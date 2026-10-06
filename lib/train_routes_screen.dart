@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'route_details_screen.dart';
 
 class TrainRoutesScreen extends StatelessWidget {
   const TrainRoutesScreen({super.key});
@@ -20,6 +21,7 @@ class TrainRoutesScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+
             const Text(
               'Find Your Train Route',
               style: TextStyle(
@@ -40,7 +42,8 @@ class TrainRoutesScreen extends StatelessWidget {
 
             const SizedBox(height: 25),
 
-            // SEARCH
+            // ================= SEARCH =================
+
             TextField(
               decoration: InputDecoration(
                 hintText: 'Search station or destination',
@@ -63,25 +66,37 @@ class TrainRoutesScreen extends StatelessWidget {
 
             const SizedBox(height: 15),
 
+            // ================= COASTAL LINE =================
+
             _buildTrainRoute(
+              context,
               'Coastal Line',
               'Colombo Fort',
               'Galle',
             ),
 
+            // ================= MAIN LINE =================
+
             _buildTrainRoute(
+              context,
               'Main Line',
               'Colombo Fort',
               'Kandy',
             ),
 
+            // ================= PUTTALAM LINE =================
+
             _buildTrainRoute(
+              context,
               'Puttalam Line',
               'Colombo Fort',
               'Puttalam',
             ),
 
+            // ================= NORTHERN LINE =================
+
             _buildTrainRoute(
+              context,
               'Northern Line',
               'Colombo Fort',
               'Jaffna',
@@ -92,8 +107,11 @@ class TrainRoutesScreen extends StatelessWidget {
     );
   }
 
+  // ================= TRAIN ROUTE CARD =================
+
   Widget _buildTrainRoute(
-    String lineName,
+    BuildContext context,
+    String line,
     String start,
     String destination,
   ) {
@@ -105,11 +123,16 @@ class TrainRoutesScreen extends StatelessWidget {
 
         leading: const CircleAvatar(
           radius: 28,
-          child: Icon(Icons.train),
+          backgroundColor: Color(0xFFEFF4FF),
+          child: Icon(
+            Icons.train_rounded,
+            color: Color(0xFF2563EB),
+            size: 28,
+          ),
         ),
 
         title: Text(
-          lineName,
+          line,
           style: const TextStyle(
             fontSize: 17,
             fontWeight: FontWeight.bold,
@@ -125,7 +148,23 @@ class TrainRoutesScreen extends StatelessWidget {
           size: 18,
         ),
 
-        onTap: () {},
+        // ================= ROUTE DETAILS =================
+
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => RouteDetailsScreen(
+                transportType: 'Train Route',
+                routeName: line,
+                from: start,
+                to: destination,
+                icon: Icons.train_rounded,
+                iconColor: const Color(0xFF2563EB),
+              ),
+            ),
+          );
+        },
       ),
     );
   }

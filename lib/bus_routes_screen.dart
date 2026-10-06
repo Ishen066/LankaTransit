@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'route_details_screen.dart';
 
 class BusRoutesScreen extends StatelessWidget {
   const BusRoutesScreen({super.key});
@@ -114,10 +115,12 @@ class BusRoutesScreen extends StatelessWidget {
 
         leading: CircleAvatar(
           radius: 28,
+          backgroundColor: const Color(0xFFE8F5EF),
           child: Text(
             busNumber,
             style: const TextStyle(
               fontWeight: FontWeight.bold,
+              color: Color(0xFF087F5B),
             ),
           ),
         ),
@@ -139,7 +142,23 @@ class BusRoutesScreen extends StatelessWidget {
           size: 18,
         ),
 
-        onTap: () {},
+        // ================= ROUTE DETAILS =================
+
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => RouteDetailsScreen(
+                transportType: 'Bus Route',
+                routeName: busNumber,
+                from: start,
+                to: destination,
+                icon: Icons.directions_bus_rounded,
+                iconColor: const Color(0xFF087F5B),
+              ),
+            ),
+          );
+        },
       ),
     );
   }

@@ -15,10 +15,12 @@ class LankaTransitApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'LankaTransit',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.green,
-        ),
         useMaterial3: true,
+        scaffoldBackgroundColor: const Color(0xFFF7F9F8),
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFF087F5B),
+        ),
+        fontFamily: 'Arial',
       ),
       home: const SplashScreen(),
     );
@@ -33,56 +35,83 @@ class SplashScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(30),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(
-                Icons.directions_transit,
-                size: 90,
-                color: Colors.green,
-              ),
-
-              const SizedBox(height: 20),
-
-              const Text(
-                'LankaTransit',
-                style: TextStyle(
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
+      backgroundColor: const Color(0xFF087F5B),
+      body: SafeArea(
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(30),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  width: 110,
+                  height: 110,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(32),
+                  ),
+                  child: const Icon(
+                    Icons.directions_transit,
+                    size: 65,
+                    color: Color(0xFF087F5B),
+                  ),
                 ),
-              ),
 
-              const SizedBox(height: 10),
+                const SizedBox(height: 28),
 
-              const Text(
-                'Smart Public Transport for Sri Lanka',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.grey,
+                const Text(
+                  'LankaTransit',
+                  style: TextStyle(
+                    fontSize: 34,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
                 ),
-              ),
 
-              const SizedBox(height: 40),
+                const SizedBox(height: 10),
 
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const LoginScreen(),
+                const Text(
+                  'Smart Public Transport\nfor Sri Lanka',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 16,
+                    height: 1.5,
+                    color: Colors.white70,
+                  ),
+                ),
+
+                const SizedBox(height: 45),
+
+                SizedBox(
+                  width: double.infinity,
+                  height: 54,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: const Color(0xFF087F5B),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
                       ),
-                    );
-                  },
-                  child: const Text('Get Started'),
+                    ),
+                    onPressed: () {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const LoginScreen(),
+                        ),
+                      );
+                    },
+                    child: const Text(
+                      'Get Started',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -90,7 +119,7 @@ class SplashScreen extends StatelessWidget {
   }
 }
 
-// ================= LOGIN SCREEN =================
+// ================= LOGIN =================
 
 class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});
@@ -99,36 +128,62 @@ class LoginScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Login'),
+        title: const Text(
+          'Welcome Back',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        backgroundColor: Colors.transparent,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(20),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(24),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            const Text(
+              'Login to LankaTransit',
+              style: TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+
+            const SizedBox(height: 8),
+
+            const Text(
+              'Find your next journey easily.',
+              style: TextStyle(
+                color: Colors.grey,
+                fontSize: 15,
+              ),
+            ),
+
+            const SizedBox(height: 30),
+
             const TextField(
               keyboardType: TextInputType.emailAddress,
               decoration: InputDecoration(
                 labelText: 'Email',
+                prefixIcon: Icon(Icons.email_outlined),
                 border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.email),
               ),
             ),
 
-            const SizedBox(height: 15),
+            const SizedBox(height: 16),
 
             const TextField(
               obscureText: true,
               decoration: InputDecoration(
                 labelText: 'Password',
+                prefixIcon: Icon(Icons.lock_outline),
                 border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.lock),
               ),
             ),
 
-            const SizedBox(height: 20),
+            const SizedBox(height: 24),
 
             SizedBox(
               width: double.infinity,
+              height: 52,
               child: ElevatedButton(
                 onPressed: () {
                   Navigator.pushReplacement(
@@ -138,22 +193,27 @@ class LoginScreen extends StatelessWidget {
                     ),
                   );
                 },
-                child: const Text('Login'),
+                child: const Text(
+                  'Login',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
               ),
             ),
 
-            const SizedBox(height: 10),
+            const SizedBox(height: 12),
 
-            TextButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const RegisterScreen(),
-                  ),
-                );
-              },
-              child: const Text('Create an account'),
+            Center(
+              child: TextButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const RegisterScreen(),
+                    ),
+                  );
+                },
+                child: const Text('Create a new account'),
+              ),
             ),
           ],
         ),
@@ -162,7 +222,7 @@ class LoginScreen extends StatelessWidget {
   }
 }
 
-// ================= REGISTER SCREEN =================
+// ================= REGISTER =================
 
 class RegisterScreen extends StatelessWidget {
   const RegisterScreen({super.key});
@@ -171,57 +231,61 @@ class RegisterScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Register'),
+        title: const Text(
+          'Create Account',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(24),
         child: Column(
           children: [
             const TextField(
               decoration: InputDecoration(
                 labelText: 'Full Name',
+                prefixIcon: Icon(Icons.person_outline),
                 border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.person),
               ),
             ),
 
-            const SizedBox(height: 15),
+            const SizedBox(height: 16),
 
             const TextField(
               keyboardType: TextInputType.emailAddress,
               decoration: InputDecoration(
                 labelText: 'Email',
+                prefixIcon: Icon(Icons.email_outlined),
                 border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.email),
               ),
             ),
 
-            const SizedBox(height: 15),
+            const SizedBox(height: 16),
 
             const TextField(
               obscureText: true,
               decoration: InputDecoration(
                 labelText: 'Password',
+                prefixIcon: Icon(Icons.lock_outline),
                 border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.lock),
               ),
             ),
 
-            const SizedBox(height: 15),
+            const SizedBox(height: 16),
 
             const TextField(
               obscureText: true,
               decoration: InputDecoration(
                 labelText: 'Confirm Password',
-                border: OutlineInputBorder(),
                 prefixIcon: Icon(Icons.lock_outline),
+                border: OutlineInputBorder(),
               ),
             ),
 
-            const SizedBox(height: 20),
+            const SizedBox(height: 24),
 
             SizedBox(
               width: double.infinity,
+              height: 52,
               child: ElevatedButton(
                 onPressed: () {
                   Navigator.pushReplacement(
@@ -231,7 +295,10 @@ class RegisterScreen extends StatelessWidget {
                     ),
                   );
                 },
-                child: const Text('Create Account'),
+                child: const Text(
+                  'Create Account',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
               ),
             ),
           ],
@@ -249,84 +316,148 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('LankaTransit'),
-        actions: [
-          IconButton(
-            onPressed: () {},
-            icon: const Icon(Icons.notifications_outlined),
-          ),
-          IconButton(
-            onPressed: () {},
-            icon: const Icon(Icons.account_circle_outlined),
-          ),
-        ],
-      ),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(20, 18, 20, 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
 
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+              // ================= HEADER =================
 
-            // Greeting
-            const Text(
-              'Good Morning 👋',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
+              Row(
+                children: [
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFE8F5EF),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: const Icon(
+                      Icons.directions_transit,
+                      color: Color(0xFF087F5B),
+                    ),
+                  ),
+
+                  const SizedBox(width: 12),
+
+                  const Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Good Morning 👋',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey,
+                          ),
+                        ),
+                        SizedBox(height: 3),
+                        Text(
+                          'LankaTransit',
+                          style: TextStyle(
+                            fontSize: 21,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: IconButton(
+                      onPressed: () {},
+                      icon: const Icon(
+                        Icons.notifications_none_rounded,
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ),
 
-            const SizedBox(height: 5),
+              const SizedBox(height: 28),
 
-            const Text(
-              'Where do you want to go today?',
-              style: TextStyle(
-                color: Colors.grey,
-              ),
-            ),
+              // ================= TITLE =================
 
-            const SizedBox(height: 20),
-
-            // Search
-            TextField(
-              decoration: InputDecoration(
-                hintText: 'Search destination',
-                prefixIcon: const Icon(Icons.search),
-                suffixIcon: IconButton(
-                  onPressed: () {},
-                  icon: const Icon(Icons.tune),
+              const Text(
+                'Where are you going?',
+                style: TextStyle(
+                  fontSize: 25,
+                  fontWeight: FontWeight.bold,
                 ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+              ),
+
+              const SizedBox(height: 7),
+
+              const Text(
+                'Find the best public transport for your journey.',
+                style: TextStyle(
+                  color: Colors.grey,
+                  fontSize: 14,
                 ),
               ),
-            ),
 
-            const SizedBox(height: 25),
+              const SizedBox(height: 20),
 
-            const Text(
-              'Find Transport',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
+              // ================= SEARCH =================
+
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(18),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.04),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: const TextField(
+                  decoration: InputDecoration(
+                    hintText: 'Search destination or route',
+                    prefixIcon: Icon(
+                      Icons.search,
+                      color: Color(0xFF087F5B),
+                    ),
+                    border: InputBorder.none,
+                    contentPadding: EdgeInsets.symmetric(
+                      vertical: 18,
+                    ),
+                  ),
+                ),
               ),
-            ),
 
-            const SizedBox(height: 15),
+              const SizedBox(height: 30),
 
-            // Bus + Train
-            Row(
-              children: [
+              // ================= TRANSPORT =================
 
-                // ================= BUS =================
+              const Text(
+                'Choose your transport',
+                style: TextStyle(
+                  fontSize: 19,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
 
-                Expanded(
-                  child: Card(
-                    elevation: 2,
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(12),
+              const SizedBox(height: 14),
+
+              Row(
+                children: [
+
+                  // BUS CARD
+                  Expanded(
+                    child: _TransportCard(
+                      icon: Icons.directions_bus_rounded,
+                      title: 'Bus',
+                      subtitle: 'Find bus routes',
+                      iconColor: const Color(0xFF087F5B),
+                      backgroundColor: const Color(0xFFE8F5EF),
                       onTap: () {
                         Navigator.push(
                           context,
@@ -336,51 +467,19 @@ class HomePage extends StatelessWidget {
                           ),
                         );
                       },
-                      child: Padding(
-                        padding: const EdgeInsets.all(20),
-                        child: Column(
-                          children: [
-                            const Icon(
-                              Icons.directions_bus,
-                              size: 45,
-                              color: Colors.green,
-                            ),
-
-                            const SizedBox(height: 10),
-
-                            const Text(
-                              'Bus',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-
-                            const SizedBox(height: 5),
-
-                            const Text(
-                              'Find bus routes',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                color: Colors.grey,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
                     ),
                   ),
-                ),
 
-                const SizedBox(width: 15),
+                  const SizedBox(width: 14),
 
-                // ================= TRAIN =================
-
-                Expanded(
-                  child: Card(
-                    elevation: 2,
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(12),
+                  // TRAIN CARD
+                  Expanded(
+                    child: _TransportCard(
+                      icon: Icons.train_rounded,
+                      title: 'Train',
+                      subtitle: 'Find train routes',
+                      iconColor: const Color(0xFF2563EB),
+                      backgroundColor: const Color(0xFFEFF4FF),
                       onTap: () {
                         Navigator.push(
                           context,
@@ -390,125 +489,260 @@ class HomePage extends StatelessWidget {
                           ),
                         );
                       },
-                      child: Padding(
-                        padding: const EdgeInsets.all(20),
-                        child: Column(
-                          children: [
-                            const Icon(
-                              Icons.train,
-                              size: 45,
-                              color: Colors.blue,
-                            ),
-
-                            const SizedBox(height: 10),
-
-                            const Text(
-                              'Train',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-
-                            const SizedBox(height: 5),
-
-                            const Text(
-                              'Find train routes',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                color: Colors.grey,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
                     ),
                   ),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 30),
-
-            // Quick Actions
-            const Text(
-              'Quick Actions',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
+                ],
               ),
-            ),
 
-            const SizedBox(height: 15),
+              const SizedBox(height: 30),
 
-            Card(
-              child: ListTile(
-                leading: const CircleAvatar(
-                  child: Icon(Icons.location_on),
-                ),
-                title: const Text('Nearby Transport'),
-                subtitle: const Text(
-                  'Find buses and trains near you',
-                ),
-                trailing: const Icon(Icons.arrow_forward_ios),
+              // ================= QUICK ACCESS =================
+
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Quick Access',
+                    style: TextStyle(
+                      fontSize: 19,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+
+                  TextButton(
+                    onPressed: () {},
+                    child: const Text('View all'),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 8),
+
+              _QuickActionCard(
+                icon: Icons.location_on_rounded,
+                title: 'Nearby Transport',
+                subtitle: 'Find buses and trains near you',
+                iconColor: const Color(0xFF087F5B),
                 onTap: () {},
               ),
-            ),
 
-            Card(
-              child: ListTile(
-                leading: const CircleAvatar(
-                  child: Icon(Icons.favorite),
-                ),
-                title: const Text('Favourite Routes'),
-                subtitle: const Text(
-                  'Your saved routes',
-                ),
-                trailing: const Icon(Icons.arrow_forward_ios),
+              const SizedBox(height: 10),
+
+              _QuickActionCard(
+                icon: Icons.favorite_rounded,
+                title: 'Favourite Routes',
+                subtitle: 'Your saved routes',
+                iconColor: Colors.redAccent,
                 onTap: () {},
               ),
-            ),
 
-            Card(
-              child: ListTile(
-                leading: const CircleAvatar(
-                  child: Icon(Icons.history),
-                ),
-                title: const Text('Recent Journeys'),
-                subtitle: const Text(
-                  'View your recent trips',
-                ),
-                trailing: const Icon(Icons.arrow_forward_ios),
+              const SizedBox(height: 10),
+
+              _QuickActionCard(
+                icon: Icons.history_rounded,
+                title: 'Recent Journeys',
+                subtitle: 'View your recent trips',
+                iconColor: Colors.orange,
                 onTap: () {},
               ),
-            ),
-          ],
+
+              const SizedBox(height: 20),
+            ],
+          ),
         ),
       ),
 
       // ================= BOTTOM NAVIGATION =================
 
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: 0,
-        type: BottomNavigationBarType.fixed,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: 0,
+        backgroundColor: Colors.white,
+        indicatorColor: const Color(0xFFE8F5EF),
+        destinations: const [
+          NavigationDestination(
+            icon: Icon(Icons.home_outlined),
+            selectedIcon: Icon(Icons.home),
             label: 'Home',
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.route),
+          NavigationDestination(
+            icon: Icon(Icons.route_outlined),
+            selectedIcon: Icon(Icons.route),
             label: 'Routes',
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.favorite),
+          NavigationDestination(
+            icon: Icon(Icons.favorite_border),
+            selectedIcon: Icon(Icons.favorite),
             label: 'Favorites',
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
+          NavigationDestination(
+            icon: Icon(Icons.person_outline),
+            selectedIcon: Icon(Icons.person),
             label: 'Profile',
           ),
         ],
+      ),
+    );
+  }
+}
+
+// ================= TRANSPORT CARD =================
+
+class _TransportCard extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final Color iconColor;
+  final Color backgroundColor;
+  final VoidCallback onTap;
+
+  const _TransportCard({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.iconColor,
+    required this.backgroundColor,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(22),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(22),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(18),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 52,
+                height: 52,
+                decoration: BoxDecoration(
+                  color: backgroundColor,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Icon(
+                  icon,
+                  color: iconColor,
+                  size: 28,
+                ),
+              ),
+
+              const SizedBox(height: 18),
+
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+
+              const SizedBox(height: 5),
+
+              Text(
+                subtitle,
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey,
+                ),
+              ),
+
+              const SizedBox(height: 12),
+
+              Icon(
+                Icons.arrow_forward_rounded,
+                color: iconColor,
+                size: 20,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ================= QUICK ACTION =================
+
+class _QuickActionCard extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final Color iconColor;
+  final VoidCallback onTap;
+
+  const _QuickActionCard({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.iconColor,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(18),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(18),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(15),
+          child: Row(
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: iconColor.withOpacity(0.10),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Icon(
+                  icon,
+                  color: iconColor,
+                ),
+              ),
+
+              const SizedBox(width: 14),
+
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15,
+                      ),
+                    ),
+
+                    const SizedBox(height: 4),
+
+                    Text(
+                      subtitle,
+                      style: const TextStyle(
+                        color: Colors.grey,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const Icon(
+                Icons.arrow_forward_ios_rounded,
+                size: 16,
+                color: Colors.grey,
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
