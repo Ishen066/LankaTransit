@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'route_coordinates.dart';
 import 'route_details_screen.dart';
 
 class BusRoutesScreen extends StatelessWidget {
@@ -10,12 +11,9 @@ class BusRoutesScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text(
           'Bus Routes',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(fontWeight: FontWeight.bold),
         ),
       ),
-
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
@@ -28,9 +26,7 @@ class BusRoutesScreen extends StatelessWidget {
                 fontWeight: FontWeight.bold,
               ),
             ),
-
             const SizedBox(height: 8),
-
             const Text(
               'Search for buses and their destinations.',
               style: TextStyle(
@@ -38,10 +34,8 @@ class BusRoutesScreen extends StatelessWidget {
                 fontSize: 16,
               ),
             ),
-
             const SizedBox(height: 25),
 
-            // SEARCH
             TextField(
               decoration: InputDecoration(
                 hintText: 'Search bus number or destination',
@@ -61,39 +55,62 @@ class BusRoutesScreen extends StatelessWidget {
                 fontWeight: FontWeight.bold,
               ),
             ),
-
             const SizedBox(height: 15),
 
-            // BUS ROUTE 1
+            // 138
             _buildBusRoute(
               context,
               '138',
               'Colombo',
               'Kaduwela',
+              const RouteCoordinates(
+                startLat: 6.9271,
+                startLng: 79.8612,
+                endLat: 6.9360,
+                endLng: 79.9840,
+              ),
             ),
 
-            // BUS ROUTE 2
+            // 100
             _buildBusRoute(
               context,
               '100',
               'Panadura',
               'Colombo',
+              const RouteCoordinates(
+                startLat: 6.7132,
+                startLng: 79.9074,
+                endLat: 6.9271,
+                endLng: 79.8612,
+              ),
             ),
 
-            // BUS ROUTE 3
+            // 02
             _buildBusRoute(
               context,
               '02',
               'Galle',
               'Colombo',
+              const RouteCoordinates(
+                startLat: 6.0329,
+                startLng: 80.2168,
+                endLat: 6.9271,
+                endLng: 79.8612,
+              ),
             ),
 
-            // BUS ROUTE 4
+            // 03
             _buildBusRoute(
               context,
               '03',
               'Colombo',
               'Kandy',
+              const RouteCoordinates(
+                startLat: 6.9271,
+                startLng: 79.8612,
+                endLat: 7.2906,
+                endLng: 80.6337,
+              ),
             ),
           ],
         ),
@@ -106,6 +123,7 @@ class BusRoutesScreen extends StatelessWidget {
     String busNumber,
     String start,
     String destination,
+    RouteCoordinates coordinates,
   ) {
     return Card(
       margin: const EdgeInsets.only(bottom: 15),
@@ -142,8 +160,6 @@ class BusRoutesScreen extends StatelessWidget {
           size: 18,
         ),
 
-        // ================= ROUTE DETAILS =================
-
         onTap: () {
           Navigator.push(
             context,
@@ -155,6 +171,11 @@ class BusRoutesScreen extends StatelessWidget {
                 to: destination,
                 icon: Icons.directions_bus_rounded,
                 iconColor: const Color(0xFF087F5B),
+
+                startLat: coordinates.startLat,
+                startLng: coordinates.startLng,
+                endLat: coordinates.endLat,
+                endLng: coordinates.endLng,
               ),
             ),
           );

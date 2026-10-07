@@ -1,12 +1,25 @@
-import 'package:flutter/material.dart';
+import 'dart:convert';
 
-class RouteDetailsScreen extends StatelessWidget {
+import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:http/http.dart' as http;
+import 'package:latlong2/latlong.dart';
+
+class RouteDetailsScreen extends StatefulWidget {
   final String transportType;
   final String routeName;
   final String from;
   final String to;
   final IconData icon;
   final Color iconColor;
+
+  final double startLat;
+  final double startLng;
+  final double endLat;
+  final double endLng;
+
+  // Custom route path for train routes
+  final List<List<double>>? routePath;
 
   const RouteDetailsScreen({
     super.key,
@@ -16,10 +29,142 @@ class RouteDetailsScreen extends StatelessWidget {
     required this.to,
     required this.icon,
     required this.iconColor,
+    required this.startLat,
+    required this.startLng,
+    required this.endLat,
+    required this.endLng,
+    this.routePath,
   });
 
   @override
+  State<RouteDetailsScreen> createState() => _RouteDetailsScreenState();
+}
+
+class _RouteDetailsScreenState extends State<RouteDetailsScreen> {
+  List<LatLng> routePoints = [];
+  bool isLoadingRoute = false;
+  String? routeError;
+
+  @override
+  void initState() {
+    super.initState();
+
+    // BUS
+    // Use OSRM to find an actual road route.
+    if (widget.transportType == 'Bus Route') {
+      _loadRoadRoute();
+    }
+
+    // TRAIN
+    // Use the custom railway path passed from train_routes_screen.dart.
+    else if (widget.routePath != null &&
+        widget.routePath!.isNotEmpty) {
+      routePoints = widget.routePath!.map<LatLng>((point) {
+        return LatLng(point[0], point[1]);
+      }).toList();
+    }
+
+    // Fallback
+    else {
+      routePoints = _createFallbackRoute();
+    }
+  }
+
+  // ============================================================
+  // BUS ROUTE - OSRM
+  // ============================================================
+
+  Future<void> _loadRoadRoute() async {
+    setState(() {
+      isLoadingRoute = true;
+      routeError = null;
+    });
+
+    try {
+      final url = Uri.parse(
+        'https://router.project-osrm.org/route/v1/driving/'
+        '${widget.startLng},${widget.startLat};'
+        '${widget.endLng},${widget.endLat}'
+        '?overview=full&geometries=geojson',
+      );
+
+      final response = await http.get(url);
+
+      if (response.statusCode != 200) {
+        throw Exception('Routing server error');
+      }
+
+      final data = jsonDecode(response.body);
+
+      if (data['code'] != 'Ok' ||
+          data['routes'] == null ||
+          data['routes'].isEmpty) {
+        throw Exception('No route found');
+      }
+
+      final coordinates =
+          data['routes'][0]['geometry']['coordinates'] as List;
+
+      final points = coordinates.map<LatLng>((coordinate) {
+        return LatLng(
+          (coordinate[1] as num).toDouble(),
+          (coordinate[0] as num).toDouble(),
+        );
+      }).toList();
+
+      if (!mounted) return;
+
+      setState(() {
+        routePoints = points;
+        isLoadingRoute = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+
+      setState(() {
+        routeError = 'Could not load road route.';
+        routePoints = _createFallbackRoute();
+        isLoadingRoute = false;
+      });
+    }
+  }
+
+  // ============================================================
+  // FALLBACK ROUTE
+  // ============================================================
+
+  List<LatLng> _createFallbackRoute() {
+    return [
+      LatLng(widget.startLat, widget.startLng),
+      LatLng(
+        (widget.startLat + widget.endLat) / 2,
+        widget.startLng,
+      ),
+      LatLng(
+        (widget.startLat + widget.endLat) / 2,
+        widget.endLng,
+      ),
+      LatLng(widget.endLat, widget.endLng),
+    ];
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final startPoint = LatLng(
+      widget.startLat,
+      widget.startLng,
+    );
+
+    final endPoint = LatLng(
+      widget.endLat,
+      widget.endLng,
+    );
+
+    final centerPoint = LatLng(
+      (widget.startLat + widget.endLat) / 2,
+      (widget.startLng + widget.endLng) / 2,
+    );
+
     return Scaffold(
       backgroundColor: const Color(0xFFF7F9F8),
 
@@ -30,370 +175,607 @@ class RouteDetailsScreen extends StatelessWidget {
             fontWeight: FontWeight.bold,
           ),
         ),
-        backgroundColor: Colors.transparent,
       ),
 
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
 
-            // ================= ROUTE HEADER =================
+            // ==================================================
+            // HEADER
+            // ==================================================
 
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.all(22),
+              margin: const EdgeInsets.fromLTRB(
+                16,
+                16,
+                16,
+                10,
+              ),
+              padding: const EdgeInsets.all(20),
+
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(24),
+                borderRadius: BorderRadius.circular(20),
               ),
-              child: Column(
+
+              child: Row(
                 children: [
 
-                  Container(
-                    width: 65,
-                    height: 65,
-                    decoration: BoxDecoration(
-                      color: iconColor.withOpacity(0.10),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
+                  CircleAvatar(
+                    radius: 30,
+                    backgroundColor:
+                        widget.iconColor.withOpacity(0.12),
+
                     child: Icon(
-                      icon,
-                      size: 34,
-                      color: iconColor,
+                      widget.icon,
+                      color: widget.iconColor,
+                      size: 30,
+                    ),
+                  ),
+
+                  const SizedBox(width: 15),
+
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment:
+                          CrossAxisAlignment.start,
+
+                      children: [
+
+                        Text(
+                          widget.routeName,
+                          style: const TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+
+                        const SizedBox(height: 4),
+
+                        Text(
+                          widget.transportType,
+                          style: TextStyle(
+                            color: widget.iconColor,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  IconButton(
+                    onPressed: () {
+                      ScaffoldMessenger.of(context)
+                          .showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                            'Added to favourites!',
+                          ),
+                        ),
+                      );
+                    },
+
+                    icon: const Icon(
+                      Icons.favorite_border,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // ==================================================
+            // JOURNEY
+            // ==================================================
+
+            Container(
+              width: double.infinity,
+
+              margin: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 10,
+              ),
+
+              padding: const EdgeInsets.all(16),
+
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+              ),
+
+              child: Column(
+                crossAxisAlignment:
+                    CrossAxisAlignment.start,
+
+                children: [
+
+                  const Text(
+                    'Journey',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
 
                   const SizedBox(height: 15),
 
-                  Text(
-                    routeName,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      fontSize: 24,
+                  // ==================================================
+                  // MAP
+                  // ==================================================
+
+                  ClipRRect(
+                    borderRadius:
+                        BorderRadius.circular(16),
+
+                    child: SizedBox(
+                      height: 320,
+
+                      child: Stack(
+                        children: [
+
+                          FlutterMap(
+                            options: MapOptions(
+                              initialCenter: centerPoint,
+                              initialZoom: 9.5,
+                            ),
+
+                            children: [
+
+                              // OpenStreetMap
+                              TileLayer(
+                                urlTemplate:
+                                    'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+
+                                userAgentPackageName:
+                                    'com.example.lanka_transit',
+                              ),
+
+                              // ==================================================
+                              // ROUTE LINE
+                              // ==================================================
+
+                              if (routePoints.isNotEmpty)
+                                PolylineLayer(
+                                  polylines: [
+
+                                    Polyline(
+                                      points: routePoints,
+
+                                      strokeWidth: 5,
+
+                                      color:
+                                          widget.iconColor,
+                                    ),
+                                  ],
+                                ),
+
+                              // ==================================================
+                              // START + DESTINATION
+                              // ==================================================
+
+                              MarkerLayer(
+                                markers: [
+
+                                  Marker(
+                                    point: startPoint,
+
+                                    width: 50,
+                                    height: 50,
+
+                                    child: const Icon(
+                                      Icons.location_on,
+                                      color: Colors.green,
+                                      size: 42,
+                                    ),
+                                  ),
+
+                                  Marker(
+                                    point: endPoint,
+
+                                    width: 50,
+                                    height: 50,
+
+                                    child: const Icon(
+                                      Icons.location_on,
+                                      color: Colors.red,
+                                      size: 42,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+
+                          // ==================================================
+                          // LOADING
+                          // ==================================================
+
+                          if (isLoadingRoute)
+                            Positioned.fill(
+                              child: Container(
+                                color: Colors.white
+                                    .withOpacity(0.7),
+
+                                child:
+                                    const Center(
+                                  child:
+                                      CircularProgressIndicator(),
+                                ),
+                              ),
+                            ),
+
+                          // ==================================================
+                          // ERROR
+                          // ==================================================
+
+                          if (routeError != null)
+                            Positioned(
+                              left: 12,
+                              right: 12,
+                              bottom: 12,
+
+                              child: Container(
+                                padding:
+                                    const EdgeInsets.all(10),
+
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+
+                                  borderRadius:
+                                      BorderRadius.circular(
+                                    10,
+                                  ),
+                                ),
+
+                                child: Text(
+                                  routeError!,
+                                  textAlign:
+                                      TextAlign.center,
+
+                                  style:
+                                      const TextStyle(
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // START LOCATION
+                  _locationRow(
+                    icon: Icons.trip_origin,
+                    color: Colors.green,
+                    title: 'Starting Point',
+                    location: widget.from,
+                  ),
+
+                  const SizedBox(height: 15),
+
+                  // DESTINATION
+                  _locationRow(
+                    icon: Icons.location_on,
+                    color: Colors.red,
+                    title: 'Destination',
+                    location: widget.to,
+                  ),
+                ],
+              ),
+            ),
+
+            // ==================================================
+            // TRIP INFORMATION
+            // ==================================================
+
+            Container(
+              width: double.infinity,
+
+              margin: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 10,
+              ),
+
+              padding: const EdgeInsets.all(16),
+
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+              ),
+
+              child: Column(
+                crossAxisAlignment:
+                    CrossAxisAlignment.start,
+
+                children: [
+
+                  const Text(
+                    'Trip Information',
+                    style: TextStyle(
+                      fontSize: 20,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
 
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 15),
 
-                  Text(
-                    transportType,
-                    style: TextStyle(
-                      color: iconColor,
-                      fontWeight: FontWeight.w600,
-                    ),
+                  Row(
+                    children: [
+
+                      Expanded(
+                        child: _infoCard(
+                          Icons.access_time,
+                          'Duration',
+                          '1h 30m',
+                        ),
+                      ),
+
+                      const SizedBox(width: 10),
+
+                      Expanded(
+                        child: _infoCard(
+                          Icons.payments_outlined,
+                          'Estimated Fare',
+                          'Rs. 150',
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 10),
+
+                  Row(
+                    children: [
+
+                      Expanded(
+                        child: _infoCard(
+                          Icons.location_on_outlined,
+                          'Stops',
+                          '12 Stops',
+                        ),
+                      ),
+
+                      const SizedBox(width: 10),
+
+                      Expanded(
+                        child: _infoCard(
+                          Icons.schedule,
+                          'Frequency',
+                          'Every 20m',
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
             ),
 
-            const SizedBox(height: 20),
-
-            // ================= JOURNEY =================
-
-            const Text(
-              'Journey',
-              style: TextStyle(
-                fontSize: 19,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-
-            const SizedBox(height: 12),
+            // ==================================================
+            // MAIN STOPS
+            // ==================================================
 
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.all(20),
+
+              margin: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 10,
+              ),
+
+              padding: const EdgeInsets.all(16),
+
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(20),
               ),
+
               child: Column(
+                crossAxisAlignment:
+                    CrossAxisAlignment.start,
+
                 children: [
 
-                  _LocationRow(
-                    icon: Icons.radio_button_checked,
-                    color: Colors.green,
-                    title: 'Starting Point',
-                    location: from,
-                  ),
-
-                  Padding(
-                    padding: const EdgeInsets.only(
-                      left: 11,
-                      top: 4,
-                      bottom: 4,
-                    ),
-                    child: Align(
-                      alignment: Alignment.centerLeft,
-                      child: Container(
-                        width: 2,
-                        height: 35,
-                        color: Colors.grey.shade300,
-                      ),
+                  const Text(
+                    'Main Stops',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
 
-                  _LocationRow(
-                    icon: Icons.location_on,
-                    color: Colors.red,
-                    title: 'Destination',
-                    location: to,
+                  const SizedBox(height: 15),
+
+                  _stopItem(
+                    'Starting Point',
+                    widget.from,
+                    true,
+                  ),
+
+                  _stopItem(
+                    'Main Junction',
+                    'Main Junction',
+                    false,
+                  ),
+
+                  _stopItem(
+                    'City Centre',
+                    'City Centre',
+                    false,
+                  ),
+
+                  _stopItem(
+                    'Town Hall',
+                    'Town Hall',
+                    false,
+                  ),
+
+                  _stopItem(
+                    'Destination',
+                    widget.to,
+                    true,
                   ),
                 ],
               ),
             ),
 
-            const SizedBox(height: 25),
+            const SizedBox(height: 10),
 
-            // ================= TRIP INFORMATION =================
+            // ==================================================
+            // FAVOURITE BUTTON
+            // ==================================================
 
-            const Text(
-              'Trip Information',
-              style: TextStyle(
-                fontSize: 19,
-                fontWeight: FontWeight.bold,
+            Padding(
+              padding:
+                  const EdgeInsets.symmetric(
+                horizontal: 16,
               ),
-            ),
 
-            const SizedBox(height: 12),
+              child: SizedBox(
+                width: double.infinity,
+                height: 55,
 
-            Row(
-              children: [
+                child: ElevatedButton.icon(
 
-                Expanded(
-                  child: _InfoCard(
-                    icon: Icons.access_time,
-                    title: 'Duration',
-                    value: '1h 30m',
-                    color: Colors.orange,
-                  ),
-                ),
-
-                const SizedBox(width: 12),
-
-                Expanded(
-                  child: _InfoCard(
-                    icon: Icons.payments_outlined,
-                    title: 'Estimated Fare',
-                    value: 'Rs. 150',
-                    color: Colors.green,
-                  ),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 12),
-
-            Row(
-              children: [
-
-                Expanded(
-                  child: _InfoCard(
-                    icon: Icons.location_on_outlined,
-                    title: 'Stops',
-                    value: '12 Stops',
-                    color: Colors.blue,
-                  ),
-                ),
-
-                const SizedBox(width: 12),
-
-                Expanded(
-                  child: _InfoCard(
-                    icon: Icons.schedule,
-                    title: 'Frequency',
-                    value: 'Every 20m',
-                    color: Colors.purple,
-                  ),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 25),
-
-            // ================= MAIN STOPS =================
-
-            const Text(
-              'Main Stops',
-              style: TextStyle(
-                fontSize: 19,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-
-            const SizedBox(height: 12),
-
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(18),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Column(
-                children: const [
-
-                  _StopItem(
-                    number: '01',
-                    name: 'Starting Point',
-                  ),
-
-                  _StopItem(
-                    number: '02',
-                    name: 'Main Junction',
-                  ),
-
-                  _StopItem(
-                    number: '03',
-                    name: 'City Centre',
-                  ),
-
-                  _StopItem(
-                    number: '04',
-                    name: 'Town Hall',
-                  ),
-
-                  _StopItem(
-                    number: '05',
-                    name: 'Destination',
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 25),
-
-            // ================= FAVOURITE BUTTON =================
-
-            SizedBox(
-              width: double.infinity,
-              height: 54,
-              child: ElevatedButton.icon(
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text(
-                        'Route added to favourites',
+                  onPressed: () {
+                    ScaffoldMessenger.of(context)
+                        .showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                          'Route added to favourites!',
+                        ),
                       ),
+                    );
+                  },
+
+                  icon: const Icon(
+                    Icons.favorite_border,
+                  ),
+
+                  label: const Text(
+                    'Add to Favourites',
+
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
                     ),
-                  );
-                },
-                icon: const Icon(Icons.favorite_border),
-                label: const Text(
-                  'Add to Favourites',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
+                  ),
+
+                  style:
+                      ElevatedButton.styleFrom(
+                    backgroundColor:
+                        widget.iconColor,
+
+                    foregroundColor:
+                        Colors.white,
+
+                    shape:
+                        RoundedRectangleBorder(
+                      borderRadius:
+                          BorderRadius.circular(15),
+                    ),
                   ),
                 ),
               ),
             ),
 
-            const SizedBox(height: 20),
+            const SizedBox(height: 25),
           ],
         ),
       ),
     );
   }
-}
 
-// ================= LOCATION ROW =================
+  // ============================================================
+  // LOCATION ROW
+  // ============================================================
 
-class _LocationRow extends StatelessWidget {
-  final IconData icon;
-  final Color color;
-  final String title;
-  final String location;
-
-  const _LocationRow({
-    required this.icon,
-    required this.color,
-    required this.title,
-    required this.location,
-  });
-
-  @override
-  Widget build(BuildContext context) {
+  Widget _locationRow({
+    required IconData icon,
+    required Color color,
+    required String title,
+    required String location,
+  }) {
     return Row(
       children: [
 
         Icon(
           icon,
           color: color,
-          size: 24,
+          size: 28,
         ),
 
-        const SizedBox(width: 15),
+        const SizedBox(width: 12),
 
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: const TextStyle(
-                fontSize: 12,
-                color: Colors.grey,
+        Expanded(
+          child: Column(
+            crossAxisAlignment:
+                CrossAxisAlignment.start,
+
+            children: [
+
+              Text(
+                title,
+                style: const TextStyle(
+                  color: Colors.grey,
+                  fontSize: 13,
+                ),
               ),
-            ),
 
-            const SizedBox(height: 3),
+              const SizedBox(height: 3),
 
-            Text(
-              location,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
+              Text(
+                location,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ],
     );
   }
-}
 
-// ================= INFO CARD =================
+  // ============================================================
+  // INFO CARD
+  // ============================================================
 
-class _InfoCard extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String value;
-  final Color color;
-
-  const _InfoCard({
-    required this.icon,
-    required this.title,
-    required this.value,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
+  Widget _infoCard(
+    IconData icon,
+    String title,
+    String value,
+  ) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(14),
+
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
+        color: const Color(0xFFF7F9F8),
+        borderRadius: BorderRadius.circular(14),
       ),
+
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
 
           Icon(
             icon,
-            color: color,
-            size: 24,
+            color: widget.iconColor,
+            size: 26,
           ),
 
-          const SizedBox(height: 10),
+          const SizedBox(height: 8),
 
           Text(
             title,
+            textAlign: TextAlign.center,
+
             style: const TextStyle(
-              fontSize: 12,
               color: Colors.grey,
+              fontSize: 12,
             ),
           ),
 
@@ -401,60 +783,79 @@ class _InfoCard extends StatelessWidget {
 
           Text(
             value,
+            textAlign: TextAlign.center,
+
             style: const TextStyle(
-              fontSize: 15,
               fontWeight: FontWeight.bold,
+              fontSize: 15,
             ),
           ),
         ],
       ),
     );
   }
-}
 
-// ================= STOP ITEM =================
+  // ============================================================
+  // STOP ITEM
+  // ============================================================
 
-class _StopItem extends StatelessWidget {
-  final String number;
-  final String name;
-
-  const _StopItem({
-    required this.number,
-    required this.name,
-  });
-
-  @override
-  Widget build(BuildContext context) {
+  Widget _stopItem(
+    String title,
+    String location,
+    bool isEndpoint,
+  ) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 9),
+      padding:
+          const EdgeInsets.only(bottom: 15),
+
       child: Row(
+        crossAxisAlignment:
+            CrossAxisAlignment.start,
+
         children: [
 
-          Container(
-            width: 35,
-            height: 35,
-            decoration: BoxDecoration(
-              color: const Color(0xFFE8F5EF),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Center(
-              child: Text(
-                number,
-                style: const TextStyle(
-                  color: Color(0xFF087F5B),
-                  fontWeight: FontWeight.bold,
-                  fontSize: 12,
-                ),
+          Column(
+            children: [
+
+              Icon(
+                isEndpoint
+                    ? Icons.location_on
+                    : Icons.circle,
+
+                size: isEndpoint ? 22 : 12,
+
+                color: isEndpoint
+                    ? widget.iconColor
+                    : Colors.grey,
               ),
-            ),
+            ],
           ),
 
-          const SizedBox(width: 14),
+          const SizedBox(width: 12),
 
-          Text(
-            name,
-            style: const TextStyle(
-              fontWeight: FontWeight.w600,
+          Expanded(
+            child: Column(
+              crossAxisAlignment:
+                  CrossAxisAlignment.start,
+
+              children: [
+
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+
+                const SizedBox(height: 3),
+
+                Text(
+                  location,
+                  style: const TextStyle(
+                    color: Colors.grey,
+                  ),
+                ),
+              ],
             ),
           ),
         ],
