@@ -18,7 +18,6 @@ class RouteDetailsScreen extends StatefulWidget {
   final double endLat;
   final double endLng;
 
-  // Custom route path for train routes
   final List<List<double>>? routePath;
 
   const RouteDetailsScreen({
@@ -41,695 +40,347 @@ class RouteDetailsScreen extends StatefulWidget {
 }
 
 class _RouteDetailsScreenState extends State<RouteDetailsScreen> {
-  List<LatLng> routePoints = [];
-  bool isLoadingRoute = false;
-  String? routeError;
+  final MapController _mapController = MapController();
+
+  List<LatLng> _routePoints = [];
+  bool _isLoadingRoute = true;
+  bool _isFavourite = false;
 
   @override
   void initState() {
     super.initState();
-
-    // BUS
-    // Use OSRM to find an actual road route.
-    if (widget.transportType == 'Bus Route') {
-      _loadRoadRoute();
-    }
-
-    // TRAIN
-    // Use the custom railway path passed from train_routes_screen.dart.
-    else if (widget.routePath != null &&
-        widget.routePath!.isNotEmpty) {
-      routePoints = widget.routePath!.map<LatLng>((point) {
-        return LatLng(point[0], point[1]);
-      }).toList();
-    }
-
-    // Fallback
-    else {
-      routePoints = _createFallbackRoute();
-    }
+    _loadRoute();
   }
 
-  // ============================================================
-  // BUS ROUTE - OSRM
-  // ============================================================
+  bool get isTrain => widget.transportType == 'Train Route';
+
+  Color get primaryColor =>
+      isTrain ? const Color(0xFF2563EB) : const Color(0xFF087F5B);
+
+  Color get lightColor =>
+      isTrain ? const Color(0xFFEFF4FF) : const Color(0xFFE8F5EF);
+
+  Color get darkText =>
+      isTrain ? const Color(0xFF172B4D) : const Color(0xFF173B32);
+
+  Future<void> _loadRoute() async {
+    if (widget.routePath != null && widget.routePath!.isNotEmpty) {
+      setState(() {
+        _routePoints = widget.routePath!
+            .map(
+              (point) => LatLng(point[0], point[1]),
+            )
+            .toList();
+
+        _isLoadingRoute = false;
+      });
+
+      return;
+    }
+
+    await _loadRoadRoute();
+  }
 
   Future<void> _loadRoadRoute() async {
-    setState(() {
-      isLoadingRoute = true;
-      routeError = null;
-    });
-
     try {
-      final url = Uri.parse(
-        'https://router.project-osrm.org/route/v1/driving/'
-        '${widget.startLng},${widget.startLat};'
-        '${widget.endLng},${widget.endLat}'
-        '?overview=full&geometries=geojson',
-      );
+      final url =
+          'https://router.project-osrm.org/route/v1/driving/'
+          '${widget.startLng},${widget.startLat};'
+          '${widget.endLng},${widget.endLat}'
+          '?overview=full&geometries=geojson';
 
-      final response = await http.get(url);
+      final response = await http.get(Uri.parse(url));
 
-      if (response.statusCode != 200) {
-        throw Exception('Routing server error');
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+
+        final coordinates =
+            data['routes'][0]['geometry']['coordinates'] as List;
+
+        final points = coordinates
+            .map<LatLng>(
+              (point) => LatLng(
+                point[1].toDouble(),
+                point[0].toDouble(),
+              ),
+            )
+            .toList();
+
+        if (mounted) {
+          setState(() {
+            _routePoints = points;
+            _isLoadingRoute = false;
+          });
+        }
+      } else {
+        _setFallbackRoute();
       }
-
-      final data = jsonDecode(response.body);
-
-      if (data['code'] != 'Ok' ||
-          data['routes'] == null ||
-          data['routes'].isEmpty) {
-        throw Exception('No route found');
-      }
-
-      final coordinates =
-          data['routes'][0]['geometry']['coordinates'] as List;
-
-      final points = coordinates.map<LatLng>((coordinate) {
-        return LatLng(
-          (coordinate[1] as num).toDouble(),
-          (coordinate[0] as num).toDouble(),
-        );
-      }).toList();
-
-      if (!mounted) return;
-
-      setState(() {
-        routePoints = points;
-        isLoadingRoute = false;
-      });
-    } catch (e) {
-      if (!mounted) return;
-
-      setState(() {
-        routeError = 'Could not load road route.';
-        routePoints = _createFallbackRoute();
-        isLoadingRoute = false;
-      });
+    } catch (_) {
+      _setFallbackRoute();
     }
   }
 
-  // ============================================================
-  // FALLBACK ROUTE
-  // ============================================================
+  void _setFallbackRoute() {
+    if (!mounted) return;
 
-  List<LatLng> _createFallbackRoute() {
-    return [
-      LatLng(widget.startLat, widget.startLng),
-      LatLng(
-        (widget.startLat + widget.endLat) / 2,
-        widget.startLng,
+    setState(() {
+      _routePoints = [
+        LatLng(widget.startLat, widget.startLng),
+        LatLng(widget.endLat, widget.endLng),
+      ];
+
+      _isLoadingRoute = false;
+    });
+  }
+
+  void _toggleFavourite() {
+    setState(() {
+      _isFavourite = !_isFavourite;
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          _isFavourite
+              ? 'Route added to favourites'
+              : 'Route removed from favourites',
+        ),
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 2),
       ),
-      LatLng(
-        (widget.startLat + widget.endLat) / 2,
-        widget.endLng,
+    );
+  }
+
+  void _fitMapToRoute() {
+    if (_routePoints.isEmpty) return;
+
+    final bounds = LatLngBounds.fromPoints(_routePoints);
+
+    _mapController.fitCamera(
+      CameraFit.bounds(
+        bounds: bounds,
+        padding: const EdgeInsets.all(45),
       ),
-      LatLng(widget.endLat, widget.endLng),
-    ];
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final startPoint = LatLng(
-      widget.startLat,
-      widget.startLng,
-    );
-
-    final endPoint = LatLng(
-      widget.endLat,
-      widget.endLng,
-    );
-
-    final centerPoint = LatLng(
-      (widget.startLat + widget.endLat) / 2,
-      (widget.startLng + widget.endLng) / 2,
-    );
-
     return Scaffold(
-      backgroundColor: const Color(0xFFF7F9F8),
-
-      appBar: AppBar(
-        title: const Text(
-          'Route Details',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ),
-
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-
-            // ==================================================
-            // HEADER
-            // ==================================================
-
-            Container(
-              width: double.infinity,
-              margin: const EdgeInsets.fromLTRB(
-                16,
-                16,
-                16,
-                10,
-              ),
-              padding: const EdgeInsets.all(20),
-
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
-              ),
-
-              child: Row(
-                children: [
-
-                  CircleAvatar(
-                    radius: 30,
-                    backgroundColor:
-                        widget.iconColor.withOpacity(0.12),
-
-                    child: Icon(
-                      widget.icon,
-                      color: widget.iconColor,
-                      size: 30,
-                    ),
-                  ),
-
-                  const SizedBox(width: 15),
-
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment:
-                          CrossAxisAlignment.start,
-
-                      children: [
-
-                        Text(
-                          widget.routeName,
-                          style: const TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-
-                        const SizedBox(height: 4),
-
-                        Text(
-                          widget.transportType,
-                          style: TextStyle(
-                            color: widget.iconColor,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  IconButton(
-                    onPressed: () {
-                      ScaffoldMessenger.of(context)
-                          .showSnackBar(
-                        const SnackBar(
-                          content: Text(
-                            'Added to favourites!',
-                          ),
-                        ),
-                      );
-                    },
-
-                    icon: const Icon(
-                      Icons.favorite_border,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            // ==================================================
-            // JOURNEY
-            // ==================================================
-
-            Container(
-              width: double.infinity,
-
-              margin: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 10,
-              ),
-
-              padding: const EdgeInsets.all(16),
-
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
-              ),
-
+      backgroundColor: const Color(0xFFF6F8F7),
+      body: SafeArea(
+        child: CustomScrollView(
+          slivers: [
+            _buildAppBar(),
+            SliverToBoxAdapter(
               child: Column(
-                crossAxisAlignment:
-                    CrossAxisAlignment.start,
-
                 children: [
-
-                  const Text(
-                    'Journey',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-
-                  const SizedBox(height: 15),
-
-                  // ==================================================
-                  // MAP
-                  // ==================================================
-
-                  ClipRRect(
-                    borderRadius:
-                        BorderRadius.circular(16),
-
-                    child: SizedBox(
-                      height: 320,
-
-                      child: Stack(
-                        children: [
-
-                          FlutterMap(
-                            options: MapOptions(
-                              initialCenter: centerPoint,
-                              initialZoom: 9.5,
-                            ),
-
-                            children: [
-
-                              // OpenStreetMap
-                              TileLayer(
-                                urlTemplate:
-                                    'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-
-                                userAgentPackageName:
-                                    'com.example.lanka_transit',
-                              ),
-
-                              // ==================================================
-                              // ROUTE LINE
-                              // ==================================================
-
-                              if (routePoints.isNotEmpty)
-                                PolylineLayer(
-                                  polylines: [
-
-                                    Polyline(
-                                      points: routePoints,
-
-                                      strokeWidth: 5,
-
-                                      color:
-                                          widget.iconColor,
-                                    ),
-                                  ],
-                                ),
-
-                              // ==================================================
-                              // START + DESTINATION
-                              // ==================================================
-
-                              MarkerLayer(
-                                markers: [
-
-                                  Marker(
-                                    point: startPoint,
-
-                                    width: 50,
-                                    height: 50,
-
-                                    child: const Icon(
-                                      Icons.location_on,
-                                      color: Colors.green,
-                                      size: 42,
-                                    ),
-                                  ),
-
-                                  Marker(
-                                    point: endPoint,
-
-                                    width: 50,
-                                    height: 50,
-
-                                    child: const Icon(
-                                      Icons.location_on,
-                                      color: Colors.red,
-                                      size: 42,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-
-                          // ==================================================
-                          // LOADING
-                          // ==================================================
-
-                          if (isLoadingRoute)
-                            Positioned.fill(
-                              child: Container(
-                                color: Colors.white
-                                    .withOpacity(0.7),
-
-                                child:
-                                    const Center(
-                                  child:
-                                      CircularProgressIndicator(),
-                                ),
-                              ),
-                            ),
-
-                          // ==================================================
-                          // ERROR
-                          // ==================================================
-
-                          if (routeError != null)
-                            Positioned(
-                              left: 12,
-                              right: 12,
-                              bottom: 12,
-
-                              child: Container(
-                                padding:
-                                    const EdgeInsets.all(10),
-
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-
-                                  borderRadius:
-                                      BorderRadius.circular(
-                                    10,
-                                  ),
-                                ),
-
-                                child: Text(
-                                  routeError!,
-                                  textAlign:
-                                      TextAlign.center,
-
-                                  style:
-                                      const TextStyle(
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  // START LOCATION
-                  _locationRow(
-                    icon: Icons.trip_origin,
-                    color: Colors.green,
-                    title: 'Starting Point',
-                    location: widget.from,
-                  ),
-
-                  const SizedBox(height: 15),
-
-                  // DESTINATION
-                  _locationRow(
-                    icon: Icons.location_on,
-                    color: Colors.red,
-                    title: 'Destination',
-                    location: widget.to,
-                  ),
+                  _buildRouteHeader(),
+                  _buildMap(),
+                  _buildJourneyCard(),
+                  _buildTripInformation(),
+                  _buildMainStops(),
+                  _buildFavouriteButton(),
+                  const SizedBox(height: 30),
                 ],
               ),
             ),
-
-            // ==================================================
-            // TRIP INFORMATION
-            // ==================================================
-
-            Container(
-              width: double.infinity,
-
-              margin: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 10,
-              ),
-
-              padding: const EdgeInsets.all(16),
-
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
-              ),
-
-              child: Column(
-                crossAxisAlignment:
-                    CrossAxisAlignment.start,
-
-                children: [
-
-                  const Text(
-                    'Trip Information',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-
-                  const SizedBox(height: 15),
-
-                  Row(
-                    children: [
-
-                      Expanded(
-                        child: _infoCard(
-                          Icons.access_time,
-                          'Duration',
-                          '1h 30m',
-                        ),
-                      ),
-
-                      const SizedBox(width: 10),
-
-                      Expanded(
-                        child: _infoCard(
-                          Icons.payments_outlined,
-                          'Estimated Fare',
-                          'Rs. 150',
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 10),
-
-                  Row(
-                    children: [
-
-                      Expanded(
-                        child: _infoCard(
-                          Icons.location_on_outlined,
-                          'Stops',
-                          '12 Stops',
-                        ),
-                      ),
-
-                      const SizedBox(width: 10),
-
-                      Expanded(
-                        child: _infoCard(
-                          Icons.schedule,
-                          'Frequency',
-                          'Every 20m',
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-
-            // ==================================================
-            // MAIN STOPS
-            // ==================================================
-
-            Container(
-              width: double.infinity,
-
-              margin: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 10,
-              ),
-
-              padding: const EdgeInsets.all(16),
-
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
-              ),
-
-              child: Column(
-                crossAxisAlignment:
-                    CrossAxisAlignment.start,
-
-                children: [
-
-                  const Text(
-                    'Main Stops',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-
-                  const SizedBox(height: 15),
-
-                  _stopItem(
-                    'Starting Point',
-                    widget.from,
-                    true,
-                  ),
-
-                  _stopItem(
-                    'Main Junction',
-                    'Main Junction',
-                    false,
-                  ),
-
-                  _stopItem(
-                    'City Centre',
-                    'City Centre',
-                    false,
-                  ),
-
-                  _stopItem(
-                    'Town Hall',
-                    'Town Hall',
-                    false,
-                  ),
-
-                  _stopItem(
-                    'Destination',
-                    widget.to,
-                    true,
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 10),
-
-            // ==================================================
-            // FAVOURITE BUTTON
-            // ==================================================
-
-            Padding(
-              padding:
-                  const EdgeInsets.symmetric(
-                horizontal: 16,
-              ),
-
-              child: SizedBox(
-                width: double.infinity,
-                height: 55,
-
-                child: ElevatedButton.icon(
-
-                  onPressed: () {
-                    ScaffoldMessenger.of(context)
-                        .showSnackBar(
-                      const SnackBar(
-                        content: Text(
-                          'Route added to favourites!',
-                        ),
-                      ),
-                    );
-                  },
-
-                  icon: const Icon(
-                    Icons.favorite_border,
-                  ),
-
-                  label: const Text(
-                    'Add to Favourites',
-
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-
-                  style:
-                      ElevatedButton.styleFrom(
-                    backgroundColor:
-                        widget.iconColor,
-
-                    foregroundColor:
-                        Colors.white,
-
-                    shape:
-                        RoundedRectangleBorder(
-                      borderRadius:
-                          BorderRadius.circular(15),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 25),
           ],
         ),
       ),
     );
   }
 
-  // ============================================================
-  // LOCATION ROW
-  // ============================================================
+  // ------------------------------------------------------------
+  // APP BAR
+  // ------------------------------------------------------------
 
-  Widget _locationRow({
-    required IconData icon,
-    required Color color,
-    required String title,
-    required String location,
-  }) {
-    return Row(
-      children: [
-
-        Icon(
-          icon,
-          color: color,
-          size: 28,
+  Widget _buildAppBar() {
+    return SliverAppBar(
+      backgroundColor: const Color(0xFFF6F8F7),
+      surfaceTintColor: Colors.transparent,
+      elevation: 0,
+      pinned: true,
+      leading: Padding(
+        padding: const EdgeInsets.only(left: 8),
+        child: IconButton(
+          onPressed: () => Navigator.pop(context),
+          icon: const Icon(
+            Icons.arrow_back_rounded,
+            color: Colors.black87,
+          ),
         ),
+      ),
+      title: Text(
+        'Route Details',
+        style: TextStyle(
+          color: darkText,
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+      actions: [
+        Padding(
+          padding: const EdgeInsets.only(right: 12),
+          child: IconButton(
+            onPressed: _toggleFavourite,
+            icon: Icon(
+              _isFavourite
+                  ? Icons.favorite_rounded
+                  : Icons.favorite_border_rounded,
+              color: _isFavourite ? Colors.red : Colors.grey.shade700,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
 
-        const SizedBox(width: 12),
+  // ------------------------------------------------------------
+  // ROUTE HEADER
+  // ------------------------------------------------------------
 
-        Expanded(
-          child: Column(
-            crossAxisAlignment:
-                CrossAxisAlignment.start,
+  Widget _buildRouteHeader() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 18),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.045),
+              blurRadius: 15,
+              offset: const Offset(0, 5),
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 58,
+                  height: 58,
+                  decoration: BoxDecoration(
+                    color: lightColor,
+                    borderRadius: BorderRadius.circular(18),
+                  ),
+                  child: Icon(
+                    widget.icon,
+                    color: primaryColor,
+                    size: 30,
+                  ),
+                ),
+                const SizedBox(width: 15),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        widget.transportType.toUpperCase(),
+                        style: TextStyle(
+                          color: primaryColor,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1.2,
+                        ),
+                      ),
+                      const SizedBox(height: 5),
+                      Text(
+                        widget.routeName,
+                        style: TextStyle(
+                          color: darkText,
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            _buildRouteJourney(),
+          ],
+        ),
+      ),
+    );
+  }
 
-            children: [
-
-              Text(
-                title,
-                style: const TextStyle(
-                  color: Colors.grey,
-                  fontSize: 13,
+  Widget _buildRouteJourney() {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Column(
+          children: [
+            Container(
+              width: 13,
+              height: 13,
+              decoration: BoxDecoration(
+                color: primaryColor,
+                shape: BoxShape.circle,
+              ),
+            ),
+            Container(
+              width: 2,
+              height: 42,
+              color: primaryColor.withValues(alpha: 0.25),
+            ),
+            Container(
+              width: 13,
+              height: 13,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: primaryColor,
+                  width: 3,
                 ),
               ),
-
-              const SizedBox(height: 3),
-
+            ),
+          ],
+        ),
+        const SizedBox(width: 14),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
               Text(
-                location,
-                style: const TextStyle(
+                'FROM',
+                style: TextStyle(
+                  color: Colors.grey.shade500,
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1,
+                ),
+              ),
+              const SizedBox(height: 3),
+              Text(
+                widget.from,
+                style: TextStyle(
+                  color: darkText,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 23),
+              Text(
+                'TO',
+                style: TextStyle(
+                  color: Colors.grey.shade500,
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1,
+                ),
+              ),
+              const SizedBox(height: 3),
+              Text(
+                widget.to,
+                style: TextStyle(
+                  color: darkText,
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                 ),
@@ -741,124 +392,534 @@ class _RouteDetailsScreenState extends State<RouteDetailsScreen> {
     );
   }
 
-  // ============================================================
-  // INFO CARD
-  // ============================================================
+  // ------------------------------------------------------------
+  // MAP
+  // ------------------------------------------------------------
 
-  Widget _infoCard(
+  Widget _buildMap() {
+    final center = LatLng(
+      (widget.startLat + widget.endLat) / 2,
+      (widget.startLng + widget.endLng) / 2,
+    );
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+      child: Container(
+        height: 290,
+        clipBehavior: Clip.antiAlias,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 15,
+              offset: const Offset(0, 5),
+            ),
+          ],
+        ),
+        child: Stack(
+          children: [
+            FlutterMap(
+              mapController: _mapController,
+              options: MapOptions(
+                initialCenter: center,
+                initialZoom: 9.5,
+                onMapReady: () {
+                  Future.delayed(
+                    const Duration(milliseconds: 300),
+                    _fitMapToRoute,
+                  );
+                },
+              ),
+              children: [
+                TileLayer(
+                  urlTemplate:
+                      'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                  userAgentPackageName:
+                      'com.example.lanka_transit',
+                ),
+
+                if (_routePoints.isNotEmpty)
+                  PolylineLayer(
+                    polylines: [
+                      Polyline(
+                        points: _routePoints,
+                        strokeWidth: 5,
+                        color: primaryColor,
+                      ),
+                    ],
+                  ),
+
+                MarkerLayer(
+                  markers: [
+                    Marker(
+                      point: LatLng(
+                        widget.startLat,
+                        widget.startLng,
+                      ),
+                      width: 44,
+                      height: 44,
+                      child: _buildMapMarker(
+                        Icons.trip_origin_rounded,
+                        primaryColor,
+                      ),
+                    ),
+                    Marker(
+                      point: LatLng(
+                        widget.endLat,
+                        widget.endLng,
+                      ),
+                      width: 44,
+                      height: 44,
+                      child: _buildMapMarker(
+                        Icons.location_on_rounded,
+                        Colors.red,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+
+            if (_isLoadingRoute)
+              Container(
+                color: Colors.white.withValues(alpha: 0.75),
+                child: Center(
+                  child: CircularProgressIndicator(
+                    color: primaryColor,
+                  ),
+                ),
+              ),
+
+            Positioned(
+              top: 14,
+              right: 14,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.12),
+                      blurRadius: 8,
+                    ),
+                  ],
+                ),
+                child: IconButton(
+                  onPressed: _fitMapToRoute,
+                  icon: Icon(
+                    Icons.fullscreen_rounded,
+                    color: primaryColor,
+                  ),
+                ),
+              ),
+            ),
+
+            Positioned(
+              left: 14,
+              bottom: 14,
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.1),
+                      blurRadius: 8,
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.map_rounded,
+                      size: 15,
+                      color: primaryColor,
+                    ),
+                    const SizedBox(width: 6),
+                    const Text(
+                      'OpenStreetMap',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMapMarker(
+    IconData icon,
+    Color color,
+  ) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        shape: BoxShape.circle,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.18),
+            blurRadius: 8,
+          ),
+        ],
+      ),
+      child: Icon(
+        icon,
+        color: color,
+        size: 28,
+      ),
+    );
+  }
+
+  // ------------------------------------------------------------
+  // JOURNEY CARD
+  // ------------------------------------------------------------
+
+  Widget _buildJourneyCard() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: primaryColor,
+          borderRadius: BorderRadius.circular(24),
+        ),
+        child: Row(
+          children: [
+            const Icon(
+              Icons.route_rounded,
+              color: Colors.white,
+              size: 28,
+            ),
+            const SizedBox(width: 14),
+            const Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Your Journey',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    'Plan your journey with ease',
+                    style: TextStyle(
+                      color: Colors.white70,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 8,
+              ),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(
+                Icons.arrow_forward_rounded,
+                color: Colors.white,
+                size: 19,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ------------------------------------------------------------
+  // TRIP INFORMATION
+  // ------------------------------------------------------------
+
+  Widget _buildTripInformation() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+      child: _buildSectionCard(
+        title: 'Trip Information',
+        icon: Icons.info_outline_rounded,
+        child: Row(
+          children: [
+            Expanded(
+              child: _buildInfoItem(
+                Icons.access_time_rounded,
+                'Duration',
+                '1h 30m',
+              ),
+            ),
+            _buildVerticalDivider(),
+            Expanded(
+              child: _buildInfoItem(
+                Icons.payments_outlined,
+                'Est. Fare',
+                'Rs. 150',
+              ),
+            ),
+            _buildVerticalDivider(),
+            Expanded(
+              child: _buildInfoItem(
+                Icons.location_on_outlined,
+                'Stops',
+                '12',
+              ),
+            ),
+            _buildVerticalDivider(),
+            Expanded(
+              child: _buildInfoItem(
+                Icons.schedule_rounded,
+                'Frequency',
+                '20m',
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInfoItem(
     IconData icon,
     String title,
     String value,
   ) {
+    return Column(
+      children: [
+        Icon(
+          icon,
+          color: primaryColor,
+          size: 21,
+        ),
+        const SizedBox(height: 8),
+        Text(
+          value,
+          style: TextStyle(
+            color: darkText,
+            fontSize: 15,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 3),
+        Text(
+          title,
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            color: Colors.grey,
+            fontSize: 10,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildVerticalDivider() {
     return Container(
-      padding: const EdgeInsets.all(14),
+      height: 48,
+      width: 1,
+      color: const Color(0xFFE8ECEA),
+    );
+  }
 
-      decoration: BoxDecoration(
-        color: const Color(0xFFF7F9F8),
-        borderRadius: BorderRadius.circular(14),
+  // ------------------------------------------------------------
+  // MAIN STOPS
+  // ------------------------------------------------------------
+
+  Widget _buildMainStops() {
+    final List<String> stops = isTrain
+        ? [
+            widget.from,
+            'Intermediate Station',
+            'Major Station',
+            'Main Junction',
+            widget.to,
+          ]
+        : [
+            widget.from,
+            'Main Bus Stop',
+            'Central Junction',
+            'Town Bus Stand',
+            widget.to,
+          ];
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+      child: _buildSectionCard(
+        title: 'Main Stops',
+        icon: Icons.signpost_outlined,
+        child: Column(
+          children: List.generate(
+            stops.length,
+            (index) {
+              final bool isLast = index == stops.length - 1;
+
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Column(
+                    children: [
+                      Container(
+                        width: 11,
+                        height: 11,
+                        decoration: BoxDecoration(
+                          color: index == 0 || isLast
+                              ? primaryColor
+                              : primaryColor.withValues(alpha: 0.35),
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      if (!isLast)
+                        Container(
+                          width: 2,
+                          height: 34,
+                          color: primaryColor.withValues(alpha: 0.18),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.only(bottom: 17),
+                      child: Text(
+                        stops[index],
+                        style: TextStyle(
+                          color: darkText,
+                          fontSize: 14,
+                          fontWeight: index == 0 || isLast
+                              ? FontWeight.bold
+                              : FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ),
       ),
+    );
+  }
 
+  // ------------------------------------------------------------
+  // SECTION CARD
+  // ------------------------------------------------------------
+
+  Widget _buildSectionCard({
+    required String title,
+    required IconData icon,
+    required Widget child,
+  }) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 14,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-
-          Icon(
-            icon,
-            color: widget.iconColor,
-            size: 26,
+          Row(
+            children: [
+              Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  color: lightColor,
+                  borderRadius: BorderRadius.circular(11),
+                ),
+                child: Icon(
+                  icon,
+                  color: primaryColor,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 11),
+              Text(
+                title,
+                style: TextStyle(
+                  color: darkText,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
           ),
-
-          const SizedBox(height: 8),
-
-          Text(
-            title,
-            textAlign: TextAlign.center,
-
-            style: const TextStyle(
-              color: Colors.grey,
-              fontSize: 12,
-            ),
-          ),
-
-          const SizedBox(height: 4),
-
-          Text(
-            value,
-            textAlign: TextAlign.center,
-
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 15,
-            ),
-          ),
+          const SizedBox(height: 20),
+          child,
         ],
       ),
     );
   }
 
-  // ============================================================
-  // STOP ITEM
-  // ============================================================
+  // ------------------------------------------------------------
+  // FAVOURITE BUTTON
+  // ------------------------------------------------------------
 
-  Widget _stopItem(
-    String title,
-    String location,
-    bool isEndpoint,
-  ) {
+  Widget _buildFavouriteButton() {
     return Padding(
-      padding:
-          const EdgeInsets.only(bottom: 15),
-
-      child: Row(
-        crossAxisAlignment:
-            CrossAxisAlignment.start,
-
-        children: [
-
-          Column(
-            children: [
-
-              Icon(
-                isEndpoint
-                    ? Icons.location_on
-                    : Icons.circle,
-
-                size: isEndpoint ? 22 : 12,
-
-                color: isEndpoint
-                    ? widget.iconColor
-                    : Colors.grey,
-              ),
-            ],
-          ),
-
-          const SizedBox(width: 12),
-
-          Expanded(
-            child: Column(
-              crossAxisAlignment:
-                  CrossAxisAlignment.start,
-
-              children: [
-
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-
-                const SizedBox(height: 3),
-
-                Text(
-                  location,
-                  style: const TextStyle(
-                    color: Colors.grey,
-                  ),
-                ),
-              ],
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: SizedBox(
+        width: double.infinity,
+        height: 56,
+        child: ElevatedButton.icon(
+          onPressed: _toggleFavourite,
+          style: ElevatedButton.styleFrom(
+            backgroundColor:
+                _isFavourite ? Colors.red.shade50 : primaryColor,
+            foregroundColor:
+                _isFavourite ? Colors.red : Colors.white,
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(17),
+              side: _isFavourite
+                  ? BorderSide(
+                      color: Colors.red.shade100,
+                    )
+                  : BorderSide.none,
             ),
           ),
-        ],
+          icon: Icon(
+            _isFavourite
+                ? Icons.favorite_rounded
+                : Icons.favorite_border_rounded,
+          ),
+          label: Text(
+            _isFavourite
+                ? 'Added to Favourites'
+                : 'Add to Favourites',
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 15,
+            ),
+          ),
+        ),
       ),
     );
   }
