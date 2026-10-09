@@ -5,6 +5,8 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:http/http.dart' as http;
 import 'package:latlong2/latlong.dart';
 
+import 'l10n/app_localizations.dart';
+
 class RouteDetailsScreen extends StatefulWidget {
   final String transportType;
   final String routeName;
@@ -36,10 +38,12 @@ class RouteDetailsScreen extends StatefulWidget {
   });
 
   @override
-  State<RouteDetailsScreen> createState() => _RouteDetailsScreenState();
+  State<RouteDetailsScreen> createState() =>
+      _RouteDetailsScreenState();
 }
 
-class _RouteDetailsScreenState extends State<RouteDetailsScreen> {
+class _RouteDetailsScreenState
+    extends State<RouteDetailsScreen> {
   final MapController _mapController = MapController();
 
   List<LatLng> _routePoints = [];
@@ -52,23 +56,43 @@ class _RouteDetailsScreenState extends State<RouteDetailsScreen> {
     _loadRoute();
   }
 
-  bool get isTrain => widget.transportType == 'Train Route';
+  // ============================================================
+  // TRANSPORT TYPE
+  // ============================================================
 
-  Color get primaryColor =>
-      isTrain ? const Color(0xFF2563EB) : const Color(0xFF087F5B);
+  bool get isTrain =>
+      widget.transportType == 'Train Route';
 
-  Color get lightColor =>
-      isTrain ? const Color(0xFFEFF4FF) : const Color(0xFFE8F5EF);
+  // ============================================================
+  // COLORS
+  // ============================================================
 
-  Color get darkText =>
-      isTrain ? const Color(0xFF172B4D) : const Color(0xFF173B32);
+  Color get primaryColor => isTrain
+      ? const Color(0xFF2563EB)
+      : const Color(0xFF087F5B);
+
+  Color get lightColor => isTrain
+      ? const Color(0xFFEFF4FF)
+      : const Color(0xFFE8F5EF);
+
+  Color get darkText => isTrain
+      ? const Color(0xFF172B4D)
+      : const Color(0xFF173B32);
+
+  // ============================================================
+  // LOAD ROUTE
+  // ============================================================
 
   Future<void> _loadRoute() async {
-    if (widget.routePath != null && widget.routePath!.isNotEmpty) {
+    if (widget.routePath != null &&
+        widget.routePath!.isNotEmpty) {
       setState(() {
         _routePoints = widget.routePath!
             .map(
-              (point) => LatLng(point[0], point[1]),
+              (point) => LatLng(
+                point[0],
+                point[1],
+              ),
             )
             .toList();
 
@@ -81,6 +105,10 @@ class _RouteDetailsScreenState extends State<RouteDetailsScreen> {
     await _loadRoadRoute();
   }
 
+  // ============================================================
+  // LOAD ROAD ROUTE USING OSRM
+  // ============================================================
+
   Future<void> _loadRoadRoute() async {
     try {
       final url =
@@ -89,13 +117,15 @@ class _RouteDetailsScreenState extends State<RouteDetailsScreen> {
           '${widget.endLng},${widget.endLat}'
           '?overview=full&geometries=geojson';
 
-      final response = await http.get(Uri.parse(url));
+      final response =
+          await http.get(Uri.parse(url));
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
 
         final coordinates =
-            data['routes'][0]['geometry']['coordinates'] as List;
+            data['routes'][0]['geometry']['coordinates']
+                as List;
 
         final points = coordinates
             .map<LatLng>(
@@ -120,20 +150,36 @@ class _RouteDetailsScreenState extends State<RouteDetailsScreen> {
     }
   }
 
+  // ============================================================
+  // FALLBACK ROUTE
+  // ============================================================
+
   void _setFallbackRoute() {
     if (!mounted) return;
 
     setState(() {
       _routePoints = [
-        LatLng(widget.startLat, widget.startLng),
-        LatLng(widget.endLat, widget.endLng),
+        LatLng(
+          widget.startLat,
+          widget.startLng,
+        ),
+        LatLng(
+          widget.endLat,
+          widget.endLng,
+        ),
       ];
 
       _isLoadingRoute = false;
     });
   }
 
+  // ============================================================
+  // FAVOURITE
+  // ============================================================
+
   void _toggleFavourite() {
+    final l10n = AppLocalizations.of(context)!;
+
     setState(() {
       _isFavourite = !_isFavourite;
     });
@@ -142,8 +188,8 @@ class _RouteDetailsScreenState extends State<RouteDetailsScreen> {
       SnackBar(
         content: Text(
           _isFavourite
-              ? 'Route added to favourites'
-              : 'Route removed from favourites',
+              ? l10n.addedToFavourites
+              : l10n.addToFavourites,
         ),
         behavior: SnackBarBehavior.floating,
         duration: const Duration(seconds: 2),
@@ -151,10 +197,15 @@ class _RouteDetailsScreenState extends State<RouteDetailsScreen> {
     );
   }
 
+  // ============================================================
+  // FIT MAP
+  // ============================================================
+
   void _fitMapToRoute() {
     if (_routePoints.isEmpty) return;
 
-    final bounds = LatLngBounds.fromPoints(_routePoints);
+    final bounds =
+        LatLngBounds.fromPoints(_routePoints);
 
     _mapController.fitCamera(
       CameraFit.bounds(
@@ -164,14 +215,20 @@ class _RouteDetailsScreenState extends State<RouteDetailsScreen> {
     );
   }
 
+  // ============================================================
+  // BUILD
+  // ============================================================
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF6F8F7),
+      backgroundColor:
+          const Color(0xFFF6F8F7),
       body: SafeArea(
         child: CustomScrollView(
           slivers: [
             _buildAppBar(),
+
             SliverToBoxAdapter(
               child: Column(
                 children: [
@@ -191,44 +248,57 @@ class _RouteDetailsScreenState extends State<RouteDetailsScreen> {
     );
   }
 
-  // ------------------------------------------------------------
+  // ============================================================
   // APP BAR
-  // ------------------------------------------------------------
+  // ============================================================
 
   Widget _buildAppBar() {
+    final l10n =
+        AppLocalizations.of(context)!;
+
     return SliverAppBar(
-      backgroundColor: const Color(0xFFF6F8F7),
-      surfaceTintColor: Colors.transparent,
+      backgroundColor:
+          const Color(0xFFF6F8F7),
+      surfaceTintColor:
+          Colors.transparent,
       elevation: 0,
       pinned: true,
+
       leading: Padding(
-        padding: const EdgeInsets.only(left: 8),
+        padding:
+            const EdgeInsets.only(left: 8),
         child: IconButton(
-          onPressed: () => Navigator.pop(context),
+          onPressed: () =>
+              Navigator.pop(context),
           icon: const Icon(
             Icons.arrow_back_rounded,
             color: Colors.black87,
           ),
         ),
       ),
+
       title: Text(
-        'Route Details',
+        l10n.routeDetails,
         style: TextStyle(
           color: darkText,
           fontSize: 20,
           fontWeight: FontWeight.bold,
         ),
       ),
+
       actions: [
         Padding(
-          padding: const EdgeInsets.only(right: 12),
+          padding:
+              const EdgeInsets.only(right: 12),
           child: IconButton(
             onPressed: _toggleFavourite,
             icon: Icon(
               _isFavourite
                   ? Icons.favorite_rounded
                   : Icons.favorite_border_rounded,
-              color: _isFavourite ? Colors.red : Colors.grey.shade700,
+              color: _isFavourite
+                  ? Colors.red
+                  : Colors.grey.shade700,
             ),
           ),
         ),
@@ -236,24 +306,34 @@ class _RouteDetailsScreenState extends State<RouteDetailsScreen> {
     );
   }
 
-  // ------------------------------------------------------------
+  // ============================================================
   // ROUTE HEADER
-  // ------------------------------------------------------------
+  // ============================================================
 
   Widget _buildRouteHeader() {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 8, 20, 18),
+      padding:
+          const EdgeInsets.fromLTRB(
+        20,
+        8,
+        20,
+        18,
+      ),
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.all(20),
+        padding:
+            const EdgeInsets.all(20),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(24),
+          borderRadius:
+              BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.045),
+              color: Colors.black
+                  .withValues(alpha: 0.045),
               blurRadius: 15,
-              offset: const Offset(0, 5),
+              offset:
+                  const Offset(0, 5),
             ),
           ],
         ),
@@ -264,9 +344,13 @@ class _RouteDetailsScreenState extends State<RouteDetailsScreen> {
                 Container(
                   width: 58,
                   height: 58,
-                  decoration: BoxDecoration(
+                  decoration:
+                      BoxDecoration(
                     color: lightColor,
-                    borderRadius: BorderRadius.circular(18),
+                    borderRadius:
+                        BorderRadius.circular(
+                      18,
+                    ),
                   ),
                   child: Icon(
                     widget.icon,
@@ -274,27 +358,35 @@ class _RouteDetailsScreenState extends State<RouteDetailsScreen> {
                     size: 30,
                   ),
                 ),
+
                 const SizedBox(width: 15),
+
                 Expanded(
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                    crossAxisAlignment:
+                        CrossAxisAlignment.start,
                     children: [
                       Text(
-                        widget.transportType.toUpperCase(),
+                        widget.transportType
+                            .toUpperCase(),
                         style: TextStyle(
                           color: primaryColor,
                           fontSize: 10,
-                          fontWeight: FontWeight.bold,
+                          fontWeight:
+                              FontWeight.bold,
                           letterSpacing: 1.2,
                         ),
                       ),
+
                       const SizedBox(height: 5),
+
                       Text(
                         widget.routeName,
                         style: TextStyle(
                           color: darkText,
                           fontSize: 22,
-                          fontWeight: FontWeight.bold,
+                          fontWeight:
+                              FontWeight.bold,
                         ),
                       ),
                     ],
@@ -302,7 +394,9 @@ class _RouteDetailsScreenState extends State<RouteDetailsScreen> {
                 ),
               ],
             ),
+
             const SizedBox(height: 20),
+
             _buildRouteJourney(),
           ],
         ),
@@ -310,29 +404,42 @@ class _RouteDetailsScreenState extends State<RouteDetailsScreen> {
     );
   }
 
+  // ============================================================
+  // ROUTE JOURNEY
+  // ============================================================
+
   Widget _buildRouteJourney() {
+    final l10n =
+        AppLocalizations.of(context)!;
+
     return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment:
+          CrossAxisAlignment.start,
       children: [
         Column(
           children: [
             Container(
               width: 13,
               height: 13,
-              decoration: BoxDecoration(
+              decoration:
+                  BoxDecoration(
                 color: primaryColor,
                 shape: BoxShape.circle,
               ),
             ),
+
             Container(
               width: 2,
               height: 42,
-              color: primaryColor.withValues(alpha: 0.25),
+              color: primaryColor
+                  .withValues(alpha: 0.25),
             ),
+
             Container(
               width: 13,
               height: 13,
-              decoration: BoxDecoration(
+              decoration:
+                  BoxDecoration(
                 color: Colors.white,
                 shape: BoxShape.circle,
                 border: Border.all(
@@ -343,46 +450,61 @@ class _RouteDetailsScreenState extends State<RouteDetailsScreen> {
             ),
           ],
         ),
+
         const SizedBox(width: 14),
+
         Expanded(
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment:
+                CrossAxisAlignment.start,
             children: [
               Text(
-                'FROM',
+                l10n.from,
                 style: TextStyle(
-                  color: Colors.grey.shade500,
+                  color:
+                      Colors.grey.shade500,
                   fontSize: 10,
-                  fontWeight: FontWeight.bold,
+                  fontWeight:
+                      FontWeight.bold,
                   letterSpacing: 1,
                 ),
               ),
+
               const SizedBox(height: 3),
+
               Text(
                 widget.from,
                 style: TextStyle(
                   color: darkText,
                   fontSize: 16,
-                  fontWeight: FontWeight.w600,
+                  fontWeight:
+                      FontWeight.w600,
                 ),
               ),
+
               const SizedBox(height: 23),
+
               Text(
-                'TO',
+                l10n.to,
                 style: TextStyle(
-                  color: Colors.grey.shade500,
+                  color:
+                      Colors.grey.shade500,
                   fontSize: 10,
-                  fontWeight: FontWeight.bold,
+                  fontWeight:
+                      FontWeight.bold,
                   letterSpacing: 1,
                 ),
               ),
+
               const SizedBox(height: 3),
+
               Text(
                 widget.to,
                 style: TextStyle(
                   color: darkText,
                   fontSize: 16,
-                  fontWeight: FontWeight.w600,
+                  fontWeight:
+                      FontWeight.w600,
                 ),
               ),
             ],
@@ -392,46 +514,66 @@ class _RouteDetailsScreenState extends State<RouteDetailsScreen> {
     );
   }
 
-  // ------------------------------------------------------------
+  // ============================================================
   // MAP
-  // ------------------------------------------------------------
+  // ============================================================
 
   Widget _buildMap() {
     final center = LatLng(
-      (widget.startLat + widget.endLat) / 2,
-      (widget.startLng + widget.endLng) / 2,
+      (widget.startLat +
+              widget.endLat) /
+          2,
+      (widget.startLng +
+              widget.endLng) /
+          2,
     );
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+      padding:
+          const EdgeInsets.fromLTRB(
+        20,
+        0,
+        20,
+        20,
+      ),
       child: Container(
         height: 290,
-        clipBehavior: Clip.antiAlias,
-        decoration: BoxDecoration(
+        clipBehavior:
+            Clip.antiAlias,
+        decoration:
+            BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(24),
+          borderRadius:
+              BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
+              color: Colors.black
+                  .withValues(alpha: 0.05),
               blurRadius: 15,
-              offset: const Offset(0, 5),
+              offset:
+                  const Offset(0, 5),
             ),
           ],
         ),
         child: Stack(
           children: [
             FlutterMap(
-              mapController: _mapController,
+              mapController:
+                  _mapController,
+
               options: MapOptions(
                 initialCenter: center,
                 initialZoom: 9.5,
                 onMapReady: () {
                   Future.delayed(
-                    const Duration(milliseconds: 300),
+                    const Duration(
+                      milliseconds: 300,
+                    ),
                     _fitMapToRoute,
                   );
                 },
               ),
+
               children: [
                 TileLayer(
                   urlTemplate:
@@ -444,9 +586,11 @@ class _RouteDetailsScreenState extends State<RouteDetailsScreen> {
                   PolylineLayer(
                     polylines: [
                       Polyline(
-                        points: _routePoints,
+                        points:
+                            _routePoints,
                         strokeWidth: 5,
-                        color: primaryColor,
+                        color:
+                            primaryColor,
                       ),
                     ],
                   ),
@@ -460,11 +604,14 @@ class _RouteDetailsScreenState extends State<RouteDetailsScreen> {
                       ),
                       width: 44,
                       height: 44,
-                      child: _buildMapMarker(
-                        Icons.trip_origin_rounded,
+                      child:
+                          _buildMapMarker(
+                        Icons
+                            .trip_origin_rounded,
                         primaryColor,
                       ),
                     ),
+
                     Marker(
                       point: LatLng(
                         widget.endLat,
@@ -472,8 +619,10 @@ class _RouteDetailsScreenState extends State<RouteDetailsScreen> {
                       ),
                       width: 44,
                       height: 44,
-                      child: _buildMapMarker(
-                        Icons.location_on_rounded,
+                      child:
+                          _buildMapMarker(
+                        Icons
+                            .location_on_rounded,
                         Colors.red,
                       ),
                     ),
@@ -482,54 +631,80 @@ class _RouteDetailsScreenState extends State<RouteDetailsScreen> {
               ],
             ),
 
+            // Loading
             if (_isLoadingRoute)
               Container(
-                color: Colors.white.withValues(alpha: 0.75),
+                color: Colors.white
+                    .withValues(
+                  alpha: 0.75,
+                ),
                 child: Center(
-                  child: CircularProgressIndicator(
+                  child:
+                      CircularProgressIndicator(
                     color: primaryColor,
                   ),
                 ),
               ),
 
+            // Fullscreen / Fit button
             Positioned(
               top: 14,
               right: 14,
               child: Container(
-                decoration: BoxDecoration(
+                decoration:
+                    BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius:
+                      BorderRadius.circular(
+                    12,
+                  ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.12),
+                      color: Colors.black
+                          .withValues(
+                        alpha: 0.12,
+                      ),
                       blurRadius: 8,
                     ),
                   ],
                 ),
                 child: IconButton(
-                  onPressed: _fitMapToRoute,
+                  onPressed:
+                      _fitMapToRoute,
                   icon: Icon(
-                    Icons.fullscreen_rounded,
-                    color: primaryColor,
+                    Icons
+                        .fullscreen_rounded,
+                    color:
+                        primaryColor,
                   ),
                 ),
               ),
             ),
 
+            // OpenStreetMap label
             Positioned(
               left: 14,
               bottom: 14,
               child: Container(
-                padding: const EdgeInsets.symmetric(
+                padding:
+                    const EdgeInsets
+                        .symmetric(
                   horizontal: 12,
                   vertical: 8,
                 ),
-                decoration: BoxDecoration(
+                decoration:
+                    BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius:
+                      BorderRadius.circular(
+                    12,
+                  ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.1),
+                      color: Colors.black
+                          .withValues(
+                        alpha: 0.1,
+                      ),
                       blurRadius: 8,
                     ),
                   ],
@@ -539,14 +714,20 @@ class _RouteDetailsScreenState extends State<RouteDetailsScreen> {
                     Icon(
                       Icons.map_rounded,
                       size: 15,
-                      color: primaryColor,
+                      color:
+                          primaryColor,
                     ),
-                    const SizedBox(width: 6),
+
+                    const SizedBox(
+                      width: 6,
+                    ),
+
                     const Text(
                       'OpenStreetMap',
                       style: TextStyle(
                         fontSize: 11,
-                        fontWeight: FontWeight.w600,
+                        fontWeight:
+                            FontWeight.w600,
                       ),
                     ),
                   ],
@@ -559,17 +740,23 @@ class _RouteDetailsScreenState extends State<RouteDetailsScreen> {
     );
   }
 
+  // ============================================================
+  // MAP MARKER
+  // ============================================================
+
   Widget _buildMapMarker(
     IconData icon,
     Color color,
   ) {
     return Container(
-      decoration: BoxDecoration(
+      decoration:
+          BoxDecoration(
         color: Colors.white,
         shape: BoxShape.circle,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.18),
+            color: Colors.black
+                .withValues(alpha: 0.18),
             blurRadius: 8,
           ),
         ],
@@ -582,19 +769,31 @@ class _RouteDetailsScreenState extends State<RouteDetailsScreen> {
     );
   }
 
-  // ------------------------------------------------------------
+  // ============================================================
   // JOURNEY CARD
-  // ------------------------------------------------------------
+  // ============================================================
 
   Widget _buildJourneyCard() {
+    final l10n =
+        AppLocalizations.of(context)!;
+
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+      padding:
+          const EdgeInsets.fromLTRB(
+        20,
+        0,
+        20,
+        20,
+      ),
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
+        padding:
+            const EdgeInsets.all(20),
+        decoration:
+            BoxDecoration(
           color: primaryColor,
-          borderRadius: BorderRadius.circular(24),
+          borderRadius:
+              BorderRadius.circular(24),
         ),
         child: Row(
           children: [
@@ -603,21 +802,28 @@ class _RouteDetailsScreenState extends State<RouteDetailsScreen> {
               color: Colors.white,
               size: 28,
             ),
+
             const SizedBox(width: 14),
-            const Expanded(
+
+            Expanded(
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment:
+                    CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Your Journey',
-                    style: TextStyle(
+                    l10n.yourJourney,
+                    style:
+                        const TextStyle(
                       color: Colors.white,
                       fontSize: 18,
-                      fontWeight: FontWeight.bold,
+                      fontWeight:
+                          FontWeight.bold,
                     ),
                   ),
-                  SizedBox(height: 4),
-                  Text(
+
+                  const SizedBox(height: 4),
+
+                  const Text(
                     'Plan your journey with ease',
                     style: TextStyle(
                       color: Colors.white70,
@@ -627,17 +833,28 @@ class _RouteDetailsScreenState extends State<RouteDetailsScreen> {
                 ],
               ),
             ),
+
             Container(
-              padding: const EdgeInsets.symmetric(
+              padding:
+                  const EdgeInsets
+                      .symmetric(
                 horizontal: 12,
                 vertical: 8,
               ),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(12),
+              decoration:
+                  BoxDecoration(
+                color: Colors.white
+                    .withValues(
+                  alpha: 0.15,
+                ),
+                borderRadius:
+                    BorderRadius.circular(
+                  12,
+                ),
               ),
               child: const Icon(
-                Icons.arrow_forward_rounded,
+                Icons
+                    .arrow_forward_rounded,
                 color: Colors.white,
                 size: 19,
               ),
@@ -648,26 +865,39 @@ class _RouteDetailsScreenState extends State<RouteDetailsScreen> {
     );
   }
 
-  // ------------------------------------------------------------
+  // ============================================================
   // TRIP INFORMATION
-  // ------------------------------------------------------------
+  // ============================================================
 
   Widget _buildTripInformation() {
+    final l10n =
+        AppLocalizations.of(context)!;
+
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+      padding:
+          const EdgeInsets.fromLTRB(
+        20,
+        0,
+        20,
+        20,
+      ),
       child: _buildSectionCard(
-        title: 'Trip Information',
-        icon: Icons.info_outline_rounded,
+        title: l10n.tripInformation,
+        icon:
+            Icons.info_outline_rounded,
         child: Row(
           children: [
             Expanded(
               child: _buildInfoItem(
-                Icons.access_time_rounded,
+                Icons
+                    .access_time_rounded,
                 'Duration',
                 '1h 30m',
               ),
             ),
+
             _buildVerticalDivider(),
+
             Expanded(
               child: _buildInfoItem(
                 Icons.payments_outlined,
@@ -675,18 +905,24 @@ class _RouteDetailsScreenState extends State<RouteDetailsScreen> {
                 'Rs. 150',
               ),
             ),
+
             _buildVerticalDivider(),
+
             Expanded(
               child: _buildInfoItem(
-                Icons.location_on_outlined,
+                Icons
+                    .location_on_outlined,
                 'Stops',
                 '12',
               ),
             ),
+
             _buildVerticalDivider(),
+
             Expanded(
               child: _buildInfoItem(
-                Icons.schedule_rounded,
+                Icons
+                    .schedule_rounded,
                 'Frequency',
                 '20m',
               ),
@@ -696,6 +932,10 @@ class _RouteDetailsScreenState extends State<RouteDetailsScreen> {
       ),
     );
   }
+
+  // ============================================================
+  // INFO ITEM
+  // ============================================================
 
   Widget _buildInfoItem(
     IconData icon,
@@ -709,19 +949,25 @@ class _RouteDetailsScreenState extends State<RouteDetailsScreen> {
           color: primaryColor,
           size: 21,
         ),
+
         const SizedBox(height: 8),
+
         Text(
           value,
           style: TextStyle(
             color: darkText,
             fontSize: 15,
-            fontWeight: FontWeight.bold,
+            fontWeight:
+                FontWeight.bold,
           ),
         ),
+
         const SizedBox(height: 3),
+
         Text(
           title,
-          textAlign: TextAlign.center,
+          textAlign:
+              TextAlign.center,
           style: const TextStyle(
             color: Colors.grey,
             fontSize: 10,
@@ -731,81 +977,127 @@ class _RouteDetailsScreenState extends State<RouteDetailsScreen> {
     );
   }
 
+  // ============================================================
+  // VERTICAL DIVIDER
+  // ============================================================
+
   Widget _buildVerticalDivider() {
     return Container(
       height: 48,
       width: 1,
-      color: const Color(0xFFE8ECEA),
+      color:
+          const Color(0xFFE8ECEA),
     );
   }
 
-  // ------------------------------------------------------------
+  // ============================================================
   // MAIN STOPS
-  // ------------------------------------------------------------
+  // ============================================================
 
   Widget _buildMainStops() {
-    final List<String> stops = isTrain
-        ? [
-            widget.from,
-            'Intermediate Station',
-            'Major Station',
-            'Main Junction',
-            widget.to,
-          ]
-        : [
-            widget.from,
-            'Main Bus Stop',
-            'Central Junction',
-            'Town Bus Stand',
-            widget.to,
-          ];
+    final l10n =
+        AppLocalizations.of(context)!;
+
+    final List<String> stops =
+        isTrain
+            ? [
+                widget.from,
+                'Intermediate Station',
+                'Major Station',
+                'Main Junction',
+                widget.to,
+              ]
+            : [
+                widget.from,
+                'Main Bus Stop',
+                'Central Junction',
+                'Town Bus Stand',
+                widget.to,
+              ];
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+      padding:
+          const EdgeInsets.fromLTRB(
+        20,
+        0,
+        20,
+        20,
+      ),
       child: _buildSectionCard(
-        title: 'Main Stops',
-        icon: Icons.signpost_outlined,
+        title: l10n.mainStops,
+        icon:
+            Icons.signpost_outlined,
         child: Column(
           children: List.generate(
             stops.length,
             (index) {
-              final bool isLast = index == stops.length - 1;
+              final bool isLast =
+                  index ==
+                      stops.length - 1;
 
               return Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment:
+                    CrossAxisAlignment
+                        .start,
                 children: [
                   Column(
                     children: [
                       Container(
                         width: 11,
                         height: 11,
-                        decoration: BoxDecoration(
-                          color: index == 0 || isLast
+                        decoration:
+                            BoxDecoration(
+                          color: index ==
+                                      0 ||
+                                  isLast
                               ? primaryColor
-                              : primaryColor.withValues(alpha: 0.35),
-                          shape: BoxShape.circle,
+                              : primaryColor
+                                  .withValues(
+                                  alpha: 0.35,
+                                ),
+                          shape:
+                              BoxShape.circle,
                         ),
                       ),
+
                       if (!isLast)
                         Container(
                           width: 2,
                           height: 34,
-                          color: primaryColor.withValues(alpha: 0.18),
+                          color:
+                              primaryColor
+                                  .withValues(
+                            alpha: 0.18,
+                          ),
                         ),
                     ],
                   ),
-                  const SizedBox(width: 14),
+
+                  const SizedBox(
+                    width: 14,
+                  ),
+
                   Expanded(
                     child: Padding(
-                      padding: const EdgeInsets.only(bottom: 17),
+                      padding:
+                          const EdgeInsets
+                              .only(
+                        bottom: 17,
+                      ),
                       child: Text(
                         stops[index],
-                        style: TextStyle(
-                          color: darkText,
+                        style:
+                            TextStyle(
+                          color:
+                              darkText,
                           fontSize: 14,
-                          fontWeight: index == 0 || isLast
-                              ? FontWeight.bold
-                              : FontWeight.w500,
+                          fontWeight:
+                              index == 0 ||
+                                      isLast
+                                  ? FontWeight
+                                      .bold
+                                  : FontWeight
+                                      .w500,
                         ),
                       ),
                     ),
@@ -819,9 +1111,9 @@ class _RouteDetailsScreenState extends State<RouteDetailsScreen> {
     );
   }
 
-  // ------------------------------------------------------------
+  // ============================================================
   // SECTION CARD
-  // ------------------------------------------------------------
+  // ============================================================
 
   Widget _buildSectionCard({
     required String title,
@@ -830,29 +1122,39 @@ class _RouteDetailsScreenState extends State<RouteDetailsScreen> {
   }) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
+      padding:
+          const EdgeInsets.all(20),
+      decoration:
+          BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius:
+            BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
+            color: Colors.black
+                .withValues(alpha: 0.04),
             blurRadius: 14,
-            offset: const Offset(0, 5),
+            offset:
+                const Offset(0, 5),
           ),
         ],
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment:
+            CrossAxisAlignment.start,
         children: [
           Row(
             children: [
               Container(
                 width: 38,
                 height: 38,
-                decoration: BoxDecoration(
+                decoration:
+                    BoxDecoration(
                   color: lightColor,
-                  borderRadius: BorderRadius.circular(11),
+                  borderRadius:
+                      BorderRadius.circular(
+                    11,
+                  ),
                 ),
                 child: Icon(
                   icon,
@@ -860,62 +1162,95 @@ class _RouteDetailsScreenState extends State<RouteDetailsScreen> {
                   size: 20,
                 ),
               ),
-              const SizedBox(width: 11),
+
+              const SizedBox(
+                width: 11,
+              ),
+
               Text(
                 title,
                 style: TextStyle(
                   color: darkText,
                   fontSize: 18,
-                  fontWeight: FontWeight.bold,
+                  fontWeight:
+                      FontWeight.bold,
                 ),
               ),
             ],
           ),
+
           const SizedBox(height: 20),
+
           child,
         ],
       ),
     );
   }
 
-  // ------------------------------------------------------------
+  // ============================================================
   // FAVOURITE BUTTON
-  // ------------------------------------------------------------
+  // ============================================================
 
   Widget _buildFavouriteButton() {
+    final l10n =
+        AppLocalizations.of(context)!;
+
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
+      padding:
+          const EdgeInsets.symmetric(
+        horizontal: 20,
+      ),
       child: SizedBox(
         width: double.infinity,
         height: 56,
         child: ElevatedButton.icon(
-          onPressed: _toggleFavourite,
-          style: ElevatedButton.styleFrom(
+          onPressed:
+              _toggleFavourite,
+
+          style:
+              ElevatedButton.styleFrom(
             backgroundColor:
-                _isFavourite ? Colors.red.shade50 : primaryColor,
+                _isFavourite
+                    ? Colors.red.shade50
+                    : primaryColor,
+
             foregroundColor:
-                _isFavourite ? Colors.red : Colors.white,
+                _isFavourite
+                    ? Colors.red
+                    : Colors.white,
+
             elevation: 0,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(17),
+
+            shape:
+                RoundedRectangleBorder(
+              borderRadius:
+                  BorderRadius.circular(
+                17,
+              ),
               side: _isFavourite
                   ? BorderSide(
-                      color: Colors.red.shade100,
+                      color: Colors
+                          .red
+                          .shade100,
                     )
                   : BorderSide.none,
             ),
           ),
+
           icon: Icon(
             _isFavourite
                 ? Icons.favorite_rounded
-                : Icons.favorite_border_rounded,
+                : Icons
+                    .favorite_border_rounded,
           ),
+
           label: Text(
             _isFavourite
-                ? 'Added to Favourites'
-                : 'Add to Favourites',
+                ? l10n.addedToFavourites
+                : l10n.addToFavourites,
             style: const TextStyle(
-              fontWeight: FontWeight.bold,
+              fontWeight:
+                  FontWeight.bold,
               fontSize: 15,
             ),
           ),
