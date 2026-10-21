@@ -34,10 +34,22 @@ class LankaTransitApp extends StatelessWidget {
 
           theme: ThemeData(
             useMaterial3: true,
-            scaffoldBackgroundColor:
-                const Color(0xFFF6F8F7),
-            colorScheme: ColorScheme.fromSeed(
-              seedColor: const Color(0xFF087F5B),
+            brightness: Brightness.dark,
+            scaffoldBackgroundColor: const Color(0xFF070B18),
+            canvasColor: const Color(0xFF070B18),
+            colorScheme: const ColorScheme.dark(
+              primary: Color(0xFF38BDF8),
+              secondary: Color(0xFF8B5CF6),
+              surface: Color(0xFF111A2E),
+              onPrimary: Color(0xFF07111F),
+              onSecondary: Color(0xFFFFFFFF),
+              onSurface: Color(0xFFF3F6FF),
+            ),
+            appBarTheme: const AppBarTheme(
+              backgroundColor: Color(0xFF070B18),
+              foregroundColor: Color(0xFFF3F6FF),
+              elevation: 0,
+              scrolledUnderElevation: 0,
             ),
             fontFamily: 'Arial',
           ),
@@ -58,7 +70,7 @@ void showLanguageSelector(BuildContext context) {
 
   showModalBottomSheet(
     context: context,
-    backgroundColor: Colors.white,
+    backgroundColor: const Color(0xFF111A2E),
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(
         top: Radius.circular(28),
@@ -84,13 +96,13 @@ void showLanguageSelector(BuildContext context) {
                     width: 48,
                     height: 48,
                     decoration: BoxDecoration(
-                      color: const Color(0xFFE8F5EF),
+                      color: const Color(0xFF15223B),
                       borderRadius:
                           BorderRadius.circular(15),
                     ),
                     child: const Icon(
                       Icons.language_rounded,
-                      color: Color(0xFF087F5B),
+                      color: Color(0xFF38BDF8),
                     ),
                   ),
                   const SizedBox(width: 14),
@@ -99,7 +111,7 @@ void showLanguageSelector(BuildContext context) {
                     style: const TextStyle(
                       fontSize: 21,
                       fontWeight: FontWeight.bold,
-                      color: Color(0xFF173B32),
+                      color: Color(0xFFF3F6FF),
                     ),
                   ),
                 ],
@@ -181,8 +193,8 @@ class _LanguageOption extends StatelessWidget {
 
     return Material(
       color: isSelected
-          ? const Color(0xFFE8F5EF)
-          : const Color(0xFFF7F9F8),
+          ? const Color(0xFF15223B)
+          : const Color(0xFF10192B),
       borderRadius: BorderRadius.circular(17),
       child: InkWell(
         borderRadius: BorderRadius.circular(17),
@@ -198,7 +210,7 @@ class _LanguageOption extends StatelessWidget {
                 width: 44,
                 height: 44,
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: const Color(0xFF111A2E),
                   borderRadius:
                       BorderRadius.circular(13),
                 ),
@@ -226,7 +238,7 @@ class _LanguageOption extends StatelessWidget {
                         fontSize: 15,
                         fontWeight:
                             FontWeight.bold,
-                        color: Color(0xFF173B32),
+                        color: Color(0xFFF3F6FF),
                       ),
                     ),
                     const SizedBox(height: 3),
@@ -234,7 +246,7 @@ class _LanguageOption extends StatelessWidget {
                       subtitle,
                       style: const TextStyle(
                         fontSize: 12,
-                        color: Colors.grey,
+                        color: Color(0xFF9AA8C0),
                       ),
                     ),
                   ],
@@ -244,7 +256,7 @@ class _LanguageOption extends StatelessWidget {
               if (isSelected)
                 const Icon(
                   Icons.check_circle_rounded,
-                  color: Color(0xFF087F5B),
+                  color: Color(0xFF38BDF8),
                 ),
             ],
           ),
@@ -268,7 +280,7 @@ class SplashScreen extends StatelessWidget {
 
     return Scaffold(
       backgroundColor:
-          const Color(0xFFF6F8F7),
+          const Color(0xFF070B18),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.fromLTRB(
@@ -289,7 +301,7 @@ class SplashScreen extends StatelessWidget {
                     decoration:
                         BoxDecoration(
                       color:
-                          const Color(0xFFE8F5EF),
+                          const Color(0xFF15223B),
                       borderRadius:
                           BorderRadius.circular(15),
                     ),
@@ -297,7 +309,7 @@ class SplashScreen extends StatelessWidget {
                       Icons
                           .directions_transit_rounded,
                       color:
-                          Color(0xFF087F5B),
+                          Color(0xFF38BDF8),
                       size: 27,
                     ),
                   ),
@@ -312,7 +324,7 @@ class SplashScreen extends StatelessWidget {
                       fontWeight:
                           FontWeight.bold,
                       color:
-                          Color(0xFF173B32),
+                          Color(0xFFF3F6FF),
                     ),
                   ),
 
@@ -326,7 +338,7 @@ class SplashScreen extends StatelessWidget {
                     icon: const Icon(
                       Icons.language_rounded,
                       color:
-                          Color(0xFF087F5B),
+                          Color(0xFF38BDF8),
                     ),
                   ),
                 ],
@@ -347,8 +359,8 @@ class SplashScreen extends StatelessWidget {
                     end:
                         Alignment.bottomRight,
                     colors: [
-                      Color(0xFFE8F5EF),
-                      Color(0xFFEFF8F5),
+                      Color(0xFF15223B),
+                      Color(0xFF171A3A),
                     ],
                   ),
                   borderRadius:
@@ -365,7 +377,7 @@ class SplashScreen extends StatelessWidget {
                         height: 55,
                         decoration:
                             BoxDecoration(
-                          color: Colors.white
+                          color: const Color(0xFF111A2E)
                               .withValues(
                             alpha: 0.7,
                           ),
@@ -383,7 +395,7 @@ class SplashScreen extends StatelessWidget {
                         height: 40,
                         decoration:
                             BoxDecoration(
-                          color: Colors.white
+                          color: const Color(0xFF111A2E)
                               .withValues(
                             alpha: 0.7,
                           ),
@@ -398,12 +410,12 @@ class SplashScreen extends StatelessWidget {
                       height: 145,
                       decoration:
                           BoxDecoration(
-                        color: Colors.white,
+                        color: const Color(0xFF111A2E),
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
                             color: const Color(
-                              0xFF087F5B,
+                              0xFF38BDF8,
                             ).withValues(
                               alpha: 0.12,
                             ),
@@ -421,7 +433,7 @@ class SplashScreen extends StatelessWidget {
                             .directions_transit_rounded,
                         size: 75,
                         color:
-                            Color(0xFF087F5B),
+                            Color(0xFF38BDF8),
                       ),
                     ),
 
@@ -433,7 +445,7 @@ class SplashScreen extends StatelessWidget {
                         icon: Icons
                             .directions_bus_rounded,
                         color:
-                            Color(0xFF087F5B),
+                            Color(0xFF38BDF8),
                       ),
                     ),
 
@@ -445,7 +457,7 @@ class SplashScreen extends StatelessWidget {
                         icon:
                             Icons.train_rounded,
                         color:
-                            Color(0xFF2563EB),
+                            Color(0xFF8B5CF6),
                       ),
                     ),
                   ],
@@ -463,7 +475,7 @@ class SplashScreen extends StatelessWidget {
                   fontWeight:
                       FontWeight.bold,
                   color:
-                      Color(0xFF173B32),
+                      Color(0xFFF3F6FF),
                 ),
               ),
 
@@ -473,7 +485,7 @@ class SplashScreen extends StatelessWidget {
                 l10n.travelSubtitle,
                 textAlign: TextAlign.center,
                 style: const TextStyle(
-                  color: Colors.grey,
+                  color: Color(0xFF9AA8C0),
                   fontSize: 14,
                   height: 1.5,
                 ),
@@ -491,9 +503,9 @@ class SplashScreen extends StatelessWidget {
                       ElevatedButton.styleFrom(
                     backgroundColor:
                         const Color(
-                            0xFF087F5B),
+                            0xFF38BDF8),
                     foregroundColor:
-                        Colors.white,
+                        const Color(0xFF111A2E),
                     elevation: 0,
                     shape:
                         RoundedRectangleBorder(
@@ -540,7 +552,7 @@ class SplashScreen extends StatelessWidget {
               Text(
                 l10n.yourJourneyStartsHere,
                 style: const TextStyle(
-                  color: Colors.grey,
+                  color: Color(0xFF9AA8C0),
                   fontSize: 12,
                 ),
               ),
@@ -572,7 +584,7 @@ class _SmallTransportIcon
       width: 48,
       height: 48,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: const Color(0xFF111A2E),
         borderRadius:
             BorderRadius.circular(15),
         boxShadow: [
@@ -619,11 +631,11 @@ class _LoginScreenState
       labelText: label,
       prefixIcon: Icon(
         icon,
-        color: const Color(0xFF087F5B),
+        color: const Color(0xFF38BDF8),
       ),
       suffixIcon: suffixIcon,
       filled: true,
-      fillColor: Colors.white,
+      fillColor: const Color(0xFF111A2E),
       contentPadding:
           const EdgeInsets.symmetric(
         horizontal: 18,
@@ -639,7 +651,7 @@ class _LoginScreenState
         borderRadius:
             BorderRadius.circular(16),
         borderSide: const BorderSide(
-          color: Color(0xFFE3EAE7),
+          color: Color(0xFF28344D),
         ),
       ),
       focusedBorder:
@@ -647,7 +659,7 @@ class _LoginScreenState
         borderRadius:
             BorderRadius.circular(16),
         borderSide: const BorderSide(
-          color: Color(0xFF087F5B),
+          color: Color(0xFF38BDF8),
           width: 1.5,
         ),
       ),
@@ -661,7 +673,7 @@ class _LoginScreenState
 
     return Scaffold(
       backgroundColor:
-          const Color(0xFFF6F8F7),
+          const Color(0xFF070B18),
       body: SafeArea(
         child: SingleChildScrollView(
           padding:
@@ -699,7 +711,7 @@ class _LoginScreenState
                     icon: const Icon(
                       Icons.language_rounded,
                       color:
-                          Color(0xFF087F5B),
+                          Color(0xFF38BDF8),
                     ),
                   ),
                 ],
@@ -715,7 +727,7 @@ class _LoginScreenState
                       BoxDecoration(
                     color:
                         const Color(
-                            0xFFE8F5EF),
+                            0xFF15223B),
                     borderRadius:
                         BorderRadius.circular(
                             22),
@@ -724,7 +736,7 @@ class _LoginScreenState
                     Icons
                         .directions_transit_rounded,
                     color:
-                        Color(0xFF087F5B),
+                        Color(0xFF38BDF8),
                     size: 38,
                   ),
                 ),
@@ -741,7 +753,7 @@ class _LoginScreenState
                     fontWeight:
                         FontWeight.bold,
                     color:
-                        Color(0xFF173B32),
+                        Color(0xFFF3F6FF),
                   ),
                 ),
               ),
@@ -755,7 +767,7 @@ class _LoginScreenState
                       TextAlign.center,
                   style:
                       const TextStyle(
-                    color: Colors.grey,
+                    color: Color(0xFF9AA8C0),
                     fontSize: 14,
                     height: 1.5,
                   ),
@@ -772,7 +784,7 @@ class _LoginScreenState
                       FontWeight.w600,
                   fontSize: 14,
                   color:
-                      Color(0xFF173B32),
+                      Color(0xFFF3F6FF),
                 ),
               ),
 
@@ -800,7 +812,7 @@ class _LoginScreenState
                       FontWeight.w600,
                   fontSize: 14,
                   color:
-                      Color(0xFF173B32),
+                      Color(0xFFF3F6FF),
                 ),
               ),
 
@@ -829,7 +841,7 @@ class _LoginScreenState
                               .visibility_outlined
                           : Icons
                               .visibility_off_outlined,
-                      color: Colors.grey,
+                      color: const Color(0xFF9AA8C0),
                     ),
                   ),
                 ),
@@ -847,7 +859,7 @@ class _LoginScreenState
                     style:
                         const TextStyle(
                       color:
-                          Color(0xFF087F5B),
+                          Color(0xFF38BDF8),
                       fontWeight:
                           FontWeight.w600,
                     ),
@@ -874,9 +886,9 @@ class _LoginScreenState
                       ElevatedButton.styleFrom(
                     backgroundColor:
                         const Color(
-                            0xFF087F5B),
+                            0xFF38BDF8),
                     foregroundColor:
-                        Colors.white,
+                        const Color(0xFF111A2E),
                     elevation: 0,
                     shape:
                         RoundedRectangleBorder(
@@ -916,7 +928,7 @@ class _LoginScreenState
                   const Expanded(
                     child: Divider(
                       color:
-                          Color(0xFFDDE5E1),
+                          Color(0xFF28344D),
                     ),
                   ),
                   Padding(
@@ -940,7 +952,7 @@ class _LoginScreenState
                   const Expanded(
                     child: Divider(
                       color:
-                          Color(0xFFDDE5E1),
+                          Color(0xFF28344D),
                     ),
                   ),
                 ],
@@ -971,14 +983,14 @@ class _LoginScreenState
                       OutlinedButton.styleFrom(
                     foregroundColor:
                         const Color(
-                            0xFF173B32),
+                            0xFFF3F6FF),
                     side:
                         const BorderSide(
                       color:
-                          Color(0xFFDDE5E1),
+                          Color(0xFF28344D),
                     ),
                     backgroundColor:
-                        Colors.white,
+                        const Color(0xFF111A2E),
                     shape:
                         RoundedRectangleBorder(
                       borderRadius:
@@ -1000,7 +1012,7 @@ class _LoginScreenState
                       '${l10n.dontHaveAccount} ',
                       style:
                           const TextStyle(
-                        color: Colors.grey,
+                        color: Color(0xFF9AA8C0),
                         fontSize: 14,
                       ),
                     ),
@@ -1020,7 +1032,7 @@ class _LoginScreenState
                         style:
                             const TextStyle(
                           color:
-                              Color(0xFF087F5B),
+                              Color(0xFF38BDF8),
                           fontWeight:
                               FontWeight.bold,
                           fontSize: 14,
@@ -1065,11 +1077,11 @@ class _RegisterScreenState
       labelText: label,
       prefixIcon: Icon(
         icon,
-        color: const Color(0xFF087F5B),
+        color: const Color(0xFF38BDF8),
       ),
       suffixIcon: suffixIcon,
       filled: true,
-      fillColor: Colors.white,
+      fillColor: const Color(0xFF111A2E),
       contentPadding:
           const EdgeInsets.symmetric(
         horizontal: 18,
@@ -1085,7 +1097,7 @@ class _RegisterScreenState
         borderRadius:
             BorderRadius.circular(16),
         borderSide: const BorderSide(
-          color: Color(0xFFE3EAE7),
+          color: Color(0xFF28344D),
         ),
       ),
       focusedBorder:
@@ -1093,7 +1105,7 @@ class _RegisterScreenState
         borderRadius:
             BorderRadius.circular(16),
         borderSide: const BorderSide(
-          color: Color(0xFF087F5B),
+          color: Color(0xFF38BDF8),
           width: 1.5,
         ),
       ),
@@ -1107,7 +1119,7 @@ class _RegisterScreenState
 
     return Scaffold(
       backgroundColor:
-          const Color(0xFFF6F8F7),
+          const Color(0xFF070B18),
       body: SafeArea(
         child: SingleChildScrollView(
           padding:
@@ -1145,7 +1157,7 @@ class _RegisterScreenState
                     icon: const Icon(
                       Icons.language_rounded,
                       color:
-                          Color(0xFF087F5B),
+                          Color(0xFF38BDF8),
                     ),
                   ),
                 ],
@@ -1161,7 +1173,7 @@ class _RegisterScreenState
                       BoxDecoration(
                     color:
                         const Color(
-                            0xFFE8F5EF),
+                            0xFF15223B),
                     borderRadius:
                         BorderRadius.circular(
                             22),
@@ -1170,7 +1182,7 @@ class _RegisterScreenState
                     Icons
                         .person_add_alt_1_rounded,
                     color:
-                        Color(0xFF087F5B),
+                        Color(0xFF38BDF8),
                     size: 36,
                   ),
                 ),
@@ -1187,7 +1199,7 @@ class _RegisterScreenState
                     fontWeight:
                         FontWeight.bold,
                     color:
-                        Color(0xFF173B32),
+                        Color(0xFFF3F6FF),
                   ),
                 ),
               ),
@@ -1201,7 +1213,7 @@ class _RegisterScreenState
                       TextAlign.center,
                   style:
                       const TextStyle(
-                    color: Colors.grey,
+                    color: Color(0xFF9AA8C0),
                     fontSize: 14,
                     height: 1.5,
                   ),
@@ -1218,7 +1230,7 @@ class _RegisterScreenState
                       FontWeight.w600,
                   fontSize: 14,
                   color:
-                      Color(0xFF173B32),
+                      Color(0xFFF3F6FF),
                 ),
               ),
 
@@ -1246,7 +1258,7 @@ class _RegisterScreenState
                       FontWeight.w600,
                   fontSize: 14,
                   color:
-                      Color(0xFF173B32),
+                      Color(0xFFF3F6FF),
                 ),
               ),
 
@@ -1274,7 +1286,7 @@ class _RegisterScreenState
                       FontWeight.w600,
                   fontSize: 14,
                   color:
-                      Color(0xFF173B32),
+                      Color(0xFFF3F6FF),
                 ),
               ),
 
@@ -1303,7 +1315,7 @@ class _RegisterScreenState
                               .visibility_outlined
                           : Icons
                               .visibility_off_outlined,
-                      color: Colors.grey,
+                      color: const Color(0xFF9AA8C0),
                     ),
                   ),
                 ),
@@ -1319,7 +1331,7 @@ class _RegisterScreenState
                       FontWeight.w600,
                   fontSize: 14,
                   color:
-                      Color(0xFF173B32),
+                      Color(0xFFF3F6FF),
                 ),
               ),
 
@@ -1348,7 +1360,7 @@ class _RegisterScreenState
                               .visibility_outlined
                           : Icons
                               .visibility_off_outlined,
-                      color: Colors.grey,
+                      color: const Color(0xFF9AA8C0),
                     ),
                   ),
                 ),
@@ -1365,7 +1377,7 @@ class _RegisterScreenState
                         .info_outline_rounded,
                     size: 17,
                     color:
-                        Color(0xFF087F5B),
+                        Color(0xFF38BDF8),
                   ),
                   const SizedBox(width: 8),
                   Expanded(
@@ -1373,7 +1385,7 @@ class _RegisterScreenState
                       l10n.passwordHint,
                       style:
                           const TextStyle(
-                        color: Colors.grey,
+                        color: Color(0xFF9AA8C0),
                         fontSize: 12,
                         height: 1.4,
                       ),
@@ -1401,9 +1413,9 @@ class _RegisterScreenState
                       ElevatedButton.styleFrom(
                     backgroundColor:
                         const Color(
-                            0xFF087F5B),
+                            0xFF38BDF8),
                     foregroundColor:
-                        Colors.white,
+                        const Color(0xFF111A2E),
                     elevation: 0,
                     shape:
                         RoundedRectangleBorder(
@@ -1447,7 +1459,7 @@ class _RegisterScreenState
                       '${l10n.alreadyHaveAccount} ',
                       style:
                           const TextStyle(
-                        color: Colors.grey,
+                        color: Color(0xFF9AA8C0),
                         fontSize: 14,
                       ),
                     ),
@@ -1460,7 +1472,7 @@ class _RegisterScreenState
                         style:
                             const TextStyle(
                           color:
-                              Color(0xFF087F5B),
+                              Color(0xFF38BDF8),
                           fontWeight:
                               FontWeight.bold,
                           fontSize: 14,
@@ -1492,7 +1504,7 @@ class HomePage extends StatelessWidget {
 
     return Scaffold(
       backgroundColor:
-          const Color(0xFFF6F8F7),
+          const Color(0xFF070B18),
 
       body: SafeArea(
         child: SingleChildScrollView(
@@ -1521,8 +1533,8 @@ class HomePage extends StatelessWidget {
                       gradient:
                           const LinearGradient(
                         colors: [
-                          Color(0xFF087F5B),
-                          Color(0xFF12A879),
+                          Color(0xFF38BDF8),
+                          Color(0xFF8B5CF6),
                         ],
                       ),
                       borderRadius:
@@ -1532,7 +1544,7 @@ class HomePage extends StatelessWidget {
                     child: const Icon(
                       Icons
                           .directions_transit_rounded,
-                      color: Colors.white,
+                      color: Color(0xFF111A2E),
                       size: 27,
                     ),
                   ),
@@ -1549,7 +1561,7 @@ class HomePage extends StatelessWidget {
                           l10n.goodMorning,
                           style:
                               const TextStyle(
-                            color: Colors.grey,
+                            color: Color(0xFF9AA8C0),
                             fontSize: 13,
                           ),
                         ),
@@ -1572,7 +1584,7 @@ class HomePage extends StatelessWidget {
                   Container(
                     decoration:
                         BoxDecoration(
-                      color: Colors.white,
+                      color: const Color(0xFF111A2E),
                       borderRadius:
                           BorderRadius.circular(
                               15),
@@ -1586,7 +1598,7 @@ class HomePage extends StatelessWidget {
                         Icons
                             .language_rounded,
                         color:
-                            Color(0xFF087F5B),
+                            Color(0xFF38BDF8),
                       ),
                     ),
                   ),
@@ -1600,7 +1612,7 @@ class HomePage extends StatelessWidget {
                         BoxDecoration(
                       color:
                           const Color(
-                              0xFFE8F5EF),
+                              0xFF15223B),
                       borderRadius:
                           BorderRadius.circular(
                               15),
@@ -1609,7 +1621,7 @@ class HomePage extends StatelessWidget {
                       Icons
                           .person_outline_rounded,
                       color:
-                          Color(0xFF087F5B),
+                          Color(0xFF38BDF8),
                     ),
                   ),
                 ],
@@ -1634,41 +1646,43 @@ class HomePage extends StatelessWidget {
                     end:
                         Alignment.bottomRight,
                     colors: [
-                      Color(0xFF087F5B),
-                      Color(0xFF12A879),
+                      Color(0xFF38BDF8),
+                      Color(0xFF8B5CF6),
                     ],
                   ),
                   borderRadius:
                       BorderRadius.circular(25),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.12),
+                    width: 1,
+                  ),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(
-                        0xFF087F5B,
-                      ).withValues(
-                        alpha: 0.20,
-                      ),
-                      blurRadius: 18,
-                      offset:
-                          const Offset(0, 8),
+                      color: const Color(0xFF38BDF8)
+                          .withValues(alpha: 0.20),
+                      blurRadius: 22,
+                      offset: const Offset(0, 8),
                     ),
                   ],
                 ),
                 child: Stack(
                   children: [
+                    // Decorative transport artwork
                     Positioned(
-                      right: -15,
-                      top: -20,
+                      right: 2,
+                      top: 0,
                       child: Container(
-                        width: 100,
-                        height: 100,
-                        decoration:
-                            BoxDecoration(
-                          color: Colors.white
-                              .withValues(
-                            alpha: 0.08,
-                          ),
-                          shape:
-                              BoxShape.circle,
+                        width: 86,
+                        height: 86,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF111A2E)
+                              .withValues(alpha: 0.09),
+                          borderRadius: BorderRadius.circular(28),
+                        ),
+                        child: const Icon(
+                          Icons.directions_transit_rounded,
+                          size: 54,
+                          color: Color(0x33111A2E),
                         ),
                       ),
                     ),
@@ -1682,7 +1696,7 @@ class HomePage extends StatelessWidget {
                           l10n.whereAreYouGoing,
                           style:
                               const TextStyle(
-                            color: Colors.white,
+                            color: Color(0xFF111A2E),
                             fontSize: 23,
                             fontWeight:
                                 FontWeight.bold,
@@ -1696,7 +1710,7 @@ class HomePage extends StatelessWidget {
                           style:
                               const TextStyle(
                             color:
-                                Colors.white70,
+                                Color(0xB3F3F6FF),
                             fontSize: 13,
                             height: 1.5,
                           ),
@@ -1708,7 +1722,7 @@ class HomePage extends StatelessWidget {
                           height: 50,
                           decoration:
                               BoxDecoration(
-                            color: Colors.white,
+                            color: const Color(0xFF111A2E),
                             borderRadius:
                                 BorderRadius
                                     .circular(
@@ -1722,7 +1736,7 @@ class HomePage extends StatelessWidget {
                               hintStyle:
                                   const TextStyle(
                                 color:
-                                    Colors.grey,
+                                    Color(0xFF9AA8C0),
                                 fontSize: 14,
                               ),
                               prefixIcon:
@@ -1731,7 +1745,7 @@ class HomePage extends StatelessWidget {
                                     .search_rounded,
                                 color:
                                     Color(
-                                        0xFF087F5B),
+                                        0xFF38BDF8),
                               ),
                               border:
                                   InputBorder.none,
@@ -1771,7 +1785,7 @@ class HomePage extends StatelessWidget {
                 l10n.selectHowYouTravel,
                 style:
                     const TextStyle(
-                  color: Colors.grey,
+                  color: Color(0xFF9AA8C0),
                   fontSize: 13,
                 ),
               ),
@@ -1789,10 +1803,10 @@ class HomePage extends StatelessWidget {
                           l10n.findBusRoutes,
                       iconColor:
                           const Color(
-                              0xFF087F5B),
+                              0xFF38BDF8),
                       backgroundColor:
                           const Color(
-                              0xFFE8F5EF),
+                              0xFF15223B),
                       onTap: () {
                         Navigator.push(
                           context,
@@ -1817,10 +1831,10 @@ class HomePage extends StatelessWidget {
                           l10n.findTrainRoutes,
                       iconColor:
                           const Color(
-                              0xFF2563EB),
+                              0xFF8B5CF6),
                       backgroundColor:
                           const Color(
-                              0xFFEFF4FF),
+                              0xFF211D3D),
                       onTap: () {
                         Navigator.push(
                           context,
@@ -1864,7 +1878,7 @@ class HomePage extends StatelessWidget {
                       style:
                           const TextStyle(
                         color:
-                            Color(0xFF087F5B),
+                            Color(0xFF38BDF8),
                         fontWeight:
                             FontWeight.w600,
                       ),
@@ -1883,9 +1897,9 @@ class HomePage extends StatelessWidget {
                 subtitle:
                     l10n.findNearbyTransport,
                 iconColor:
-                    const Color(0xFF087F5B),
+                    const Color(0xFF38BDF8),
                 backgroundColor:
-                    const Color(0xFFE8F5EF),
+                    const Color(0xFF15223B),
                 onTap: () {},
               ),
 
@@ -1899,9 +1913,9 @@ class HomePage extends StatelessWidget {
                 subtitle:
                     l10n.savedRoutes,
                 iconColor:
-                    const Color(0xFFE63963),
+                    const Color(0xFFFB7185),
                 backgroundColor:
-                    const Color(0xFFFFEDF1),
+                    const Color(0xFF321A2A),
                 onTap: () {},
               ),
 
@@ -1915,9 +1929,9 @@ class HomePage extends StatelessWidget {
                 subtitle:
                     l10n.recentTrips,
                 iconColor:
-                    const Color(0xFFF59E0B),
+                    const Color(0xFFFBBF24),
                 backgroundColor:
-                    const Color(0xFFFFF7E6),
+                    const Color(0xFF302719),
                 onTap: () {},
               ),
 
@@ -1934,7 +1948,7 @@ class HomePage extends StatelessWidget {
                 decoration:
                     BoxDecoration(
                   color:
-                      const Color(0xFFEFF4FF),
+                      const Color(0xFF17213A),
                   borderRadius:
                       BorderRadius.circular(20),
                 ),
@@ -1945,7 +1959,7 @@ class HomePage extends StatelessWidget {
                       height: 48,
                       decoration:
                           BoxDecoration(
-                        color: Colors.white,
+                        color: const Color(0xFF111A2E),
                         borderRadius:
                             BorderRadius.circular(
                                 15),
@@ -1954,7 +1968,7 @@ class HomePage extends StatelessWidget {
                         Icons
                             .lightbulb_outline_rounded,
                         color:
-                            Color(0xFF2563EB),
+                            Color(0xFF8B5CF6),
                       ),
                     ),
 
@@ -1984,7 +1998,7 @@ class HomePage extends StatelessWidget {
                             style:
                                 const TextStyle(
                               color:
-                                  Colors.grey,
+                                  Color(0xFF9AA8C0),
                               fontSize: 12,
                             ),
                           ),
@@ -2005,13 +2019,28 @@ class HomePage extends StatelessWidget {
       // BOTTOM NAVIGATION
       // ==========================================================
 
-      bottomNavigationBar:
-          NavigationBar(
-        height: 70,
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          color: const Color(0xFF111A2E),
+          border: Border(
+            top: BorderSide(
+              color: const Color(0xFF38BDF8).withValues(alpha: 0.12),
+              width: 1,
+            ),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.20),
+              blurRadius: 20,
+              offset: const Offset(0, -5),
+            ),
+          ],
+        ),
+        child: NavigationBar(
+        height: 72,
         selectedIndex: 0,
-        backgroundColor: Colors.white,
-        indicatorColor:
-            const Color(0xFFE8F5EF),
+        backgroundColor: Colors.transparent,
+        indicatorColor: const Color(0xFF38BDF8).withValues(alpha: 0.13),
         labelTextStyle:
             WidgetStateProperty.all(
           const TextStyle(
@@ -2028,7 +2057,7 @@ class HomePage extends StatelessWidget {
                 const Icon(
               Icons.home,
               color:
-                  Color(0xFF087F5B),
+                  Color(0xFF38BDF8),
             ),
             label: l10n.home,
           ),
@@ -2040,7 +2069,7 @@ class HomePage extends StatelessWidget {
                 const Icon(
               Icons.route,
               color:
-                  Color(0xFF087F5B),
+                  Color(0xFF38BDF8),
             ),
             label: l10n.routes,
           ),
@@ -2052,23 +2081,21 @@ class HomePage extends StatelessWidget {
                 const Icon(
               Icons.favorite,
               color:
-                  Color(0xFFE63963),
+                  Color(0xFFFB7185),
             ),
             label: l10n.favorites,
           ),
 
           NavigationDestination(
-            icon: const Icon(
-                Icons.person_outline),
-            selectedIcon:
-                const Icon(
+            icon: const Icon(Icons.person_outline),
+            selectedIcon: const Icon(
               Icons.person,
-              color:
-                  Color(0xFF087F5B),
+              color: Color(0xFF38BDF8),
             ),
             label: l10n.profile,
           ),
         ],
+        ),
       ),
     );
   }
@@ -2102,9 +2129,8 @@ class _TransportCard
         AppLocalizations.of(context)!;
 
     return Material(
-      color: Colors.white,
-      borderRadius:
-          BorderRadius.circular(22),
+      color: const Color(0xFF111A2E),
+      borderRadius: BorderRadius.circular(22),
       child: InkWell(
         borderRadius:
             BorderRadius.circular(22),
@@ -2112,19 +2138,25 @@ class _TransportCard
         child: Container(
           padding:
               const EdgeInsets.all(18),
-          decoration:
-              BoxDecoration(
-            borderRadius:
-                BorderRadius.circular(22),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(
+              color: iconColor.withValues(alpha: 0.22),
+              width: 1,
+            ),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                const Color(0xFF111A2E),
+                backgroundColor.withValues(alpha: 0.32),
+              ],
+            ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black
-                    .withValues(
-                  alpha: 0.035,
-                ),
-                blurRadius: 12,
-                offset:
-                    const Offset(0, 5),
+                color: iconColor.withValues(alpha: 0.07),
+                blurRadius: 18,
+                offset: const Offset(0, 7),
               ),
             ],
           ),
@@ -2169,7 +2201,7 @@ class _TransportCard
                 style:
                     const TextStyle(
                   fontSize: 12,
-                  color: Colors.grey,
+                  color: Color(0xFF9AA8C0),
                 ),
               ),
 
@@ -2230,16 +2262,22 @@ class _QuickActionCard
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: Colors.white,
+      color: const Color(0xFF111A2E),
       borderRadius:
           BorderRadius.circular(19),
       child: InkWell(
         borderRadius:
             BorderRadius.circular(19),
         onTap: onTap,
-        child: Padding(
-          padding:
-              const EdgeInsets.all(15),
+        child: Container(
+          padding: const EdgeInsets.all(15),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(19),
+            border: Border.all(
+              color: iconColor.withValues(alpha: 0.12),
+              width: 1,
+            ),
+          ),
           child: Row(
             children: [
               Container(
@@ -2285,7 +2323,7 @@ class _QuickActionCard
                       subtitle,
                       style:
                           const TextStyle(
-                        color: Colors.grey,
+                        color: Color(0xFF9AA8C0),
                         fontSize: 12,
                       ),
                     ),
