@@ -7,6 +7,7 @@ import 'train_routes_screen.dart';
 import 'favourite_routes_screen.dart';
 import 'routes_screen.dart';
 import 'nearby_transport_screen.dart';
+import 'profile_screen.dart';
 
 void main() {
   runApp(const LankaTransitApp());
@@ -1592,11 +1593,9 @@ class _HomePageState extends State<HomePage> {
                 MaterialPageRoute(builder: (context) => const RoutesScreen()),
               );
             } else if (index == 3) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Profile screen is coming soon.'),
-                  behavior: SnackBarBehavior.floating,
-                ),
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const ProfileScreen()),
               );
             }
           },
