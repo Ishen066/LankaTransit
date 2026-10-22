@@ -6,6 +6,7 @@ import 'bus_routes_screen.dart';
 import 'train_routes_screen.dart';
 import 'favourite_routes_screen.dart';
 import 'routes_screen.dart';
+import 'nearby_transport_screen.dart';
 
 void main() {
   runApp(const LankaTransitApp());
@@ -1454,7 +1455,14 @@ class _HomePageState extends State<HomePage> {
                 subtitle: l10n.findNearbyTransport,
                 iconColor: const Color(0xFF38BDF8),
                 backgroundColor: const Color(0xFF15223B),
-                onTap: () {},
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const NearbyTransportScreen(),
+                    ),
+                  );
+                },
               ),
 
               const SizedBox(height: 11),
