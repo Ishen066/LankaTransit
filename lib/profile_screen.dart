@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'about_screen.dart';
 import 'app_locale.dart';
 import 'favourite_routes_screen.dart';
 import 'recent_journeys_screen.dart';
@@ -217,7 +218,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  // Open the Recent Journeys screen.
   void _openRecentJourneys() {
     Navigator.push(
       context,
@@ -225,11 +225,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  // Open the Favourite Routes screen.
   void _openFavouriteRoutes() {
     Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => const FavouriteRoutesScreen()),
+    );
+  }
+
+  void _openAbout() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const AboutScreen()),
     );
   }
 
@@ -332,7 +338,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
             const SizedBox(height: 10),
 
-            // RECENT JOURNEYS NAVIGATION
             _ProfileTile(
               icon: Icons.history_rounded,
               iconColor: const Color(0xFFFBBF24),
@@ -377,13 +382,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
               icon: Icons.info_outline_rounded,
               iconColor: _cyan,
               title: 'About LankaTransit',
-              subtitle: 'Smart travel across Sri Lanka',
-              onTap: () => _showInfo(
-                'About LankaTransit',
-                'LankaTransit helps you explore bus and train '
-                    'routes, find nearby transport, and keep '
-                    'your favourite routes together.',
-              ),
+              subtitle: 'Learn more about our app',
+              onTap: _openAbout,
             ),
 
             const SizedBox(height: 20),
