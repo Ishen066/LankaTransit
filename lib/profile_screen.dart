@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'app_locale.dart';
 import 'favourite_routes_screen.dart';
+import 'recent_journeys_screen.dart';
 
 const Color _bg = Color(0xFF070B18);
 const Color _panel = Color(0xFF111A2E);
@@ -216,15 +217,32 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  // Open the Recent Journeys screen.
+  void _openRecentJourneys() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const RecentJourneysScreen()),
+    );
+  }
+
+  // Open the Favourite Routes screen.
+  void _openFavouriteRoutes() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const FavouriteRoutesScreen()),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: _bg,
       appBar: AppBar(
         backgroundColor: _bg,
+        foregroundColor: _text,
         title: const Text(
           'My Profile',
-          style: TextStyle(color: _text, fontWeight: FontWeight.bold),
+          style: TextStyle(fontWeight: FontWeight.bold),
         ),
         actions: [
           IconButton(
@@ -309,28 +327,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
               iconColor: const Color(0xFFFB7185),
               title: 'Favourite Routes',
               subtitle: 'Your saved bus and train routes',
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => const FavouriteRoutesScreen(),
-                  ),
-                );
-              },
+              onTap: _openFavouriteRoutes,
             ),
 
             const SizedBox(height: 10),
 
+            // RECENT JOURNEYS NAVIGATION
             _ProfileTile(
               icon: Icons.history_rounded,
               iconColor: const Color(0xFFFBBF24),
               title: 'Recent Journeys',
               subtitle: 'Review your recent trips',
-              onTap: () => _showInfo(
-                'Recent Journeys',
-                'Journey history is not connected yet. '
-                    'We can add trip tracking later.',
-              ),
+              onTap: _openRecentJourneys,
             ),
 
             const SizedBox(height: 26),
