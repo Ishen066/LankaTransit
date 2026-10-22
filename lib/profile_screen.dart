@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'about_screen.dart';
 import 'app_locale.dart';
 import 'favourite_routes_screen.dart';
+import 'notification_screen.dart';
 import 'recent_journeys_screen.dart';
 
 const Color _bg = Color(0xFF070B18);
@@ -119,26 +120,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  void _showInfo(String title, String message) {
-    showDialog<void>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        backgroundColor: _panel,
-        title: Text(title, style: const TextStyle(color: _text)),
-        content: Text(
-          message,
-          style: const TextStyle(color: _muted, height: 1.5),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('OK', style: TextStyle(color: _cyan)),
-          ),
-        ],
-      ),
-    );
-  }
-
   void _showLanguageSelector() {
     showModalBottomSheet<void>(
       context: context,
@@ -218,6 +199,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  void _openNotifications() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const NotificationScreen()),
+    );
+  }
+
   void _openRecentJourneys() {
     Navigator.push(
       context,
@@ -263,7 +251,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
           children: [
-            // PROFILE HEADER
             Container(
               padding: const EdgeInsets.all(22),
               decoration: BoxDecoration(
@@ -322,12 +309,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ],
               ),
             ),
-
             const SizedBox(height: 27),
-
             const _SectionTitle(title: 'YOUR TRAVEL'),
             const SizedBox(height: 11),
-
             _ProfileTile(
               icon: Icons.favorite_rounded,
               iconColor: const Color(0xFFFB7185),
@@ -335,9 +319,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               subtitle: 'Your saved bus and train routes',
               onTap: _openFavouriteRoutes,
             ),
-
             const SizedBox(height: 10),
-
             _ProfileTile(
               icon: Icons.history_rounded,
               iconColor: const Color(0xFFFBBF24),
@@ -345,12 +327,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
               subtitle: 'Review your recent trips',
               onTap: _openRecentJourneys,
             ),
-
             const SizedBox(height: 26),
-
             const _SectionTitle(title: 'PREFERENCES'),
             const SizedBox(height: 11),
-
             _ProfileTile(
               icon: Icons.language_rounded,
               iconColor: _cyan,
@@ -358,26 +337,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
               subtitle: _languageName(appLocale.value.languageCode),
               onTap: _showLanguageSelector,
             ),
-
             const SizedBox(height: 10),
-
             _ProfileTile(
               icon: Icons.notifications_active_outlined,
               iconColor: _purple,
               title: 'Notifications',
-              subtitle: 'Manage travel alerts',
-              onTap: () => _showInfo(
-                'Notifications',
-                'Notification settings will be available '
-                    'when travel alerts are added.',
-              ),
+              subtitle: 'View your travel updates',
+              onTap: _openNotifications,
             ),
-
             const SizedBox(height: 26),
-
             const _SectionTitle(title: 'ABOUT'),
             const SizedBox(height: 11),
-
             _ProfileTile(
               icon: Icons.info_outline_rounded,
               iconColor: _cyan,
@@ -385,9 +355,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               subtitle: 'Learn more about our app',
               onTap: _openAbout,
             ),
-
             const SizedBox(height: 20),
-
             SizedBox(
               height: 54,
               child: OutlinedButton.icon(
@@ -410,9 +378,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               ),
             ),
-
             const SizedBox(height: 22),
-
             const Center(
               child: Text(
                 'LankaTransit • Travel smarter, travel better',
