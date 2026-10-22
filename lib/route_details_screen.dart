@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:http/http.dart' as http;
 import 'package:latlong2/latlong.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'l10n/app_localizations.dart';
 
@@ -41,7 +42,9 @@ class RouteDetailsScreen extends StatefulWidget {
 
 class _RouteDetailsScreenState extends State<RouteDetailsScreen> {
   final MapController _mapController = MapController();
+
   List<LatLng> _routePoints = [];
+
   bool _isLoadingRoute = true;
   bool _isFavourite = false;
   bool _mapReady = false;
@@ -58,6 +61,7 @@ class _RouteDetailsScreenState extends State<RouteDetailsScreen> {
   static const Color _border = Color(0xFF174B87);
 
   bool get isTrain => widget.transportType.toLowerCase().contains('train');
+
   Color get accent => isTrain ? _purple : _cyan;
   Color get accent2 => isTrain ? _cyan : _purple;
 
@@ -65,23 +69,153 @@ class _RouteDetailsScreenState extends State<RouteDetailsScreen> {
       ? 'https://images.unsplash.com/photo-1474487548417-781cb71495f3?auto=format&fit=crop&w=1400&q=85'
       : 'https://images.unsplash.com/photo-1570125909232-eb263c188f7e?auto=format&fit=crop&w=1400&q=85';
 
+  // Create a unique local-storage key for this route.
+  String get _favouriteKey {
+    final routeId = [
+      widget.transportType,
+      widget.routeName,
+      widget.from,
+      widget.to,
+    ].join('_').toLowerCase();
+
+    return 'lanka_transit_favourite_$routeId';
+  }
+
   @override
   void initState() {
     super.initState();
     _loadRoute();
+    _loadFavourite();
+  }
+
+  // Keep the route metadata list in sync with the existing boolean favourite.
+  // This lets the Favourite Routes screen reopen the selected route and map.
+  Future<void> _updateFavouriteList(bool isFavourite) async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedRoutes =
+        prefs.getStringList('lanka_transit_favourites_v1') ?? <String>[];
+
+    savedRoutes.removeWhere((item) {
+      try {
+        final decoded = jsonDecode(item) as Map<String, dynamic>;
+        return decoded['id'] == _favouriteKey;
+      } catch (_) {
+        return false;
+      }
+    });
+
+    if (isFavourite) {
+      final routeData = <String, dynamic>{
+        'id': _favouriteKey,
+        'transportType': widget.transportType,
+        'routeName': widget.routeName,
+        'from': widget.from,
+        'to': widget.to,
+        'startLat': widget.startLat,
+        'startLng': widget.startLng,
+        'endLat': widget.endLat,
+        'endLng': widget.endLng,
+        'routePath': widget.routePath,
+      };
+      savedRoutes.add(jsonEncode(routeData));
+    }
+
+    await prefs.setStringList('lanka_transit_favourites_v1', savedRoutes);
+  }
+
+  // Load the saved favourite state when this screen opens.
+  Future<void> _loadFavourite() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final savedFavourite = prefs.getBool(_favouriteKey) ?? false;
+
+      if (!mounted) return;
+
+      setState(() {
+        _isFavourite = savedFavourite;
+      });
+    } catch (e) {
+      debugPrint('Error loading favourite: $e');
+    }
+  }
+
+  // Save or remove this route from local favourites.
+  Future<void> _toggleFavourite() async {
+    final previousValue = _isFavourite;
+    final newValue = !previousValue;
+
+    setState(() {
+      _isFavourite = newValue;
+    });
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final saved = await prefs.setBool(_favouriteKey, newValue);
+
+      if (saved) {
+        await _updateFavouriteList(newValue);
+      }
+
+      if (!mounted) return;
+
+      if (!saved) {
+        setState(() {
+          _isFavourite = previousValue;
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Could not save favourite. Please try again.'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        return;
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            newValue
+                ? 'Route added to favourites'
+                : 'Route removed from favourites',
+          ),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: _card2,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+
+      setState(() {
+        _isFavourite = previousValue;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Could not save favourite. Please try again.'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+
+      debugPrint('Error saving favourite: $e');
+    }
   }
 
   Future<void> _loadRoute() async {
     final supplied = widget.routePath;
+
     if (supplied != null && supplied.isNotEmpty) {
       if (!mounted) return;
+
       setState(() {
         _routePoints = supplied
             .where((p) => p.length >= 2)
             .map((p) => LatLng(p[0], p[1]))
             .toList();
+
         _isLoadingRoute = false;
       });
+
       _fitWhenReady();
       return;
     }
@@ -100,14 +234,17 @@ class _RouteDetailsScreenState extends State<RouteDetailsScreen> {
         '${widget.endLng},${widget.endLat}'
         '?overview=full&geometries=geojson',
       );
+
       final response = await http.get(uri).timeout(const Duration(seconds: 12));
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
         final routes = data['routes'] as List?;
+
         if (routes != null && routes.isNotEmpty) {
           final geometry = routes.first['geometry'] as Map<String, dynamic>;
           final coordinates = geometry['coordinates'] as List;
+
           final points = coordinates.map<LatLng>((p) {
             return LatLng((p[1] as num).toDouble(), (p[0] as num).toDouble());
           }).toList();
@@ -117,11 +254,13 @@ class _RouteDetailsScreenState extends State<RouteDetailsScreen> {
               _routePoints = points;
               _isLoadingRoute = false;
             });
+
             _fitWhenReady();
             return;
           }
         }
       }
+
       _setFallbackRoute();
     } catch (_) {
       _setFallbackRoute();
@@ -130,21 +269,26 @@ class _RouteDetailsScreenState extends State<RouteDetailsScreen> {
 
   void _setFallbackRoute() {
     if (!mounted) return;
+
     setState(() {
       _routePoints = [
         LatLng(widget.startLat, widget.startLng),
         LatLng(widget.endLat, widget.endLng),
       ];
+
       _isLoadingRoute = false;
       _routeLoadFailed = true;
     });
+
     _fitWhenReady();
   }
 
   void _fitWhenReady() {
     if (!_mapReady || _routePoints.isEmpty) return;
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted || _routePoints.isEmpty) return;
+
       try {
         _mapController.fitCamera(
           CameraFit.bounds(
@@ -154,20 +298,6 @@ class _RouteDetailsScreenState extends State<RouteDetailsScreen> {
         );
       } catch (_) {}
     });
-  }
-
-  void _toggleFavourite() {
-    final l10n = AppLocalizations.of(context)!;
-    setState(() => _isFavourite = !_isFavourite);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          _isFavourite ? l10n.addedToFavourites : l10n.addToFavourites,
-        ),
-        behavior: SnackBarBehavior.floating,
-        backgroundColor: _card2,
-      ),
-    );
   }
 
   @override
@@ -206,6 +336,7 @@ class _RouteDetailsScreenState extends State<RouteDetailsScreen> {
 
   Widget _buildHero() {
     final l10n = AppLocalizations.of(context)!;
+
     return SizedBox(
       height: 330,
       child: Stack(
@@ -479,6 +610,7 @@ class _RouteDetailsScreenState extends State<RouteDetailsScreen> {
       (widget.startLat + widget.endLat) / 2,
       (widget.startLng + widget.endLng) / 2,
     );
+
     return Container(
       height: 245,
       clipBehavior: Clip.antiAlias,
@@ -808,6 +940,7 @@ class _RouteDetailsScreenState extends State<RouteDetailsScreen> {
             final first = index == 0;
             final last = index == stops.length - 1;
             final color = last ? _purple : _cyan;
+
             return Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
