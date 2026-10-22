@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'l10n/app_localizations.dart';
 import 'bus_routes_screen.dart';
 import 'train_routes_screen.dart';
 
@@ -16,14 +17,17 @@ class RoutesScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Scaffold(
       backgroundColor: _background,
       appBar: AppBar(
         backgroundColor: _background,
+        foregroundColor: Colors.white,
         elevation: 0,
-        title: const Text(
-          'Explore Routes',
-          style: TextStyle(fontWeight: FontWeight.w800),
+        title: Text(
+          l10n.exploreRoutesTitle,
+          style: const TextStyle(fontWeight: FontWeight.w800),
         ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_rounded),
@@ -72,9 +76,9 @@ class RoutesScreen extends StatelessWidget {
                           color: _cyan.withValues(alpha: 0.13),
                           borderRadius: BorderRadius.circular(30),
                         ),
-                        child: const Text(
-                          'SRI LANKA • JOURNEY PLANNER',
-                          style: TextStyle(
+                        child: Text(
+                          l10n.journeyPlannerLabel,
+                          style: const TextStyle(
                             color: _cyan,
                             fontSize: 10,
                             letterSpacing: 1.1,
@@ -83,9 +87,9 @@ class RoutesScreen extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 18),
-                      const Text(
-                        'Where would you\nlike to go?',
-                        style: TextStyle(
+                      Text(
+                        l10n.whereWouldYouLikeToGo,
+                        style: const TextStyle(
                           fontSize: 29,
                           height: 1.12,
                           fontWeight: FontWeight.w900,
@@ -94,7 +98,7 @@ class RoutesScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: 10),
                       Text(
-                        'Choose your transport and find a route that fits your journey.',
+                        l10n.chooseTransportDescription,
                         style: TextStyle(
                           fontSize: 13,
                           height: 1.5,
@@ -107,9 +111,9 @@ class RoutesScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 27),
-            const Text(
-              'CHOOSE TRANSPORT',
-              style: TextStyle(
+            Text(
+              l10n.chooseTransportLabel,
+              style: const TextStyle(
                 color: Color(0xFF9AA9C5),
                 fontSize: 11,
                 letterSpacing: 1.5,
@@ -118,10 +122,9 @@ class RoutesScreen extends StatelessWidget {
             ),
             const SizedBox(height: 13),
             _TransportCard(
-              title: 'Bus Routes',
-              subtitle:
-                  'Explore bus routes and plan your trip across the island.',
-              label: 'ROAD TRAVEL',
+              title: l10n.busRoutes,
+              subtitle: l10n.busRoutesExploreDescription,
+              label: l10n.roadTravelLabel,
               icon: Icons.directions_bus_rounded,
               accent: _cyan,
               gradient: const [Color(0xFF112A42), Color(0xFF101A30)],
@@ -129,10 +132,9 @@ class RoutesScreen extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             _TransportCard(
-              title: 'Train Routes',
-              subtitle:
-                  'Discover railway journeys, stations and scenic routes.',
-              label: 'RAIL TRAVEL',
+              title: l10n.trainRoutes,
+              subtitle: l10n.trainRoutesExploreDescription,
+              label: l10n.railTravelLabel,
               icon: Icons.train_rounded,
               accent: _purple,
               gradient: const [Color(0xFF251B48), Color(0xFF17182F)],
@@ -156,7 +158,7 @@ class RoutesScreen extends StatelessWidget {
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      'Tip: Save a route with the heart icon to find it quickly in Favourite Routes.',
+                      l10n.saveFavouriteRouteTip,
                       style: TextStyle(
                         color: Colors.white.withValues(alpha: 0.72),
                         fontSize: 12,

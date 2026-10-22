@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 
 import 'about_screen.dart';
@@ -5,6 +6,7 @@ import 'app_locale.dart';
 import 'favourite_routes_screen.dart';
 import 'notification_screen.dart';
 import 'recent_journeys_screen.dart';
+import 'l10n/app_localizations.dart';
 
 const Color _bg = Color(0xFF070B18);
 const Color _panel = Color(0xFF111A2E);
@@ -26,6 +28,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String _email = 'user@example.com';
 
   Future<void> _editProfile() async {
+    final l10n = AppLocalizations.of(context)!;
     final nameController = TextEditingController(text: _name);
     final emailController = TextEditingController(text: _email);
 
@@ -33,7 +36,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
       context: context,
       builder: (dialogContext) => AlertDialog(
         backgroundColor: _panel,
-        title: const Text('Edit Profile', style: TextStyle(color: _text)),
+        title: Text(
+          l10n.editProfile,
+          style: const TextStyle(color: _text),
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -41,7 +47,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
               controller: nameController,
               textCapitalization: TextCapitalization.words,
               style: const TextStyle(color: _text),
-              decoration: _inputDecoration('Full Name', Icons.person_outline),
+              decoration: _inputDecoration(
+                l10n.fullName,
+                Icons.person_outline,
+              ),
             ),
             const SizedBox(height: 14),
             TextField(
@@ -49,7 +58,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               keyboardType: TextInputType.emailAddress,
               style: const TextStyle(color: _text),
               decoration: _inputDecoration(
-                'Email Address',
+                l10n.emailAddress,
                 Icons.email_outlined,
               ),
             ),
@@ -58,7 +67,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Cancel', style: TextStyle(color: _muted)),
+            child: Text(
+              l10n.cancel,
+              style: const TextStyle(color: _muted),
+            ),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
@@ -71,7 +83,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 'email': emailController.text.trim(),
               });
             },
-            child: const Text('Save'),
+            child: Text(l10n.save),
           ),
         ],
       ),
@@ -84,8 +96,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     if (result['name']!.isEmpty || result['email']!.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please enter your name and email.'),
+        SnackBar(
+          content: Text(l10n.pleaseEnterNameEmail),
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -121,6 +133,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   void _showLanguageSelector() {
+    final l10n = AppLocalizations.of(context)!;
+
     showModalBottomSheet<void>(
       context: context,
       backgroundColor: _panel,
@@ -134,9 +148,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'Choose Language',
-                style: TextStyle(
+              Text(
+                l10n.chooseLanguage,
+                style: const TextStyle(
                   color: _text,
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
@@ -144,21 +158,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
               const SizedBox(height: 18),
               _LanguageOption(
-                title: 'English',
+                title: l10n.english,
                 subtitle: 'English',
                 locale: const Locale('en'),
               ),
               const SizedBox(height: 9),
-              _LanguageOption(
+              const _LanguageOption(
                 title: 'සිංහල',
                 subtitle: 'Sinhala',
-                locale: const Locale('si'),
+                locale: Locale('si'),
               ),
               const SizedBox(height: 9),
-              _LanguageOption(
+              const _LanguageOption(
                 title: 'தமிழ்',
                 subtitle: 'Tamil',
-                locale: const Locale('ta'),
+                locale: Locale('ta'),
               ),
             ],
           ),
@@ -168,20 +182,31 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   void _confirmLogout() {
+    final l10n = AppLocalizations.of(context)!;
+
     showDialog<void>(
       context: context,
       builder: (dialogContext) => AlertDialog(
         backgroundColor: _panel,
-        icon: const Icon(Icons.logout_rounded, color: Color(0xFFFB7185)),
-        title: const Text('Log Out?', style: TextStyle(color: _text)),
-        content: const Text(
-          'Do you want to return to the welcome screen?',
-          style: TextStyle(color: _muted),
+        icon: const Icon(
+          Icons.logout_rounded,
+          color: Color(0xFFFB7185),
+        ),
+        title: Text(
+          l10n.logoutTitle,
+          style: const TextStyle(color: _text),
+        ),
+        content: Text(
+          l10n.logoutMessage,
+          style: const TextStyle(color: _muted),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Cancel', style: TextStyle(color: _muted)),
+            child: Text(
+              l10n.cancel,
+              style: const TextStyle(color: _muted),
+            ),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
@@ -192,7 +217,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               Navigator.pop(dialogContext);
               Navigator.of(context).popUntil((route) => route.isFirst);
             },
-            child: const Text('Log Out'),
+            child: Text(l10n.logout),
           ),
         ],
       ),
@@ -202,47 +227,66 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void _openNotifications() {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const NotificationScreen()),
+      MaterialPageRoute(
+        builder: (context) => const NotificationScreen(),
+      ),
     );
   }
 
   void _openRecentJourneys() {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const RecentJourneysScreen()),
+      MaterialPageRoute(
+        builder: (context) => const RecentJourneysScreen(),
+      ),
     );
   }
 
   void _openFavouriteRoutes() {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const FavouriteRoutesScreen()),
+      MaterialPageRoute(
+        builder: (context) => const FavouriteRoutesScreen(),
+      ),
     );
   }
 
   void _openAbout() {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const AboutScreen()),
+      MaterialPageRoute(
+        builder: (context) => const AboutScreen(),
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
+    final currentLanguage = switch (appLocale.value.languageCode) {
+      'si' => l10n.sinhala,
+      'ta' => l10n.tamil,
+      _ => l10n.english,
+    };
+
     return Scaffold(
       backgroundColor: _bg,
       appBar: AppBar(
         backgroundColor: _bg,
         foregroundColor: _text,
-        title: const Text(
-          'My Profile',
-          style: TextStyle(fontWeight: FontWeight.bold),
+        title: Text(
+          l10n.myProfile,
+          style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         actions: [
           IconButton(
-            tooltip: 'Language',
+            tooltip: l10n.language,
             onPressed: _showLanguageSelector,
-            icon: const Icon(Icons.language_rounded, color: _cyan),
+            icon: const Icon(
+              Icons.language_rounded,
+              color: _cyan,
+            ),
           ),
           const SizedBox(width: 8),
         ],
@@ -260,7 +304,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   colors: [_panelLight, Color(0xFF211D3D)],
                 ),
                 borderRadius: BorderRadius.circular(26),
-                border: Border.all(color: _cyan.withValues(alpha: 0.18)),
+                border: Border.all(
+                  color: _cyan.withValues(alpha: 0.18),
+                ),
               ),
               child: Column(
                 children: [
@@ -269,7 +315,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     height: 94,
                     decoration: const BoxDecoration(
                       shape: BoxShape.circle,
-                      gradient: LinearGradient(colors: [_cyan, _purple]),
+                      gradient: LinearGradient(
+                        colors: [_cyan, _purple],
+                      ),
                     ),
                     child: const Icon(
                       Icons.person_rounded,
@@ -291,13 +339,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   Text(
                     _email,
                     textAlign: TextAlign.center,
-                    style: const TextStyle(color: _muted, fontSize: 13),
+                    style: const TextStyle(
+                      color: _muted,
+                      fontSize: 13,
+                    ),
                   ),
                   const SizedBox(height: 18),
                   OutlinedButton.icon(
                     onPressed: _editProfile,
                     icon: const Icon(Icons.edit_rounded, size: 17),
-                    label: const Text('Edit Profile'),
+                    label: Text(l10n.editProfile),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: _cyan,
                       side: const BorderSide(color: _cyan),
@@ -310,65 +361,72 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ),
             const SizedBox(height: 27),
-            const _SectionTitle(title: 'YOUR TRAVEL'),
+
+            _SectionTitle(title: l10n.yourTravel),
             const SizedBox(height: 11),
             _ProfileTile(
               icon: Icons.favorite_rounded,
               iconColor: const Color(0xFFFB7185),
-              title: 'Favourite Routes',
-              subtitle: 'Your saved bus and train routes',
+              title: l10n.favouriteRoutes,
+              subtitle: l10n.savedBusTrainRoutes,
               onTap: _openFavouriteRoutes,
             ),
             const SizedBox(height: 10),
             _ProfileTile(
               icon: Icons.history_rounded,
               iconColor: const Color(0xFFFBBF24),
-              title: 'Recent Journeys',
-              subtitle: 'Review your recent trips',
+              title: l10n.recentJourneys,
+              subtitle: l10n.reviewRecentTrips,
               onTap: _openRecentJourneys,
             ),
+
             const SizedBox(height: 26),
-            const _SectionTitle(title: 'PREFERENCES'),
+            _SectionTitle(title: l10n.preferences),
             const SizedBox(height: 11),
             _ProfileTile(
               icon: Icons.language_rounded,
               iconColor: _cyan,
-              title: 'Language',
-              subtitle: _languageName(appLocale.value.languageCode),
+              title: l10n.language,
+              subtitle: currentLanguage,
               onTap: _showLanguageSelector,
             ),
             const SizedBox(height: 10),
             _ProfileTile(
               icon: Icons.notifications_active_outlined,
               iconColor: _purple,
-              title: 'Notifications',
-              subtitle: 'View your travel updates',
+              title: l10n.notifications,
+              subtitle: l10n.viewTravelUpdates,
               onTap: _openNotifications,
             ),
+
             const SizedBox(height: 26),
-            const _SectionTitle(title: 'ABOUT'),
+            _SectionTitle(title: l10n.aboutSection),
             const SizedBox(height: 11),
             _ProfileTile(
               icon: Icons.info_outline_rounded,
               iconColor: _cyan,
-              title: 'About LankaTransit',
-              subtitle: 'Learn more about our app',
+              title: l10n.aboutLankaTransit,
+              subtitle: l10n.learnMoreAboutApp,
               onTap: _openAbout,
             ),
+
             const SizedBox(height: 20),
             SizedBox(
               height: 54,
               child: OutlinedButton.icon(
                 onPressed: _confirmLogout,
                 icon: const Icon(Icons.logout_rounded),
-                label: const Text(
-                  'Log Out',
-                  style: TextStyle(fontWeight: FontWeight.bold),
+                label: Text(
+                  l10n.logout,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: const Color(0xFFFB7185),
                   side: BorderSide(
-                    color: const Color(0xFFFB7185).withValues(alpha: 0.55),
+                    color: const Color(0xFFFB7185)
+                        .withValues(alpha: 0.55),
                   ),
                   backgroundColor: const Color(0xFF321A2A)
                       .withValues(alpha: 0.35),
@@ -379,28 +437,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ),
             const SizedBox(height: 22),
-            const Center(
+            Center(
               child: Text(
-                'LankaTransit • Travel smarter, travel better',
+                '${l10n.appName} • ${l10n.travelSmarterFooter}',
                 textAlign: TextAlign.center,
-                style: TextStyle(color: Color(0xFF64748B), fontSize: 11),
+                style: const TextStyle(
+                  color: Color(0xFF64748B),
+                  fontSize: 11,
+                ),
               ),
             ),
           ],
         ),
       ),
     );
-  }
-}
-
-String _languageName(String code) {
-  switch (code) {
-    case 'si':
-      return 'සිංහල';
-    case 'ta':
-      return 'தமிழ்';
-    default:
-      return 'English';
   }
 }
 
@@ -417,19 +467,30 @@ class _LanguageOption extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final selected = appLocale.value.languageCode == locale.languageCode;
+    final selected =
+        appLocale.value.languageCode == locale.languageCode;
 
     return Material(
       color: selected ? _panelLight : _bg,
       borderRadius: BorderRadius.circular(15),
       child: ListTile(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(15),
+        ),
         leading: Icon(
-          selected ? Icons.check_circle_rounded : Icons.circle_outlined,
+          selected
+              ? Icons.check_circle_rounded
+              : Icons.circle_outlined,
           color: selected ? _cyan : _muted,
         ),
-        title: Text(title, style: const TextStyle(color: _text)),
-        subtitle: Text(subtitle, style: const TextStyle(color: _muted)),
+        title: Text(
+          title,
+          style: const TextStyle(color: _text),
+        ),
+        subtitle: Text(
+          subtitle,
+          style: const TextStyle(color: _muted),
+        ),
         onTap: () {
           appLocale.value = locale;
           Navigator.pop(context);
@@ -482,10 +543,15 @@ class _ProfileTile extends StatelessWidget {
         borderRadius: BorderRadius.circular(18),
         onTap: onTap,
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 14),
+          padding: const EdgeInsets.symmetric(
+            horizontal: 15,
+            vertical: 14,
+          ),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: iconColor.withValues(alpha: 0.12)),
+            border: Border.all(
+              color: iconColor.withValues(alpha: 0.12),
+            ),
           ),
           child: Row(
             children: [
@@ -496,7 +562,11 @@ class _ProfileTile extends StatelessWidget {
                   color: iconColor.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(14),
                 ),
-                child: Icon(icon, color: iconColor, size: 23),
+                child: Icon(
+                  icon,
+                  color: iconColor,
+                  size: 23,
+                ),
               ),
               const SizedBox(width: 13),
               Expanded(
@@ -514,7 +584,10 @@ class _ProfileTile extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(
                       subtitle,
-                      style: const TextStyle(color: _muted, fontSize: 11.5),
+                      style: const TextStyle(
+                        color: _muted,
+                        fontSize: 11.5,
+                      ),
                     ),
                   ],
                 ),

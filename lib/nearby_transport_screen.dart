@@ -6,6 +6,8 @@ import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
 import 'package:latlong2/latlong.dart';
 
+import 'l10n/app_localizations.dart';
+
 class NearbyTransportScreen extends StatefulWidget {
   const NearbyTransportScreen({super.key});
 
@@ -20,10 +22,13 @@ class _NearbyTransportScreenState extends State<NearbyTransportScreen> {
   static const Color _purple = Color(0xFF8B5CF6);
 
   final MapController _mapController = MapController();
+
   Position? _position;
   List<_NearbyPlace> _places = [];
   bool _loading = false;
-  String? _error;
+  String? _errorCode;
+
+  // Internal filter values do not change with the selected language.
   String _filter = 'All';
 
   @override
@@ -37,30 +42,28 @@ class _NearbyTransportScreenState extends State<NearbyTransportScreen> {
 
     setState(() {
       _loading = true;
-      _error = null;
+      _errorCode = null;
     });
 
     try {
       final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+
       if (!serviceEnabled) {
-        throw Exception('Please turn on Location/GPS on your device.');
+        throw Exception('locationServiceOff');
       }
 
       var permission = await Geolocator.checkPermission();
+
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
       }
 
       if (permission == LocationPermission.denied) {
-        throw Exception(
-          'Location permission was denied. Allow it to find nearby transport.',
-        );
+        throw Exception('locationPermissionDenied');
       }
 
       if (permission == LocationPermission.deniedForever) {
-        throw Exception(
-          'Location permission is blocked. Enable it in your device app settings.',
-        );
+        throw Exception('locationPermissionBlocked');
       }
 
       final position = await Geolocator.getCurrentPosition(
@@ -84,15 +87,25 @@ class _NearbyTransportScreenState extends State<NearbyTransportScreen> {
       setState(() {
         _places = places;
         if (places.isEmpty) {
-          _error = 'No nearby stops found in OpenStreetMap data. Try refreshing or check your internet connection.';
+          _errorCode = 'noNearbyStopsFound';
         }
       });
     } catch (e) {
-      if (mounted) {
-        setState(() {
-          _error = e.toString().replaceFirst('Exception: ', '');
-        });
-      }
+      if (!mounted) return;
+
+      final message = e.toString().replaceFirst('Exception: ', '');
+
+      setState(() {
+        _errorCode =
+            [
+              'locationServiceOff',
+              'locationPermissionDenied',
+              'locationPermissionBlocked',
+              'mapServiceBusy',
+            ].contains(message)
+            ? message
+            : 'somethingWentWrong';
+      });
     } finally {
       if (mounted) {
         setState(() {
@@ -104,6 +117,7 @@ class _NearbyTransportScreenState extends State<NearbyTransportScreen> {
 
   Future<List<_NearbyPlace>> _loadPlaces(double lat, double lon) async {
     const endpoint = 'https://overpass-api.de/api/interpreter';
+
     final query =
         '''[out:json][timeout:25];
 (
@@ -125,20 +139,21 @@ out center tags;''';
         .timeout(const Duration(seconds: 35));
 
     if (response.statusCode != 200) {
-      throw Exception(
-        'Map data service is busy. Please try again in a moment.',
-      );
+      throw Exception('mapServiceBusy');
     }
 
     final decoded = jsonDecode(response.body) as Map<String, dynamic>;
     final elements = decoded['elements'] as List<dynamic>? ?? [];
+
     final result = <_NearbyPlace>[];
     final seen = <String>{};
 
     for (final raw in elements) {
       final item = raw as Map<String, dynamic>;
       final tags = item['tags'] as Map<String, dynamic>? ?? {};
+
       final railway = tags['railway'] == 'station' || tags['railway'] == 'halt';
+
       final isBus =
           tags['highway'] == 'bus_stop' ||
           (tags['public_transport'] == 'platform' && tags['bus'] == 'yes');
@@ -147,6 +162,7 @@ out center tags;''';
 
       final latValue =
           item['lat'] ?? (item['center'] as Map<String, dynamic>?)?['lat'];
+
       final lonValue =
           item['lon'] ?? (item['center'] as Map<String, dynamic>?)?['lon'];
 
@@ -157,6 +173,7 @@ out center tags;''';
                   tags['name:en'] ??
                   (railway ? 'Train station' : 'Bus stop'))
               .toString();
+
       final type = railway ? 'Train Station' : 'Bus Stop';
       final key = '$type|$name|$latValue|$lonValue';
 
@@ -164,6 +181,7 @@ out center tags;''';
 
       final placeLat = (latValue as num).toDouble();
       final placeLon = (lonValue as num).toDouble();
+
       final distance = Geolocator.distanceBetween(lat, lon, placeLat, placeLon);
 
       result.add(
@@ -178,24 +196,58 @@ out center tags;''';
     }
 
     result.sort((a, b) => a.distanceMeters.compareTo(b.distanceMeters));
+
     return result;
   }
 
   List<_NearbyPlace> get _filteredPlaces {
     return _places.where((place) {
-      if (_filter == 'Bus') return place.type == 'Bus Stop';
-      if (_filter == 'Train') return place.type == 'Train Station';
+      if (_filter == 'Bus') {
+        return place.type == 'Bus Stop';
+      }
+
+      if (_filter == 'Train') {
+        return place.type == 'Train Station';
+      }
+
       return true;
     }).toList();
   }
 
-  String _distanceLabel(double meters) {
-    if (meters < 1000) return '${meters.round()} m away';
-    return '${(meters / 1000).toStringAsFixed(1)} km away';
+  String _distanceLabel(double meters, AppLocalizations l10n) {
+    if (meters < 1000) {
+      return '${meters.round()} ${l10n.metersAway}';
+    }
+
+    return '${(meters / 1000).toStringAsFixed(1)} '
+        '${l10n.kilometersAway}';
+  }
+
+  String _errorMessage(AppLocalizations l10n) {
+    switch (_errorCode) {
+      case 'locationServiceOff':
+        return l10n.locationServiceOff;
+      case 'locationPermissionDenied':
+        return l10n.locationPermissionDenied;
+      case 'locationPermissionBlocked':
+        return l10n.locationPermissionBlocked;
+      case 'mapServiceBusy':
+        return l10n.mapServiceBusy;
+      case 'noNearbyStopsFound':
+        return l10n.noNearbyStopsFound;
+      default:
+        return l10n.somethingWentWrong;
+    }
+  }
+
+  String _placeTypeLabel(_NearbyPlace place, AppLocalizations l10n) {
+    return place.type == 'Bus Stop' ? l10n.busStop : l10n.trainStation;
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     final center = _position == null
         ? const LatLng(7.8731, 80.7718)
         : LatLng(_position!.latitude, _position!.longitude);
@@ -204,13 +256,13 @@ out center tags;''';
       backgroundColor: _bg,
       appBar: AppBar(
         backgroundColor: _bg,
-        title: const Text(
-          'Nearby Transport',
-          style: TextStyle(fontWeight: FontWeight.bold),
+        title: Text(
+          l10n.nearbyTransport,
+          style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         actions: [
           IconButton(
-            tooltip: 'Refresh location',
+            tooltip: l10n.refreshLocation,
             onPressed: _loading ? null : _findNearby,
             icon: const Icon(Icons.my_location_rounded, color: _cyan),
           ),
@@ -228,8 +280,8 @@ out center tags;''';
                   Expanded(
                     child: Text(
                       _position == null
-                          ? 'Finding your current location…'
-                          : 'Transport within 5 km of you',
+                          ? l10n.findingCurrentLocation
+                          : l10n.transportWithin5Km,
                       style: const TextStyle(color: Color(0xFFB7C4D9)),
                     ),
                   ),
@@ -242,6 +294,8 @@ out center tags;''';
                 ],
               ),
             ),
+
+            // Map
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: ClipRRect(
@@ -323,7 +377,10 @@ out center tags;''';
                 ),
               ),
             ),
+
             const SizedBox(height: 14),
+
+            // Summary cards
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Row(
@@ -331,7 +388,7 @@ out center tags;''';
                   Expanded(
                     child: _SummaryCard(
                       icon: Icons.directions_bus_rounded,
-                      label: 'Bus stops',
+                      label: l10n.busStops,
                       count: _places.where((p) => p.type == 'Bus Stop').length,
                       color: _cyan,
                     ),
@@ -340,7 +397,7 @@ out center tags;''';
                   Expanded(
                     child: _SummaryCard(
                       icon: Icons.train_rounded,
-                      label: 'Train stations',
+                      label: l10n.trainStations,
                       count: _places
                           .where((p) => p.type == 'Train Station')
                           .length,
@@ -350,41 +407,45 @@ out center tags;''';
                 ],
               ),
             ),
+
             const SizedBox(height: 14),
+
+            // Nearby list heading and filters
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Row(
                 children: [
-                  const Expanded(
+                  Expanded(
                     child: Text(
-                      'Nearby places',
-                      style: TextStyle(
+                      l10n.nearbyPlaces,
+                      style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                   ),
                   _FilterChip(
-                    label: 'All',
+                    label: l10n.all,
                     selected: _filter == 'All',
                     onTap: () => setState(() => _filter = 'All'),
                   ),
                   const SizedBox(width: 6),
                   _FilterChip(
-                    label: 'Bus',
+                    label: l10n.bus,
                     selected: _filter == 'Bus',
                     onTap: () => setState(() => _filter = 'Bus'),
                   ),
                   const SizedBox(width: 6),
                   _FilterChip(
-                    label: 'Train',
+                    label: l10n.train,
                     selected: _filter == 'Train',
                     onTap: () => setState(() => _filter = 'Train'),
                   ),
                 ],
               ),
             ),
-            if (_error != null)
+
+            if (_errorCode != null)
               Padding(
                 padding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
                 child: Container(
@@ -404,7 +465,7 @@ out center tags;''';
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        _error!,
+                        _errorMessage(l10n),
                         textAlign: TextAlign.center,
                         style: const TextStyle(color: Color(0xFFCBD5E1)),
                       ),
@@ -412,12 +473,14 @@ out center tags;''';
                       TextButton.icon(
                         onPressed: _loading ? null : _findNearby,
                         icon: const Icon(Icons.refresh_rounded),
-                        label: const Text('Try again'),
+                        label: Text(l10n.tryAgain),
                       ),
                     ],
                   ),
                 ),
               ),
+
+            // Nearby places list
             Expanded(
               child: _loading && _position == null
                   ? const Center(child: CircularProgressIndicator(color: _cyan))
@@ -426,9 +489,9 @@ out center tags;''';
                       child: Padding(
                         padding: const EdgeInsets.all(24),
                         child: Text(
-                          _error == null
-                              ? 'No places to show yet.'
-                              : 'Check your location and try again.',
+                          _errorCode == null
+                              ? l10n.noPlacesToShow
+                              : l10n.checkLocationTryAgain,
                           textAlign: TextAlign.center,
                           style: const TextStyle(color: Color(0xFF9CAEC6)),
                         ),
@@ -447,10 +510,12 @@ out center tags;''';
                           borderRadius: BorderRadius.circular(17),
                           child: InkWell(
                             borderRadius: BorderRadius.circular(17),
-                            onTap: () => _mapController.move(
-                              LatLng(place.lat, place.lon),
-                              16,
-                            ),
+                            onTap: () {
+                              _mapController.move(
+                                LatLng(place.lat, place.lon),
+                                16,
+                              );
+                            },
                             child: Padding(
                               padding: const EdgeInsets.all(13),
                               child: Row(
@@ -488,7 +553,7 @@ out center tags;''';
                                         ),
                                         const SizedBox(height: 4),
                                         Text(
-                                          place.type,
+                                          _placeTypeLabel(place, l10n),
                                           style: TextStyle(
                                             color: isBus ? _cyan : _purple,
                                             fontSize: 12,
@@ -500,7 +565,7 @@ out center tags;''';
                                   ),
                                   const SizedBox(width: 8),
                                   Text(
-                                    _distanceLabel(place.distanceMeters),
+                                    _distanceLabel(place.distanceMeters, l10n),
                                     style: const TextStyle(
                                       color: Color(0xFFB7C4D9),
                                       fontSize: 11,
@@ -551,40 +616,45 @@ class _SummaryCard extends StatelessWidget {
   final Color color;
 
   @override
-  Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.all(13),
-    decoration: BoxDecoration(
-      color: const Color(0xFF111A2E),
-      borderRadius: BorderRadius.circular(17),
-      border: Border.all(color: color.withValues(alpha: .25)),
-    ),
-    child: Row(
-      children: [
-        Icon(icon, color: color, size: 25),
-        const SizedBox(width: 10),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                '$count',
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(13),
+      decoration: BoxDecoration(
+        color: const Color(0xFF111A2E),
+        borderRadius: BorderRadius.circular(17),
+        border: Border.all(color: color.withValues(alpha: .25)),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: color, size: 25),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '$count',
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-              ),
-              Text(
-                label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(color: Color(0xFF9CAEC6), fontSize: 11),
-              ),
-            ],
+                Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Color(0xFF9CAEC6),
+                    fontSize: 11,
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
-      ],
-    ),
-  );
+        ],
+      ),
+    );
+  }
 }
 
 class _FilterChip extends StatelessWidget {
@@ -599,26 +669,28 @@ class _FilterChip extends StatelessWidget {
   final VoidCallback onTap;
 
   @override
-  Widget build(BuildContext context) => InkWell(
-    onTap: onTap,
-    borderRadius: BorderRadius.circular(20),
-    child: Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: selected ? const Color(0xFF173953) : const Color(0xFF111A2E),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: selected ? const Color(0xFF38BDF8) : const Color(0xFF34415B),
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: selected ? const Color(0xFF173953) : const Color(0xFF111A2E),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: selected ? const Color(0xFF38BDF8) : const Color(0xFF34415B),
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            color: selected ? const Color(0xFF38BDF8) : const Color(0xFFB7C4D9),
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ),
-      child: Text(
-        label,
-        style: TextStyle(
-          fontSize: 12,
-          color: selected ? const Color(0xFF38BDF8) : const Color(0xFFB7C4D9),
-          fontWeight: FontWeight.w600,
-        ),
-      ),
-    ),
-  );
+    );
+  }
 }

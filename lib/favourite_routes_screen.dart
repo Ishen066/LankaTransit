@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'l10n/app_localizations.dart';
 import 'route_details_screen.dart';
 
 class FavouriteRoutesScreen extends StatefulWidget {
@@ -51,41 +52,54 @@ class _FavouriteRoutesScreenState extends State<FavouriteRoutesScreen> {
       }
 
       if (!mounted) return;
+
       setState(() {
         _routes = parsed.reversed.toList();
         _isLoading = false;
       });
     } catch (e) {
       debugPrint('Could not load favourite routes: $e');
+
       if (!mounted) return;
-      setState(() => _isLoading = false);
+
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
 
   double _number(Map<String, dynamic> route, String key) {
     final value = route[key];
+
     if (value is num) return value.toDouble();
+
     return double.tryParse('$value') ?? 0.0;
   }
 
   List<List<double>>? _routePath(Map<String, dynamic> route) {
     final rawPath = route['routePath'];
+
     if (rawPath is! List) return null;
 
     final result = <List<double>>[];
+
     for (final point in rawPath) {
       if (point is List && point.length >= 2) {
         final lat = point[0];
         final lng = point[1];
+
         if (lat is num && lng is num) {
           result.add(<double>[lat.toDouble(), lng.toDouble()]);
         }
       }
     }
+
     return result.isEmpty ? null : result;
   }
 
   Future<void> _openRoute(Map<String, dynamic> route) async {
+    final l10n = AppLocalizations.of(context)!;
+
     final transportType = '${route['transportType'] ?? 'Bus Route'}';
     final isTrain = transportType.toLowerCase().contains('train');
 
@@ -94,9 +108,9 @@ class _FavouriteRoutesScreenState extends State<FavouriteRoutesScreen> {
       MaterialPageRoute(
         builder: (context) => RouteDetailsScreen(
           transportType: transportType,
-          routeName: '${route['routeName'] ?? 'Saved route'}',
-          from: '${route['from'] ?? 'Start'}',
-          to: '${route['to'] ?? 'Destination'}',
+          routeName: '${route['routeName'] ?? l10n.savedRouteFallback}',
+          from: '${route['from'] ?? l10n.startLocationFallback}',
+          to: '${route['to'] ?? l10n.destinationFallback}',
           icon: isTrain ? Icons.train_rounded : Icons.directions_bus_rounded,
           iconColor: isTrain ? _purple : _cyan,
           startLat: _number(route, 'startLat'),
@@ -108,15 +122,18 @@ class _FavouriteRoutesScreenState extends State<FavouriteRoutesScreen> {
       ),
     );
 
-    // Refresh when returning in case the heart button was toggled.
+    // Refresh when returning from the route details screen.
     await _loadFavourites();
   }
 
   Future<void> _removeFavourite(Map<String, dynamic> route) async {
+    final l10n = AppLocalizations.of(context)!;
     final id = route['id'];
+
     try {
       final prefs = await SharedPreferences.getInstance();
       final saved = prefs.getStringList(_storageKey) ?? <String>[];
+
       saved.removeWhere((item) {
         try {
           final decoded = jsonDecode(item) as Map<String, dynamic>;
@@ -125,6 +142,7 @@ class _FavouriteRoutesScreenState extends State<FavouriteRoutesScreen> {
           return false;
         }
       });
+
       await prefs.setStringList(_storageKey, saved);
 
       if (id is String && id.isNotEmpty) {
@@ -134,39 +152,50 @@ class _FavouriteRoutesScreenState extends State<FavouriteRoutesScreen> {
       await _loadFavourites();
 
       if (!mounted) return;
+
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Route removed from favourites'),
+        SnackBar(
+          content: Text(l10n.routeRemovedFromFavourites),
           behavior: SnackBarBehavior.floating,
         ),
       );
     } catch (e) {
       debugPrint('Could not remove favourite route: $e');
+
       if (!mounted) return;
+
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Could not remove route. Please try again.'),
+        SnackBar(
+          content: Text(l10n.couldNotRemoveRoute),
           behavior: SnackBarBehavior.floating,
         ),
       );
     }
   }
 
+  String _savedCountText(AppLocalizations l10n, int count) {
+    if (count == 1) return l10n.oneSavedRoute;
+
+    return '$count ${l10n.savedRoutesCountLabel}';
+  }
+
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Scaffold(
       backgroundColor: _bg,
       appBar: AppBar(
         backgroundColor: _bg,
         foregroundColor: _white,
         elevation: 0,
-        title: const Text(
-          'Favourite Routes',
-          style: TextStyle(fontWeight: FontWeight.bold),
+        title: Text(
+          l10n.favouriteRoutes,
+          style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         actions: [
           IconButton(
-            tooltip: 'Refresh favourites',
+            tooltip: l10n.refreshFavourites,
             onPressed: _loadFavourites,
             icon: const Icon(Icons.refresh_rounded, color: _cyan),
           ),
@@ -218,7 +247,7 @@ class _FavouriteRoutesScreenState extends State<FavouriteRoutesScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  '${_routes.length} saved ${_routes.length == 1 ? 'route' : 'routes'}',
+                                  _savedCountText(l10n, _routes.length),
                                   style: const TextStyle(
                                     color: _white,
                                     fontWeight: FontWeight.bold,
@@ -226,9 +255,12 @@ class _FavouriteRoutesScreenState extends State<FavouriteRoutesScreen> {
                                   ),
                                 ),
                                 const SizedBox(height: 4),
-                                const Text(
-                                  'Your favourite bus and train journeys',
-                                  style: TextStyle(color: _muted, fontSize: 12),
+                                Text(
+                                  l10n.favouriteRoutesDescription,
+                                  style: const TextStyle(
+                                    color: _muted,
+                                    fontSize: 12,
+                                  ),
                                 ),
                               ],
                             ),
@@ -246,6 +278,8 @@ class _FavouriteRoutesScreenState extends State<FavouriteRoutesScreen> {
   }
 
   Widget _buildEmptyState() {
+    final l10n = AppLocalizations.of(context)!;
+
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(28),
@@ -266,26 +300,26 @@ class _FavouriteRoutesScreenState extends State<FavouriteRoutesScreen> {
               ),
             ),
             const SizedBox(height: 22),
-            const Text(
-              'No favourite routes yet',
+            Text(
+              l10n.noFavouriteRoutesYet,
               textAlign: TextAlign.center,
-              style: TextStyle(
+              style: const TextStyle(
                 color: _white,
                 fontSize: 21,
                 fontWeight: FontWeight.bold,
               ),
             ),
             const SizedBox(height: 9),
-            const Text(
-              'Open a bus or train route and tap the heart icon to save it here.',
+            Text(
+              l10n.saveFavouriteRoutesDescription,
               textAlign: TextAlign.center,
-              style: TextStyle(color: _muted, height: 1.5, fontSize: 14),
+              style: const TextStyle(color: _muted, height: 1.5, fontSize: 14),
             ),
             const SizedBox(height: 22),
             OutlinedButton.icon(
               onPressed: () => Navigator.pop(context),
               icon: const Icon(Icons.explore_rounded),
-              label: const Text('Explore routes'),
+              label: Text(l10n.exploreRoutesButton),
               style: OutlinedButton.styleFrom(
                 foregroundColor: _cyan,
                 side: const BorderSide(color: _cyan),
@@ -302,12 +336,15 @@ class _FavouriteRoutesScreenState extends State<FavouriteRoutesScreen> {
   }
 
   Widget _buildRouteCard(Map<String, dynamic> route) {
+    final l10n = AppLocalizations.of(context)!;
+
     final transportType = '${route['transportType'] ?? 'Bus Route'}';
     final isTrain = transportType.toLowerCase().contains('train');
     final accent = isTrain ? _purple : _cyan;
-    final routeName = '${route['routeName'] ?? 'Saved route'}';
-    final from = '${route['from'] ?? 'Start'}';
-    final to = '${route['to'] ?? 'Destination'}';
+
+    final routeName = '${route['routeName'] ?? l10n.savedRouteFallback}';
+    final from = '${route['from'] ?? l10n.startLocationFallback}';
+    final to = '${route['to'] ?? l10n.destinationFallback}';
 
     return Container(
       margin: const EdgeInsets.only(bottom: 13),
@@ -365,7 +402,7 @@ class _FavouriteRoutesScreenState extends State<FavouriteRoutesScreen> {
                       ),
                       const SizedBox(height: 7),
                       Text(
-                        isTrain ? 'TRAIN ROUTE' : 'BUS ROUTE',
+                        isTrain ? l10n.trainRoutes : l10n.busRouteLabel,
                         style: TextStyle(
                           color: accent,
                           fontWeight: FontWeight.w700,
@@ -378,7 +415,7 @@ class _FavouriteRoutesScreenState extends State<FavouriteRoutesScreen> {
                 ),
                 const SizedBox(width: 6),
                 IconButton(
-                  tooltip: 'Remove favourite',
+                  tooltip: l10n.removeFavourite,
                   onPressed: () => _removeFavourite(route),
                   icon: const Icon(Icons.favorite_rounded, color: _pink),
                 ),

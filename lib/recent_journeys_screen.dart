@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'l10n/app_localizations.dart';
+
 class RecentJourneysScreen extends StatelessWidget {
   const RecentJourneysScreen({super.key});
 
@@ -11,23 +13,25 @@ class RecentJourneysScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Scaffold(
       backgroundColor: bg,
       appBar: AppBar(
         backgroundColor: bg,
         foregroundColor: Colors.white,
         elevation: 0,
-        title: const Text(
-          'Recent Journeys',
-          style: TextStyle(fontWeight: FontWeight.bold),
+        title: Text(
+          l10n.recentJourneys,
+          style: const TextStyle(fontWeight: FontWeight.bold),
         ),
       ),
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
-          const Text(
-            'Your travel history',
-            style: TextStyle(color: muted, fontSize: 14),
+          Text(
+            l10n.yourTravelHistory,
+            style: const TextStyle(color: muted, fontSize: 14),
           ),
           const SizedBox(height: 22),
 
@@ -37,7 +41,7 @@ class RecentJourneysScreen extends StatelessWidget {
             iconBg: const Color(0xFF164E63),
             from: 'Colombo Fort',
             to: 'Kandy',
-            type: 'Bus Journey',
+            type: l10n.busJourney,
             date: '21 Oct 2026',
             time: '8:30 AM',
           ),
@@ -50,7 +54,7 @@ class RecentJourneysScreen extends StatelessWidget {
             iconBg: const Color(0xFF3B2866),
             from: 'Colombo Fort',
             to: 'Galle',
-            type: 'Train Journey',
+            type: l10n.trainJourney,
             date: '19 Oct 2026',
             time: '10:15 AM',
           ),
@@ -63,18 +67,18 @@ class RecentJourneysScreen extends StatelessWidget {
             iconBg: const Color(0xFF164E63),
             from: 'Kandy',
             to: 'Peradeniya',
-            type: 'Bus Journey',
+            type: l10n.busJourney,
             date: '17 Oct 2026',
             time: '2:45 PM',
           ),
 
           const SizedBox(height: 24),
 
-          const Center(
+          Center(
             child: Text(
-              'Sample journeys are displayed for now.',
+              l10n.sampleJourneysMessage,
               textAlign: TextAlign.center,
-              style: TextStyle(color: muted, fontSize: 12),
+              style: const TextStyle(color: muted, fontSize: 12),
             ),
           ),
         ],

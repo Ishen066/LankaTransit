@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'l10n/app_localizations.dart';
+
 class NotificationScreen extends StatefulWidget {
   const NotificationScreen({super.key});
 
@@ -15,64 +17,69 @@ class _NotificationScreenState extends State<NotificationScreen> {
   static const Color _text = Color(0xFFF1F5F9);
   static const Color _muted = Color(0xFF94A3B8);
 
-  String _selectedFilter = 'All';
+  String _selectedFilter = 'all';
 
   final List<Map<String, dynamic>> _notifications = [
-    {
-      'title': 'Welcome to LankaTransit!',
-      'message':
-          'Thank you for using LankaTransit. Explore bus and train routes '
-          'and plan your next journey around Sri Lanka.',
-      'type': 'general',
-      'time': 'Just now',
-      'read': false,
-    },
-    {
-      'title': 'Bus Routes',
-      'message':
-          'Explore available bus route information and check your preferred '
-          'destination before starting your journey.',
-      'type': 'bus',
-      'time': 'Today',
-      'read': false,
-    },
-    {
-      'title': 'Train Journey',
-      'message':
-          'Visit the Train Routes section to explore train journey '
-          'information for your next trip.',
-      'type': 'train',
-      'time': 'Yesterday',
-      'read': true,
-    },
-    {
-      'title': 'Nearby Transport',
-      'message':
-          'Use Nearby Transport to explore transport options around '
-          'your current location.',
-      'type': 'location',
-      'time': '2 days ago',
-      'read': true,
-    },
-    {
-      'title': 'Save Your Favourite Routes',
-      'message':
-          'Tap the heart icon on a route to add it to your favourite routes '
-          'and find it more easily later.',
-      'type': 'favorite',
-      'time': '3 days ago',
-      'read': true,
-    },
+    {'type': 'general', 'time': 'now', 'read': false},
+    {'type': 'bus', 'time': 'today', 'read': false},
+    {'type': 'train', 'time': 'yesterday', 'read': true},
+    {'type': 'location', 'time': 'twoDays', 'read': true},
+    {'type': 'favorite', 'time': 'threeDays', 'read': true},
   ];
 
   int get _unreadCount =>
       _notifications.where((item) => item['read'] == false).length;
 
   List<Map<String, dynamic>> get _filteredNotifications {
-    if (_selectedFilter == 'Unread') {
+    if (_selectedFilter == 'unread') {
       return _notifications.where((item) => item['read'] == false).toList();
     }
     return _notifications;
+  }
+
+  String _getTitle(AppLocalizations l10n, String type) {
+    switch (type) {
+      case 'bus':
+        return l10n.notificationBusTitle;
+      case 'train':
+        return l10n.notificationTrainTitle;
+      case 'location':
+        return l10n.notificationNearbyTitle;
+      case 'favorite':
+        return l10n.notificationFavoritesTitle;
+      default:
+        return l10n.notificationWelcomeTitle;
+    }
+  }
+
+  String _getMessage(AppLocalizations l10n, String type) {
+    switch (type) {
+      case 'bus':
+        return l10n.notificationBusMessage;
+      case 'train':
+        return l10n.notificationTrainMessage;
+      case 'location':
+        return l10n.notificationNearbyMessage;
+      case 'favorite':
+        return l10n.notificationFavoritesMessage;
+      default:
+        return l10n.notificationWelcomeMessage;
+    }
+  }
+
+  String _getTime(AppLocalizations l10n, String time) {
+    switch (time) {
+      case 'today':
+        return l10n.notificationTimeToday;
+      case 'yesterday':
+        return l10n.notificationTimeYesterday;
+      case 'twoDays':
+        return l10n.notificationTimeTwoDaysAgo;
+      case 'threeDays':
+        return l10n.notificationTimeThreeDaysAgo;
+      default:
+        return l10n.notificationTimeJustNow;
+    }
   }
 
   IconData _getIcon(String type) {
@@ -118,6 +125,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
       ),
       builder: (sheetContext) {
+        final l10n = AppLocalizations.of(sheetContext)!;
         final type = notification['type'] as String;
 
         return SafeArea(
@@ -153,7 +161,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                 ),
                 const SizedBox(height: 18),
                 Text(
-                  notification['title'] as String,
+                  _getTitle(l10n, type),
                   style: const TextStyle(
                     color: _text,
                     fontSize: 21,
@@ -162,7 +170,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  notification['message'] as String,
+                  _getMessage(l10n, type),
                   style: const TextStyle(
                     color: _muted,
                     fontSize: 15,
@@ -171,7 +179,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                 ),
                 const SizedBox(height: 18),
                 Text(
-                  notification['time'] as String,
+                  _getTime(l10n, notification['time'] as String),
                   style: const TextStyle(color: _cyan, fontSize: 12),
                 ),
                 const SizedBox(height: 24),
@@ -187,9 +195,9 @@ class _NotificationScreenState extends State<NotificationScreen> {
                         borderRadius: BorderRadius.circular(14),
                       ),
                     ),
-                    child: const Text(
-                      'Got it',
-                      style: TextStyle(fontWeight: FontWeight.bold),
+                    child: Text(
+                      l10n.notificationGotIt,
+                      style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
                   ),
                 ),
@@ -202,6 +210,8 @@ class _NotificationScreenState extends State<NotificationScreen> {
   }
 
   void _markAllAsRead() {
+    final l10n = AppLocalizations.of(context)!;
+
     setState(() {
       for (final notification in _notifications) {
         notification['read'] = true;
@@ -209,8 +219,8 @@ class _NotificationScreenState extends State<NotificationScreen> {
     });
 
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('All notifications marked as read'),
+      SnackBar(
+        content: Text(l10n.notificationAllMarkedRead),
         behavior: SnackBarBehavior.floating,
       ),
     );
@@ -218,6 +228,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final notifications = _filteredNotifications;
 
     return Scaffold(
@@ -226,17 +237,20 @@ class _NotificationScreenState extends State<NotificationScreen> {
         backgroundColor: _bg,
         foregroundColor: _text,
         elevation: 0,
-        title: const Text(
-          'Notifications',
-          style: TextStyle(fontWeight: FontWeight.bold),
+        title: Text(
+          l10n.notifications,
+          style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         actions: [
           if (_unreadCount > 0)
             TextButton(
               onPressed: _markAllAsRead,
-              child: const Text(
-                'Read all',
-                style: TextStyle(color: _cyan, fontWeight: FontWeight.w600),
+              child: Text(
+                l10n.notificationReadAll,
+                style: const TextStyle(
+                  color: _cyan,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
           const SizedBox(width: 8),
@@ -279,9 +293,9 @@ class _NotificationScreenState extends State<NotificationScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
-                            'Stay updated!',
-                            style: TextStyle(
+                          Text(
+                            l10n.notificationStayUpdated,
+                            style: const TextStyle(
                               color: _text,
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
@@ -290,9 +304,9 @@ class _NotificationScreenState extends State<NotificationScreen> {
                           const SizedBox(height: 5),
                           Text(
                             _unreadCount == 0
-                                ? 'You are all caught up.'
-                                : 'You have $_unreadCount unread '
-                                      '${_unreadCount == 1 ? 'notification' : 'notifications'}.',
+                                ? l10n.notificationAllCaughtUp
+                                : '${l10n.notificationUnreadCountLabel} '
+                                      '$_unreadCount',
                             style: const TextStyle(color: _muted, fontSize: 13),
                           ),
                         ],
@@ -306,10 +320,10 @@ class _NotificationScreenState extends State<NotificationScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Row(
                 children: [
-                  const Expanded(
+                  Expanded(
                     child: Text(
-                      'Your notifications',
-                      style: TextStyle(
+                      l10n.notificationYourNotifications,
+                      style: const TextStyle(
                         color: _text,
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -317,7 +331,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                     ),
                   ),
                   Text(
-                    '${notifications.length} items',
+                    '${notifications.length} ${l10n.notificationItemsLabel}',
                     style: const TextStyle(color: _muted, fontSize: 12),
                   ),
                 ],
@@ -329,15 +343,15 @@ class _NotificationScreenState extends State<NotificationScreen> {
               child: Row(
                 children: [
                   _FilterChip(
-                    label: 'All',
-                    selected: _selectedFilter == 'All',
-                    onTap: () => setState(() => _selectedFilter = 'All'),
+                    label: l10n.all,
+                    selected: _selectedFilter == 'all',
+                    onTap: () => setState(() => _selectedFilter = 'all'),
                   ),
                   const SizedBox(width: 10),
                   _FilterChip(
-                    label: 'Unread',
-                    selected: _selectedFilter == 'Unread',
-                    onTap: () => setState(() => _selectedFilter = 'Unread'),
+                    label: l10n.notificationUnreadFilter,
+                    selected: _selectedFilter == 'unread',
+                    onTap: () => setState(() => _selectedFilter = 'unread'),
                   ),
                 ],
               ),
@@ -357,19 +371,19 @@ class _NotificationScreenState extends State<NotificationScreen> {
                               color: _muted.withValues(alpha: 0.65),
                             ),
                             const SizedBox(height: 15),
-                            const Text(
-                              'You are all caught up!',
-                              style: TextStyle(
+                            Text(
+                              l10n.notificationAllCaughtUp,
+                              style: const TextStyle(
                                 color: _text,
                                 fontSize: 17,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
                             const SizedBox(height: 8),
-                            const Text(
-                              'There are no unread notifications.',
+                            Text(
+                              l10n.notificationNoUnread,
                               textAlign: TextAlign.center,
-                              style: TextStyle(color: _muted),
+                              style: const TextStyle(color: _muted),
                             ),
                           ],
                         ),
@@ -429,7 +443,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                                           children: [
                                             Expanded(
                                               child: Text(
-                                                notification['title'] as String,
+                                                _getTitle(l10n, type),
                                                 style: TextStyle(
                                                   color: _text,
                                                   fontSize: 14,
@@ -457,7 +471,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                                         ),
                                         const SizedBox(height: 7),
                                         Text(
-                                          notification['message'] as String,
+                                          _getMessage(l10n, type),
                                           maxLines: 2,
                                           overflow: TextOverflow.ellipsis,
                                           style: const TextStyle(
@@ -468,7 +482,10 @@ class _NotificationScreenState extends State<NotificationScreen> {
                                         ),
                                         const SizedBox(height: 10),
                                         Text(
-                                          notification['time'] as String,
+                                          _getTime(
+                                            l10n,
+                                            notification['time'] as String,
+                                          ),
                                           style: const TextStyle(
                                             color: _cyan,
                                             fontSize: 11,

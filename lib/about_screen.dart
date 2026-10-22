@@ -1,4 +1,6 @@
+
 import 'package:flutter/material.dart';
+import 'l10n/app_localizations.dart';
 
 class AboutScreen extends StatelessWidget {
   const AboutScreen({super.key});
@@ -11,15 +13,17 @@ class AboutScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Scaffold(
       backgroundColor: _bg,
       appBar: AppBar(
         backgroundColor: _bg,
         foregroundColor: _textColor,
         elevation: 0,
-        title: const Text(
-          'About LankaTransit',
-          style: TextStyle(fontWeight: FontWeight.bold),
+        title: Text(
+          l10n.aboutLankaTransit,
+          style: const TextStyle(fontWeight: FontWeight.bold),
         ),
       ),
       body: SingleChildScrollView(
@@ -57,98 +61,112 @@ class AboutScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 6),
-                  const Text(
-                    'Travel Smarter, Travel Better',
+                  Text(
+                    l10n.aboutTagline,
                     textAlign: TextAlign.center,
-                    style: TextStyle(
+                    style: const TextStyle(
                       color: _cyan,
                       fontSize: 15,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
                   const SizedBox(height: 12),
-                  const Text(
-                    'Your travel companion for exploring Sri Lanka.',
+                  Text(
+                    l10n.aboutCompanion,
                     textAlign: TextAlign.center,
-                    style: TextStyle(color: _muted, fontSize: 14),
+                    style: const TextStyle(
+                      color: _muted,
+                      fontSize: 14,
+                    ),
                   ),
                 ],
               ),
             ),
             const SizedBox(height: 30),
 
-            const _SectionHeading(title: 'About Our App'),
+            _SectionHeading(title: l10n.aboutOurApp),
             const SizedBox(height: 12),
-            const _InfoCard(
+            _InfoCard(
               child: Text(
-                'LankaTransit helps users explore bus and train routes '
-                'across Sri Lanka. It provides a simple interface to '
-                'discover transport options and organise journeys.',
-                style: TextStyle(color: _muted, fontSize: 14, height: 1.7),
+                l10n.aboutDescription,
+                style: const TextStyle(
+                  color: _muted,
+                  fontSize: 14,
+                  height: 1.7,
+                ),
               ),
             ),
 
             const SizedBox(height: 25),
-            const _SectionHeading(title: 'Key Features'),
+            _SectionHeading(title: l10n.keyFeatures),
             const SizedBox(height: 12),
 
-            const _FeatureTile(
+            _FeatureTile(
               icon: Icons.directions_bus_rounded,
-              title: 'Bus Routes',
-              subtitle: 'Explore available bus route information.',
+              title: l10n.busRoutes,
+              subtitle: l10n.aboutBusDescription,
             ),
             const SizedBox(height: 10),
-            const _FeatureTile(
+            _FeatureTile(
               icon: Icons.train_rounded,
-              title: 'Train Routes',
-              subtitle: 'Discover train route information.',
+              title: l10n.trainRoutes,
+              subtitle: l10n.aboutTrainDescription,
             ),
             const SizedBox(height: 10),
-            const _FeatureTile(
+            _FeatureTile(
               icon: Icons.location_on_rounded,
-              title: 'Nearby Transport',
-              subtitle: 'Explore nearby transport options.',
+              title: l10n.nearbyTransport,
+              subtitle: l10n.aboutNearbyDescription,
             ),
             const SizedBox(height: 10),
-            const _FeatureTile(
+            _FeatureTile(
               icon: Icons.favorite_rounded,
-              title: 'Favourite Routes',
-              subtitle: 'Access your saved favourite routes.',
+              title: l10n.favouriteRoutes,
+              subtitle: l10n.aboutFavouritesDescription,
             ),
             const SizedBox(height: 10),
-            const _FeatureTile(
+            _FeatureTile(
               icon: Icons.history_rounded,
-              title: 'Recent Journeys',
-              subtitle: 'View your recent journey list.',
+              title: l10n.recentJourneys,
+              subtitle: l10n.aboutRecentDescription,
             ),
 
             const SizedBox(height: 25),
-            const _SectionHeading(title: 'App Information'),
+            _SectionHeading(title: l10n.appInformation),
             const SizedBox(height: 12),
-            const _InfoCard(
+            _InfoCard(
               child: Column(
                 children: [
                   _InfoRow(
                     icon: Icons.apps_rounded,
-                    label: 'Application',
+                    label: l10n.application,
                     value: 'LankaTransit',
                   ),
-                  Divider(color: Color(0xFF29384D), height: 24),
+                  const Divider(
+                    color: Color(0xFF29384D),
+                    height: 24,
+                  ),
                   _InfoRow(
                     icon: Icons.phone_android_rounded,
-                    label: 'Platform',
+                    label: l10n.platform,
                     value: 'Flutter',
                   ),
-                  Divider(color: Color(0xFF29384D), height: 24),
+                  const Divider(
+                    color: Color(0xFF29384D),
+                    height: 24,
+                  ),
                   _InfoRow(
                     icon: Icons.public_rounded,
-                    label: 'Coverage',
-                    value: 'Sri Lanka',
+                    label: l10n.coverage,
+                    value: l10n.sriLanka,
                   ),
-                  Divider(color: Color(0xFF29384D), height: 24),
+                  const Divider(
+                    color: Color(0xFF29384D),
+                    height: 24,
+                  ),
                   _InfoRow(
                     icon: Icons.info_outline_rounded,
-                    label: 'Version',
+                    label: l10n.version,
                     value: '1.0.0',
                   ),
                 ],
@@ -156,19 +174,30 @@ class AboutScreen extends StatelessWidget {
             ),
 
             const SizedBox(height: 30),
-            const Center(
+            Center(
               child: Column(
                 children: [
-                  Icon(Icons.favorite_rounded, color: _purple, size: 22),
-                  SizedBox(height: 8),
-                  Text(
-                    'Made for smarter journeys',
-                    style: TextStyle(color: _muted, fontSize: 13),
+                  const Icon(
+                    Icons.favorite_rounded,
+                    color: _purple,
+                    size: 22,
                   ),
-                  SizedBox(height: 5),
+                  const SizedBox(height: 8),
                   Text(
+                    l10n.madeForSmarterJourneys,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: _muted,
+                      fontSize: 13,
+                    ),
+                  ),
+                  const SizedBox(height: 5),
+                  const Text(
                     'LankaTransit © 2026',
-                    style: TextStyle(color: _muted, fontSize: 12),
+                    style: TextStyle(
+                      color: _muted,
+                      fontSize: 12,
+                    ),
                   ),
                 ],
               ),
@@ -212,7 +241,9 @@ class _InfoCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: const Color(0xFF172337),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFF29384D)),
+        border: Border.all(
+          color: const Color(0xFF29384D),
+        ),
       ),
       child: child,
     );
@@ -237,7 +268,9 @@ class _FeatureTile extends StatelessWidget {
       decoration: BoxDecoration(
         color: const Color(0xFF172337),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFF29384D)),
+        border: Border.all(
+          color: const Color(0xFF29384D),
+        ),
       ),
       child: Row(
         children: [
@@ -245,10 +278,15 @@ class _FeatureTile extends StatelessWidget {
             width: 46,
             height: 46,
             decoration: BoxDecoration(
-              color: const Color(0xFF22D3EE).withValues(alpha: 0.12),
+              color: const Color(0xFF22D3EE)
+                  .withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(13),
             ),
-            child: Icon(icon, color: const Color(0xFF22D3EE), size: 24),
+            child: Icon(
+              icon,
+              color: const Color(0xFF22D3EE),
+              size: 24,
+            ),
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -297,12 +335,19 @@ class _InfoRow extends StatelessWidget {
     return Row(
       children: [
         const SizedBox(width: 2),
-        Icon(icon, color: Color(0xFF22D3EE), size: 21),
+        Icon(
+          icon,
+          color: const Color(0xFF22D3EE),
+          size: 21,
+        ),
         const SizedBox(width: 12),
         Expanded(
           child: Text(
             label,
-            style: const TextStyle(color: Color(0xFF94A3B8), fontSize: 13),
+            style: const TextStyle(
+              color: Color(0xFF94A3B8),
+              fontSize: 13,
+            ),
           ),
         ),
         const SizedBox(width: 8),
