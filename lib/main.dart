@@ -257,246 +257,201 @@ class SplashScreen extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: const Color(0xFF070B18),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(24, 30, 24, 28),
-          child: Column(
-            children: [
-              // LOGO HEADER
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          // FULL-SCREEN BACKGROUND IMAGE
+          Image.asset(
+            'assets/images/lanka_transit_splash.png',
+            fit: BoxFit.cover,
+            alignment: Alignment.center,
+            errorBuilder: (context, error, stackTrace) {
+              return const ColoredBox(
+                color: Color(0xFF070B18),
+                child: Center(
+                  child: Icon(
+                    Icons.directions_transit_rounded,
+                    size: 100,
+                    color: Color(0xFF38BDF8),
+                  ),
+                ),
+              );
+            },
+          ),
 
-              Row(
+          // DARK OVERLAY FOR TEXT VISIBILITY
+          const DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Color(0x99070B18),
+                  Color(0x33070B18),
+                  Color(0x88070B18),
+                  Color(0xF2070B18),
+                ],
+                stops: [0.0, 0.30, 0.60, 1.0],
+              ),
+            ),
+          ),
+
+          // FOREGROUND CONTENT
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(24, 24, 24, 22),
+              child: Column(
                 children: [
-                  Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF15223B),
-                      borderRadius: BorderRadius.circular(15),
-                    ),
-                    child: const Icon(
-                      Icons.directions_transit_rounded,
-                      color: Color(0xFF38BDF8),
-                      size: 27,
+                  // APP HEADER
+                  Row(
+                    children: [
+                      Container(
+                        width: 48,
+                        height: 48,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF15223B)
+                              .withValues(alpha: 0.85),
+                          borderRadius: BorderRadius.circular(15),
+                          border: Border.all(
+                            color: const Color(0xFF38BDF8)
+                                .withValues(alpha: 0.4),
+                          ),
+                        ),
+                        child: const Icon(
+                          Icons.directions_transit_rounded,
+                          color: Color(0xFF38BDF8),
+                          size: 27,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        l10n.appName,
+                        style: const TextStyle(
+                          fontSize: 21,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFFF3F6FF),
+                          shadows: [
+                            Shadow(color: Colors.black54, blurRadius: 12),
+                          ],
+                        ),
+                      ),
+                      const Spacer(),
+                      Container(
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF070B18).withValues(alpha: 0.6),
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: IconButton(
+                          onPressed: () {
+                            showLanguageSelector(context);
+                          },
+                          icon: const Icon(
+                            Icons.language_rounded,
+                            color: Color(0xFF38BDF8),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const Spacer(),
+
+                  // MAIN TEXT OVER BACKGROUND
+                  Text(
+                    l10n.travelSmarter,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 36,
+                      height: 1.15,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFFF3F6FF),
+                      shadows: [
+                        Shadow(
+                          color: Colors.black87,
+                          blurRadius: 18,
+                          offset: Offset(0, 3),
+                        ),
+                      ],
                     ),
                   ),
 
-                  const SizedBox(width: 12),
+                  const SizedBox(height: 16),
 
-                  Text(
-                    l10n.appName,
-                    style: const TextStyle(
-                      fontSize: 21,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFFF3F6FF),
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 450),
+                    child: Text(
+                      l10n.travelSubtitle,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        color: Color(0xFFE0E9F8),
+                        fontSize: 15,
+                        height: 1.6,
+                        shadows: [
+                          Shadow(color: Colors.black87, blurRadius: 10),
+                        ],
+                      ),
                     ),
                   ),
 
                   const Spacer(),
 
-                  IconButton(
-                    onPressed: () {
-                      showLanguageSelector(context);
-                    },
-                    icon: const Icon(
-                      Icons.language_rounded,
-                      color: Color(0xFF38BDF8),
+                  // GET STARTED BUTTON
+                  SizedBox(
+                    width: double.infinity,
+                    height: 58,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const LoginScreen(),
+                          ),
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF38BDF8),
+                        foregroundColor: const Color(0xFF07111F),
+                        elevation: 8,
+                        shadowColor: const Color(0xFF38BDF8)
+                            .withValues(alpha: 0.3),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(18),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            l10n.getStarted,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          const Icon(Icons.arrow_forward_rounded, size: 21),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 14),
+
+                  Text(
+                    l10n.yourJourneyStartsHere,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: Color(0xFFCFD9EA),
+                      fontSize: 12,
+                      shadows: [Shadow(color: Colors.black87, blurRadius: 8)],
                     ),
                   ),
                 ],
               ),
-
-              const Spacer(),
-
-              // MAIN ILLUSTRATION
-              Container(
-                width: double.infinity,
-                height: 300,
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [Color(0xFF15223B), Color(0xFF171A3A)],
-                  ),
-                  borderRadius: BorderRadius.circular(35),
-                ),
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    Positioned(
-                      top: 25,
-                      right: 25,
-                      child: Container(
-                        width: 55,
-                        height: 55,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF111A2E).withValues(alpha: 0.7),
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                    ),
-
-                    Positioned(
-                      bottom: 25,
-                      left: 25,
-                      child: Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF111A2E).withValues(alpha: 0.7),
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                    ),
-
-                    Container(
-                      width: 145,
-                      height: 145,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF111A2E),
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(0xFF38BDF8)
-                                .withValues(alpha: 0.12),
-                            blurRadius: 25,
-                            offset: const Offset(0, 10),
-                          ),
-                        ],
-                      ),
-                      child: const Icon(
-                        Icons.directions_transit_rounded,
-                        size: 75,
-                        color: Color(0xFF38BDF8),
-                      ),
-                    ),
-
-                    const Positioned(
-                      left: 35,
-                      bottom: 55,
-                      child: _SmallTransportIcon(
-                        icon: Icons.directions_bus_rounded,
-                        color: Color(0xFF38BDF8),
-                      ),
-                    ),
-
-                    const Positioned(
-                      right: 35,
-                      top: 55,
-                      child: _SmallTransportIcon(
-                        icon: Icons.train_rounded,
-                        color: Color(0xFF8B5CF6),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 32),
-
-              Text(
-                l10n.travelSmarter,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontSize: 31,
-                  height: 1.15,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFFF3F6FF),
-                ),
-              ),
-
-              const SizedBox(height: 12),
-
-              Text(
-                l10n.travelSubtitle,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: Color(0xFF9AA8C0),
-                  fontSize: 14,
-                  height: 1.5,
-                ),
-              ),
-
-              const Spacer(),
-
-              // GET STARTED
-              SizedBox(
-                width: double.infinity,
-                height: 56,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF38BDF8),
-                    foregroundColor: const Color(0xFF111A2E),
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(17),
-                    ),
-                  ),
-                  onPressed: () {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const LoginScreen(),
-                      ),
-                    );
-                  },
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        l10n.getStarted,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      const Icon(Icons.arrow_forward_rounded, size: 21),
-                    ],
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 14),
-
-              Text(
-                l10n.yourJourneyStartsHere,
-                style: const TextStyle(color: Color(0xFF9AA8C0), fontSize: 12),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// ============================================================
-// SMALL TRANSPORT ICON
-// ============================================================
-
-class _SmallTransportIcon extends StatelessWidget {
-  final IconData icon;
-  final Color color;
-
-  const _SmallTransportIcon({required this.icon, required this.color});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 48,
-      height: 48,
-      decoration: BoxDecoration(
-        color: const Color(0xFF111A2E),
-        borderRadius: BorderRadius.circular(15),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            ),
           ),
         ],
       ),
-      child: Icon(icon, color: color, size: 25),
     );
   }
 }
