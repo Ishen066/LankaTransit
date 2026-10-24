@@ -1,5 +1,8 @@
+
 import 'package:flutter/material.dart';
+
 import 'app_locale.dart';
+import 'app_theme.dart';
 import 'l10n/app_localizations.dart';
 import 'bus_routes_screen.dart';
 import 'train_routes_screen.dart';
@@ -8,7 +11,9 @@ import 'routes_screen.dart';
 import 'nearby_transport_screen.dart';
 import 'profile_screen.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await AppTheme.load();
   runApp(const LankaTransitApp());
 }
 
@@ -24,46 +29,47 @@ class LankaTransitApp extends StatelessWidget {
     return ValueListenableBuilder<Locale>(
       valueListenable: appLocale,
       builder: (context, locale, child) {
-        return MaterialApp(
-          debugShowCheckedModeBanner: false,
-          title: 'LankaTransit',
-
-          locale: locale,
-
-          localizationsDelegates:
-              AppLocalizations.localizationsDelegates,
-
-          supportedLocales:
-              AppLocalizations.supportedLocales,
-
-          theme: ThemeData(
-            useMaterial3: true,
-            brightness: Brightness.dark,
-            scaffoldBackgroundColor: const Color(0xFF070B18),
-            canvasColor: const Color(0xFF070B18),
-            colorScheme: const ColorScheme.dark(
-              primary: Color(0xFF38BDF8),
-              secondary: Color(0xFF8B5CF6),
-              surface: Color(0xFF111A2E),
-              onPrimary: Color(0xFF07111F),
-              onSecondary: Color(0xFFFFFFFF),
-              onSurface: Color(0xFFF3F6FF),
-            ),
-            appBarTheme: const AppBarTheme(
-              backgroundColor: Color(0xFF070B18),
-              foregroundColor: Color(0xFFF3F6FF),
-              elevation: 0,
-              scrolledUnderElevation: 0,
-            ),
-            fontFamily: 'Arial',
-          ),
-
-          home: const SplashScreen(),
+        return ValueListenableBuilder<ThemeMode>(
+          valueListenable: AppTheme.mode,
+          builder: (context, mode, child) {
+            return MaterialApp(
+              debugShowCheckedModeBanner: false,
+              title: 'LankaTransit',
+              locale: locale,
+              themeMode: mode,
+              theme: AppTheme.lightTheme,
+              darkTheme: AppTheme.darkTheme,
+              localizationsDelegates:
+                  AppLocalizations.localizationsDelegates,
+              supportedLocales:
+                  AppLocalizations.supportedLocales,
+              home: const SplashScreen(),
+            );
+          },
         );
       },
     );
   }
 }
+
+// ============================================================
+// THEME HELPERS
+// ============================================================
+
+Color _page(BuildContext context) =>
+    Theme.of(context).scaffoldBackgroundColor;
+
+Color _surface(BuildContext context) =>
+    Theme.of(context).colorScheme.surface;
+
+Color _text(BuildContext context) =>
+    Theme.of(context).colorScheme.onSurface;
+
+Color _muted(BuildContext context) =>
+    AppTheme.secondaryText(context);
+
+Color _primary(BuildContext context) =>
+    Theme.of(context).colorScheme.primary;
 
 // ============================================================
 // LANGUAGE SELECTOR
@@ -74,92 +80,56 @@ void showLanguageSelector(BuildContext context) {
 
   showModalBottomSheet(
     context: context,
-    backgroundColor: const Color(0xFF111A2E),
+    backgroundColor: _surface(context),
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(
         top: Radius.circular(28),
       ),
     ),
-    builder: (context) {
+    builder: (sheetContext) {
       return SafeArea(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(
-            24,
-            22,
-            24,
-            28,
-          ),
+          padding: const EdgeInsets.fromLTRB(24, 22, 24, 28),
           child: Column(
             mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment:
-                CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                children: [
-                  Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF15223B),
-                      borderRadius:
-                          BorderRadius.circular(15),
-                    ),
-                    child: const Icon(
-                      Icons.language_rounded,
-                      color: Color(0xFF38BDF8),
-                    ),
-                  ),
-                  const SizedBox(width: 14),
-                  Text(
-                    l10n.language,
-                    style: const TextStyle(
-                      fontSize: 21,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFFF3F6FF),
-                    ),
-                  ),
-                ],
+              Text(
+                l10n.language,
+                style: TextStyle(
+                  fontSize: 21,
+                  fontWeight: FontWeight.bold,
+                  color: _text(sheetContext),
+                ),
               ),
-
-              const SizedBox(height: 22),
-
+              const SizedBox(height: 20),
               _LanguageOption(
                 title: l10n.english,
                 subtitle: 'English',
                 locale: const Locale('en'),
-                currentLocale: appLocale.value,
                 onTap: () {
-                  appLocale.value =
-                      const Locale('en');
-                  Navigator.pop(context);
+                  appLocale.value = const Locale('en');
+                  Navigator.pop(sheetContext);
                 },
               ),
-
               const SizedBox(height: 10),
-
               _LanguageOption(
                 title: l10n.sinhala,
                 subtitle: 'සිංහල',
                 locale: const Locale('si'),
-                currentLocale: appLocale.value,
                 onTap: () {
-                  appLocale.value =
-                      const Locale('si');
-                  Navigator.pop(context);
+                  appLocale.value = const Locale('si');
+                  Navigator.pop(sheetContext);
                 },
               ),
-
               const SizedBox(height: 10),
-
               _LanguageOption(
                 title: l10n.tamil,
                 subtitle: 'தமிழ்',
                 locale: const Locale('ta'),
-                currentLocale: appLocale.value,
                 onTap: () {
-                  appLocale.value =
-                      const Locale('ta');
-                  Navigator.pop(context);
+                  appLocale.value = const Locale('ta');
+                  Navigator.pop(sheetContext);
                 },
               ),
             ],
@@ -170,35 +140,29 @@ void showLanguageSelector(BuildContext context) {
   );
 }
 
-// ============================================================
-// LANGUAGE OPTION
-// ============================================================
-
 class _LanguageOption extends StatelessWidget {
   final String title;
   final String subtitle;
   final Locale locale;
-  final Locale currentLocale;
   final VoidCallback onTap;
 
   const _LanguageOption({
     required this.title,
     required this.subtitle,
     required this.locale,
-    required this.currentLocale,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    final bool isSelected =
-        currentLocale.languageCode ==
-            locale.languageCode;
+    final selected =
+        appLocale.value.languageCode == locale.languageCode;
+    final theme = Theme.of(context);
 
     return Material(
-      color: isSelected
-          ? const Color(0xFF15223B)
-          : const Color(0xFF10192B),
+      color: selected
+          ? theme.colorScheme.primary.withValues(alpha: 0.12)
+          : theme.colorScheme.surface,
       borderRadius: BorderRadius.circular(17),
       child: InkWell(
         borderRadius: BorderRadius.circular(17),
@@ -213,54 +177,44 @@ class _LanguageOption extends StatelessWidget {
               Container(
                 width: 44,
                 height: 44,
+                alignment: Alignment.center,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF111A2E),
-                  borderRadius:
-                      BorderRadius.circular(13),
+                  color: theme.colorScheme.primary
+                      .withValues(alpha: 0.10),
+                  borderRadius: BorderRadius.circular(13),
                 ),
-                child: Center(
-                  child: Text(
-                    locale.languageCode == 'en'
-                        ? '🇬🇧'
-                        : '🇱🇰',
-                    style:
-                        const TextStyle(fontSize: 22),
-                  ),
+                child: Text(
+                  locale.languageCode == 'en' ? '🇬🇧' : '🇱🇰',
+                  style: const TextStyle(fontSize: 22),
                 ),
               ),
-
               const SizedBox(width: 14),
-
               Expanded(
                 child: Column(
-                  crossAxisAlignment:
-                      CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       title,
-                      style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight:
-                            FontWeight.bold,
-                        color: Color(0xFFF3F6FF),
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: _text(context),
                       ),
                     ),
                     const SizedBox(height: 3),
                     Text(
                       subtitle,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 12,
-                        color: Color(0xFF9AA8C0),
+                        color: _muted(context),
                       ),
                     ),
                   ],
                 ),
               ),
-
-              if (isSelected)
-                const Icon(
+              if (selected)
+                Icon(
                   Icons.check_circle_rounded,
-                  color: Color(0xFF38BDF8),
+                  color: _primary(context),
                 ),
             ],
           ),
@@ -271,9 +225,8 @@ class _LanguageOption extends StatelessWidget {
 }
 
 // ============================================================
-// GET STARTED / SPLASH SCREEN
+// SPLASH SCREEN
 // ============================================================
-
 
 class SplashScreen extends StatelessWidget {
   const SplashScreen({super.key});
@@ -281,73 +234,71 @@ class SplashScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
+      backgroundColor: _page(context),
       body: Stack(
         fit: StackFit.expand,
         children: [
-          // Full-screen background image
           Image.asset(
             'assets/images/lanka_transit_splash.png',
             fit: BoxFit.cover,
-            errorBuilder: (context, error, stackTrace) {
-              return Container(
-                color: const Color(0xFF070B18),
-              );
-            },
+            errorBuilder: (_, _, _) => Container(
+              color: _page(context),
+            ),
           ),
-
-          // Dark overlay for readable text
           Container(
-            color: const Color(0x99070B18),
+            color: isDark
+                ? const Color(0xCC070B18)
+                : const Color(0x99070B18),
           ),
-
-          // Splash content
           SafeArea(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(
-                24, 20, 24, 28,
-              ),
+              padding: const EdgeInsets.fromLTRB(24, 20, 24, 28),
               child: Column(
                 children: [
                   Row(
                     children: [
-                      Container(
-                        width: 48,
-                        height: 48,
-                        decoration: BoxDecoration(
-                          color: const Color(0xCC15223B),
-                          borderRadius: BorderRadius.circular(15),
-                        ),
-                        child: const Icon(
-                          Icons.directions_transit_rounded,
-                          color: Color(0xFF38BDF8),
-                          size: 27,
-                        ),
+                      const Icon(
+                        Icons.directions_transit_rounded,
+                        color: Color(0xFF38BDF8),
+                        size: 32,
                       ),
                       const SizedBox(width: 12),
-                      Text(
-                        l10n.appName,
-                        style: const TextStyle(
-                          fontSize: 21,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
+                      Expanded(
+                        child: Text(
+                          l10n.appName,
+                          style: const TextStyle(
+                            fontSize: 21,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
-                      const Spacer(),
                       IconButton(
-                        onPressed: () =>
-                            showLanguageSelector(context),
+                        onPressed: () => showLanguageSelector(context),
                         icon: const Icon(
                           Icons.language_rounded,
                           color: Colors.white,
                         ),
                       ),
+                      IconButton(
+                        onPressed: () {
+                          AppTheme.setMode(
+                            isDark ? ThemeMode.light : ThemeMode.dark,
+                          );
+                        },
+                        icon: Icon(
+                          isDark
+                              ? Icons.light_mode_rounded
+                              : Icons.dark_mode_rounded,
+                          color: Colors.white,
+                        ),
+                      ),
                     ],
                   ),
-
                   const Spacer(),
-
                   Text(
                     l10n.travelSmarter,
                     textAlign: TextAlign.center,
@@ -358,9 +309,7 @@ class SplashScreen extends StatelessWidget {
                       color: Colors.white,
                     ),
                   ),
-
                   const SizedBox(height: 14),
-
                   Text(
                     l10n.travelSubtitle,
                     textAlign: TextAlign.center,
@@ -370,20 +319,11 @@ class SplashScreen extends StatelessWidget {
                       height: 1.6,
                     ),
                   ),
-
                   const Spacer(),
-
                   SizedBox(
                     width: double.infinity,
                     height: 56,
                     child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF38BDF8),
-                        foregroundColor: const Color(0xFF07111F),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(17),
-                        ),
-                      ),
                       onPressed: () {
                         Navigator.pushReplacement(
                           context,
@@ -395,24 +335,14 @@ class SplashScreen extends StatelessWidget {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text(
-                            l10n.getStarted,
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
+                          Text(l10n.getStarted),
                           const SizedBox(width: 10),
-                          const Icon(
-                            Icons.arrow_forward_rounded,
-                          ),
+                          const Icon(Icons.arrow_forward_rounded),
                         ],
                       ),
                     ),
                   ),
-
                   const SizedBox(height: 14),
-
                   Text(
                     l10n.yourJourneyStartsHere,
                     style: const TextStyle(
@@ -430,8 +360,46 @@ class SplashScreen extends StatelessWidget {
   }
 }
 
+// ============================================================
+// SHARED AUTH INPUT
+// ============================================================
 
+InputDecoration _inputDecoration(
+  BuildContext context, {
+  required String label,
+  required IconData icon,
+  Widget? suffixIcon,
+}) {
+  final theme = Theme.of(context);
+  final border = AppTheme.borderColor(context);
 
+  return InputDecoration(
+    labelText: label,
+    prefixIcon: Icon(icon, color: theme.colorScheme.primary),
+    suffixIcon: suffixIcon,
+    filled: true,
+    fillColor: theme.colorScheme.surface,
+    contentPadding: const EdgeInsets.symmetric(
+      horizontal: 18,
+      vertical: 17,
+    ),
+    border: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(16),
+      borderSide: BorderSide(color: border),
+    ),
+    enabledBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(16),
+      borderSide: BorderSide(color: border),
+    ),
+    focusedBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(16),
+      borderSide: BorderSide(
+        color: theme.colorScheme.primary,
+        width: 1.5,
+      ),
+    ),
+  );
+}
 
 // ============================================================
 // LOGIN SCREEN
@@ -441,432 +409,136 @@ class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
   @override
-  State<LoginScreen> createState() =>
-      _LoginScreenState();
+  State<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState
-    extends State<LoginScreen> {
+class _LoginScreenState extends State<LoginScreen> {
   bool _obscurePassword = true;
-
-  InputDecoration _inputDecoration({
-    required String label,
-    required IconData icon,
-    Widget? suffixIcon,
-  }) {
-    return InputDecoration(
-      labelText: label,
-      prefixIcon: Icon(
-        icon,
-        color: const Color(0xFF38BDF8),
-      ),
-      suffixIcon: suffixIcon,
-      filled: true,
-      fillColor: const Color(0xFF111A2E),
-      contentPadding:
-          const EdgeInsets.symmetric(
-        horizontal: 18,
-        vertical: 17,
-      ),
-      border: OutlineInputBorder(
-        borderRadius:
-            BorderRadius.circular(16),
-        borderSide: BorderSide.none,
-      ),
-      enabledBorder:
-          OutlineInputBorder(
-        borderRadius:
-            BorderRadius.circular(16),
-        borderSide: const BorderSide(
-          color: Color(0xFF28344D),
-        ),
-      ),
-      focusedBorder:
-          OutlineInputBorder(
-        borderRadius:
-            BorderRadius.circular(16),
-        borderSide: const BorderSide(
-          color: Color(0xFF38BDF8),
-          width: 1.5,
-        ),
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
-    final l10n =
-        AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
-      backgroundColor:
-          const Color(0xFF070B18),
+      backgroundColor: _page(context),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding:
-              const EdgeInsets.fromLTRB(
-            24,
-            18,
-            24,
-            30,
-          ),
+          padding: const EdgeInsets.fromLTRB(24, 18, 24, 30),
           child: Column(
-            crossAxisAlignment:
-                CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 children: [
                   IconButton(
-                    onPressed: () =>
-                        Navigator.pop(context),
-                    icon: const Icon(
-                      Icons
-                          .arrow_back_rounded,
-                    ),
-                    padding: EdgeInsets.zero,
-                    constraints:
-                        const BoxConstraints(),
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.arrow_back_rounded),
                   ),
-
                   const Spacer(),
-
                   IconButton(
-                    onPressed: () {
-                      showLanguageSelector(
-                          context);
-                    },
-                    icon: const Icon(
-                      Icons.language_rounded,
-                      color:
-                          Color(0xFF38BDF8),
-                    ),
+                    onPressed: () => showLanguageSelector(context),
+                    icon: Icon(Icons.language_rounded,
+                        color: _primary(context)),
                   ),
                 ],
               ),
-
               const SizedBox(height: 24),
-
               Center(
-                child: Container(
-                  width: 72,
-                  height: 72,
-                  decoration:
-                      BoxDecoration(
-                    color:
-                        const Color(
-                            0xFF15223B),
-                    borderRadius:
-                        BorderRadius.circular(
-                            22),
-                  ),
-                  child: const Icon(
-                    Icons
-                        .directions_transit_rounded,
-                    color:
-                        Color(0xFF38BDF8),
-                    size: 38,
-                  ),
+                child: Icon(
+                  Icons.directions_transit_rounded,
+                  size: 66,
+                  color: _primary(context),
                 ),
               ),
-
               const SizedBox(height: 24),
-
               Center(
                 child: Text(
                   l10n.welcomeBack,
-                  style:
-                      const TextStyle(
+                  style: TextStyle(
                     fontSize: 30,
-                    fontWeight:
-                        FontWeight.bold,
-                    color:
-                        Color(0xFFF3F6FF),
+                    fontWeight: FontWeight.bold,
+                    color: _text(context),
                   ),
                 ),
               ),
-
               const SizedBox(height: 8),
-
               Center(
                 child: Text(
                   l10n.loginSubtitle,
-                  textAlign:
-                      TextAlign.center,
-                  style:
-                      const TextStyle(
-                    color: Color(0xFF9AA8C0),
-                    fontSize: 14,
-                    height: 1.5,
-                  ),
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: _muted(context)),
                 ),
               ),
-
-              const SizedBox(height: 34),
-
-              Text(
-                l10n.emailAddress,
-                style:
-                    const TextStyle(
-                  fontWeight:
-                      FontWeight.w600,
-                  fontSize: 14,
-                  color:
-                      Color(0xFFF3F6FF),
-                ),
-              ),
-
+              const SizedBox(height: 32),
+              _FieldLabel(text: l10n.emailAddress),
               const SizedBox(height: 8),
-
               TextField(
-                keyboardType:
-                    TextInputType.emailAddress,
-                decoration:
-                    _inputDecoration(
-                  label:
-                      l10n.enterYourEmail,
-                  icon:
-                      Icons.email_outlined,
+                keyboardType: TextInputType.emailAddress,
+                decoration: _inputDecoration(
+                  context,
+                  label: l10n.enterYourEmail,
+                  icon: Icons.email_outlined,
                 ),
               ),
-
               const SizedBox(height: 20),
-
-              Text(
-                l10n.password,
-                style:
-                    const TextStyle(
-                  fontWeight:
-                      FontWeight.w600,
-                  fontSize: 14,
-                  color:
-                      Color(0xFFF3F6FF),
-                ),
-              ),
-
+              _FieldLabel(text: l10n.password),
               const SizedBox(height: 8),
-
               TextField(
-                obscureText:
-                    _obscurePassword,
-                decoration:
-                    _inputDecoration(
-                  label:
-                      l10n.enterYourPassword,
-                  icon:
-                      Icons.lock_outline_rounded,
-                  suffixIcon:
-                      IconButton(
+                obscureText: _obscurePassword,
+                decoration: _inputDecoration(
+                  context,
+                  label: l10n.enterYourPassword,
+                  icon: Icons.lock_outline_rounded,
+                  suffixIcon: IconButton(
                     onPressed: () {
                       setState(() {
-                        _obscurePassword =
-                            !_obscurePassword;
+                        _obscurePassword = !_obscurePassword;
                       });
                     },
                     icon: Icon(
                       _obscurePassword
-                          ? Icons
-                              .visibility_outlined
-                          : Icons
-                              .visibility_off_outlined,
-                      color: const Color(0xFF9AA8C0),
+                          ? Icons.visibility_outlined
+                          : Icons.visibility_off_outlined,
                     ),
                   ),
                 ),
               ),
-
-              const SizedBox(height: 10),
-
               Align(
-                alignment:
-                    Alignment.centerRight,
+                alignment: Alignment.centerRight,
                 child: TextButton(
                   onPressed: () {},
-                  child: Text(
-                    l10n.forgotPassword,
-                    style:
-                        const TextStyle(
-                      color:
-                          Color(0xFF38BDF8),
-                      fontWeight:
-                          FontWeight.w600,
-                    ),
-                  ),
+                  child: Text(l10n.forgotPassword),
                 ),
               ),
-
-              const SizedBox(height: 14),
-
+              const SizedBox(height: 12),
               SizedBox(
                 width: double.infinity,
-                height: 56,
+                height: 54,
                 child: ElevatedButton(
                   onPressed: () {
                     Navigator.pushReplacement(
                       context,
                       MaterialPageRoute(
-                        builder: (context) =>
-                            const HomePage(),
+                        builder: (_) => const HomePage(),
                       ),
                     );
                   },
-                  style:
-                      ElevatedButton.styleFrom(
-                    backgroundColor:
-                        const Color(
-                            0xFF38BDF8),
-                    foregroundColor:
-                        const Color(0xFF111A2E),
-                    elevation: 0,
-                    shape:
-                        RoundedRectangleBorder(
-                      borderRadius:
-                          BorderRadius.circular(
-                              17),
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisAlignment:
-                        MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        l10n.login,
-                        style:
-                            const TextStyle(
-                          fontSize: 16,
-                          fontWeight:
-                              FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(width: 9),
-                      const Icon(
-                        Icons
-                            .arrow_forward_rounded,
-                        size: 21,
-                      ),
-                    ],
-                  ),
+                  child: Text(l10n.login),
                 ),
               ),
-
-              const SizedBox(height: 25),
-
-              Row(
-                children: [
-                  const Expanded(
-                    child: Divider(
-                      color:
-                          Color(0xFF28344D),
-                    ),
-                  ),
-                  Padding(
-                    padding:
-                        const EdgeInsets
-                            .symmetric(
-                      horizontal: 14,
-                    ),
-                    child: Text(
-                      l10n.or,
-                      style:
-                          TextStyle(
-                        color: Colors
-                            .grey.shade600,
-                        fontSize: 12,
-                        fontWeight:
-                            FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                  const Expanded(
-                    child: Divider(
-                      color:
-                          Color(0xFF28344D),
-                    ),
-                  ),
-                ],
-              ),
-
               const SizedBox(height: 20),
-
-              SizedBox(
-                width: double.infinity,
-                height: 52,
-                child:
-                    OutlinedButton.icon(
-                  onPressed: () {},
-                  icon: const Icon(
-                    Icons
-                        .g_mobiledata_rounded,
-                    size: 27,
-                  ),
-                  label: Text(
-                    l10n.continueWithGoogle,
-                    style:
-                        const TextStyle(
-                      fontWeight:
-                          FontWeight.w600,
-                    ),
-                  ),
-                  style:
-                      OutlinedButton.styleFrom(
-                    foregroundColor:
-                        const Color(
-                            0xFFF3F6FF),
-                    side:
-                        const BorderSide(
-                      color:
-                          Color(0xFF28344D),
-                    ),
-                    backgroundColor:
-                        const Color(0xFF111A2E),
-                    shape:
-                        RoundedRectangleBorder(
-                      borderRadius:
-                          BorderRadius.circular(
-                              16),
-                    ),
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 26),
-
               Center(
-                child: Wrap(
-                  alignment:
-                      WrapAlignment.center,
-                  children: [
-                    Text(
-                      '${l10n.dontHaveAccount} ',
-                      style:
-                          const TextStyle(
-                        color: Color(0xFF9AA8C0),
-                        fontSize: 14,
+                child: TextButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const RegisterScreen(),
                       ),
-                    ),
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder:
-                                (context) =>
-                                    const RegisterScreen(),
-                          ),
-                        );
-                      },
-                      child: Text(
-                        l10n.register,
-                        style:
-                            const TextStyle(
-                          color:
-                              Color(0xFF38BDF8),
-                          fontWeight:
-                              FontWeight.bold,
-                          fontSize: 14,
-                        ),
-                      ),
-                    ),
-                  ],
+                    );
+                  },
+                  child: Text(
+                    '${l10n.dontHaveAccount} ${l10n.register}',
+                  ),
                 ),
               ),
             ],
@@ -881,300 +553,125 @@ class _LoginScreenState
 // REGISTER SCREEN
 // ============================================================
 
-class RegisterScreen
-    extends StatefulWidget {
+class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
 
   @override
-  State<RegisterScreen> createState() =>
-      _RegisterScreenState();
+  State<RegisterScreen> createState() => _RegisterScreenState();
 }
 
-class _RegisterScreenState
-    extends State<RegisterScreen> {
+class _RegisterScreenState extends State<RegisterScreen> {
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
 
-  InputDecoration _inputDecoration({
-    required String label,
-    required IconData icon,
-    Widget? suffixIcon,
-  }) {
-    return InputDecoration(
-      labelText: label,
-      prefixIcon: Icon(
-        icon,
-        color: const Color(0xFF38BDF8),
-      ),
-      suffixIcon: suffixIcon,
-      filled: true,
-      fillColor: const Color(0xFF111A2E),
-      contentPadding:
-          const EdgeInsets.symmetric(
-        horizontal: 18,
-        vertical: 17,
-      ),
-      border: OutlineInputBorder(
-        borderRadius:
-            BorderRadius.circular(16),
-        borderSide: BorderSide.none,
-      ),
-      enabledBorder:
-          OutlineInputBorder(
-        borderRadius:
-            BorderRadius.circular(16),
-        borderSide: const BorderSide(
-          color: Color(0xFF28344D),
-        ),
-      ),
-      focusedBorder:
-          OutlineInputBorder(
-        borderRadius:
-            BorderRadius.circular(16),
-        borderSide: const BorderSide(
-          color: Color(0xFF38BDF8),
-          width: 1.5,
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
-    final l10n =
-        AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
-      backgroundColor:
-          const Color(0xFF070B18),
+      backgroundColor: _page(context),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding:
-              const EdgeInsets.fromLTRB(
-            24,
-            18,
-            24,
-            30,
-          ),
+          padding: const EdgeInsets.fromLTRB(24, 18, 24, 30),
           child: Column(
-            crossAxisAlignment:
-                CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 children: [
                   IconButton(
-                    onPressed: () =>
-                        Navigator.pop(context),
-                    icon: const Icon(
-                      Icons
-                          .arrow_back_rounded,
-                    ),
-                    padding: EdgeInsets.zero,
-                    constraints:
-                        const BoxConstraints(),
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.arrow_back_rounded),
                   ),
-
                   const Spacer(),
-
                   IconButton(
-                    onPressed: () {
-                      showLanguageSelector(
-                          context);
-                    },
-                    icon: const Icon(
-                      Icons.language_rounded,
-                      color:
-                          Color(0xFF38BDF8),
-                    ),
+                    onPressed: () => showLanguageSelector(context),
+                    icon: Icon(Icons.language_rounded,
+                        color: _primary(context)),
                   ),
                 ],
               ),
-
               const SizedBox(height: 20),
-
               Center(
-                child: Container(
-                  width: 72,
-                  height: 72,
-                  decoration:
-                      BoxDecoration(
-                    color:
-                        const Color(
-                            0xFF15223B),
-                    borderRadius:
-                        BorderRadius.circular(
-                            22),
-                  ),
-                  child: const Icon(
-                    Icons
-                        .person_add_alt_1_rounded,
-                    color:
-                        Color(0xFF38BDF8),
-                    size: 36,
-                  ),
+                child: Icon(
+                  Icons.person_add_alt_1_rounded,
+                  size: 60,
+                  color: _primary(context),
                 ),
               ),
-
               const SizedBox(height: 22),
-
               Center(
                 child: Text(
                   l10n.createAccount,
-                  style:
-                      const TextStyle(
-                    fontSize: 30,
-                    fontWeight:
-                        FontWeight.bold,
-                    color:
-                        Color(0xFFF3F6FF),
+                  style: TextStyle(
+                    fontSize: 29,
+                    fontWeight: FontWeight.bold,
+                    color: _text(context),
                   ),
                 ),
               ),
-
               const SizedBox(height: 8),
-
               Center(
                 child: Text(
                   l10n.createAccountSubtitle,
-                  textAlign:
-                      TextAlign.center,
-                  style:
-                      const TextStyle(
-                    color: Color(0xFF9AA8C0),
-                    fontSize: 14,
-                    height: 1.5,
-                  ),
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: _muted(context)),
                 ),
               ),
-
-              const SizedBox(height: 32),
-
-              Text(
-                l10n.fullName,
-                style:
-                    const TextStyle(
-                  fontWeight:
-                      FontWeight.w600,
-                  fontSize: 14,
-                  color:
-                      Color(0xFFF3F6FF),
-                ),
-              ),
-
+              const SizedBox(height: 30),
+              _FieldLabel(text: l10n.fullName),
               const SizedBox(height: 8),
-
               TextField(
-                textCapitalization:
-                    TextCapitalization.words,
-                decoration:
-                    _inputDecoration(
-                  label:
-                      l10n.enterYourFullName,
-                  icon: Icons
-                      .person_outline_rounded,
+                textCapitalization: TextCapitalization.words,
+                decoration: _inputDecoration(
+                  context,
+                  label: l10n.enterYourFullName,
+                  icon: Icons.person_outline_rounded,
                 ),
               ),
-
               const SizedBox(height: 18),
-
-              Text(
-                l10n.emailAddress,
-                style:
-                    const TextStyle(
-                  fontWeight:
-                      FontWeight.w600,
-                  fontSize: 14,
-                  color:
-                      Color(0xFFF3F6FF),
-                ),
-              ),
-
+              _FieldLabel(text: l10n.emailAddress),
               const SizedBox(height: 8),
-
               TextField(
-                keyboardType:
-                    TextInputType.emailAddress,
-                decoration:
-                    _inputDecoration(
-                  label:
-                      l10n.enterYourEmail,
-                  icon:
-                      Icons.email_outlined,
+                keyboardType: TextInputType.emailAddress,
+                decoration: _inputDecoration(
+                  context,
+                  label: l10n.enterYourEmail,
+                  icon: Icons.email_outlined,
                 ),
               ),
-
               const SizedBox(height: 18),
-
-              Text(
-                l10n.password,
-                style:
-                    const TextStyle(
-                  fontWeight:
-                      FontWeight.w600,
-                  fontSize: 14,
-                  color:
-                      Color(0xFFF3F6FF),
-                ),
-              ),
-
+              _FieldLabel(text: l10n.password),
               const SizedBox(height: 8),
-
               TextField(
-                obscureText:
-                    _obscurePassword,
-                decoration:
-                    _inputDecoration(
-                  label:
-                      l10n.createPassword,
-                  icon:
-                      Icons.lock_outline_rounded,
-                  suffixIcon:
-                      IconButton(
+                obscureText: _obscurePassword,
+                decoration: _inputDecoration(
+                  context,
+                  label: l10n.createPassword,
+                  icon: Icons.lock_outline_rounded,
+                  suffixIcon: IconButton(
                     onPressed: () {
                       setState(() {
-                        _obscurePassword =
-                            !_obscurePassword;
+                        _obscurePassword = !_obscurePassword;
                       });
                     },
                     icon: Icon(
                       _obscurePassword
-                          ? Icons
-                              .visibility_outlined
-                          : Icons
-                              .visibility_off_outlined,
-                      color: const Color(0xFF9AA8C0),
+                          ? Icons.visibility_outlined
+                          : Icons.visibility_off_outlined,
                     ),
                   ),
                 ),
               ),
-
               const SizedBox(height: 18),
-
-              Text(
-                l10n.confirmPassword,
-                style:
-                    const TextStyle(
-                  fontWeight:
-                      FontWeight.w600,
-                  fontSize: 14,
-                  color:
-                      Color(0xFFF3F6FF),
-                ),
-              ),
-
+              _FieldLabel(text: l10n.confirmPassword),
               const SizedBox(height: 8),
-
               TextField(
-                obscureText:
-                    _obscureConfirmPassword,
-                decoration:
-                    _inputDecoration(
-                  label:
-                      l10n.confirmYourPassword,
-                  icon:
-                      Icons.lock_outline_rounded,
-                  suffixIcon:
-                      IconButton(
+                obscureText: _obscureConfirmPassword,
+                decoration: _inputDecoration(
+                  context,
+                  label: l10n.confirmYourPassword,
+                  icon: Icons.lock_outline_rounded,
+                  suffixIcon: IconButton(
                     onPressed: () {
                       setState(() {
                         _obscureConfirmPassword =
@@ -1183,135 +680,66 @@ class _RegisterScreenState
                     },
                     icon: Icon(
                       _obscureConfirmPassword
-                          ? Icons
-                              .visibility_outlined
-                          : Icons
-                              .visibility_off_outlined,
-                      color: const Color(0xFF9AA8C0),
+                          ? Icons.visibility_outlined
+                          : Icons.visibility_off_outlined,
                     ),
                   ),
                 ),
               ),
-
               const SizedBox(height: 14),
-
-              Row(
-                crossAxisAlignment:
-                    CrossAxisAlignment.start,
-                children: [
-                  const Icon(
-                    Icons
-                        .info_outline_rounded,
-                    size: 17,
-                    color:
-                        Color(0xFF38BDF8),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      l10n.passwordHint,
-                      style:
-                          const TextStyle(
-                        color: Color(0xFF9AA8C0),
-                        fontSize: 12,
-                        height: 1.4,
-                      ),
-                    ),
-                  ),
-                ],
+              Text(
+                l10n.passwordHint,
+                style: TextStyle(
+                  color: _muted(context),
+                  fontSize: 12,
+                ),
               ),
-
               const SizedBox(height: 24),
-
               SizedBox(
                 width: double.infinity,
-                height: 56,
+                height: 54,
                 child: ElevatedButton(
                   onPressed: () {
                     Navigator.pushReplacement(
                       context,
                       MaterialPageRoute(
-                        builder: (context) =>
-                            const HomePage(),
+                        builder: (_) => const HomePage(),
                       ),
                     );
                   },
-                  style:
-                      ElevatedButton.styleFrom(
-                    backgroundColor:
-                        const Color(
-                            0xFF38BDF8),
-                    foregroundColor:
-                        const Color(0xFF111A2E),
-                    elevation: 0,
-                    shape:
-                        RoundedRectangleBorder(
-                      borderRadius:
-                          BorderRadius.circular(
-                              17),
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisAlignment:
-                        MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        l10n.createAccount,
-                        style:
-                            const TextStyle(
-                          fontSize: 16,
-                          fontWeight:
-                              FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(width: 9),
-                      const Icon(
-                        Icons
-                            .arrow_forward_rounded,
-                        size: 21,
-                      ),
-                    ],
-                  ),
+                  child: Text(l10n.createAccount),
                 ),
               ),
-
-              const SizedBox(height: 25),
-
+              const SizedBox(height: 20),
               Center(
-                child: Wrap(
-                  alignment:
-                      WrapAlignment.center,
-                  children: [
-                    Text(
-                      '${l10n.alreadyHaveAccount} ',
-                      style:
-                          const TextStyle(
-                        color: Color(0xFF9AA8C0),
-                        fontSize: 14,
-                      ),
-                    ),
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.pop(context);
-                      },
-                      child: Text(
-                        l10n.login,
-                        style:
-                            const TextStyle(
-                          color:
-                              Color(0xFF38BDF8),
-                          fontWeight:
-                              FontWeight.bold,
-                          fontSize: 14,
-                        ),
-                      ),
-                    ),
-                  ],
+                child: TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text(
+                    '${l10n.alreadyHaveAccount} ${l10n.login}',
+                  ),
                 ),
               ),
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _FieldLabel extends StatelessWidget {
+  final String text;
+
+  const _FieldLabel({required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      text,
+      style: TextStyle(
+        fontWeight: FontWeight.w600,
+        fontSize: 14,
+        color: _text(context),
       ),
     );
   }
@@ -1326,376 +754,198 @@ class HomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n =
-        AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
-      backgroundColor:
-          const Color(0xFF070B18),
-
+      backgroundColor: _page(context),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding:
-              const EdgeInsets.fromLTRB(
-            20,
-            18,
-            20,
-            25,
-          ),
+          padding: const EdgeInsets.fromLTRB(20, 18, 20, 25),
           child: Column(
-            crossAxisAlignment:
-                CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // ==================================================
-              // TOP HEADER
-              // ==================================================
-
               Row(
                 children: [
                   Container(
-                    width: 50,
-                    height: 50,
-                    decoration:
-                        BoxDecoration(
-                      gradient:
-                          const LinearGradient(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
                         colors: [
                           Color(0xFF38BDF8),
                           Color(0xFF8B5CF6),
                         ],
                       ),
-                      borderRadius:
-                          BorderRadius.circular(
-                              17),
+                      borderRadius: BorderRadius.circular(16),
                     ),
                     child: const Icon(
-                      Icons
-                          .directions_transit_rounded,
-                      color: Color(0xFF111A2E),
-                      size: 27,
+                      Icons.directions_transit_rounded,
+                      color: Colors.white,
                     ),
                   ),
-
                   const SizedBox(width: 12),
-
                   Expanded(
                     child: Column(
-                      crossAxisAlignment:
-                          CrossAxisAlignment
-                              .start,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
                           l10n.goodMorning,
-                          style:
-                              const TextStyle(
-                            color: Color(0xFF9AA8C0),
-                            fontSize: 13,
-                          ),
+                          style: TextStyle(color: _muted(context)),
                         ),
-                        const SizedBox(height: 3),
                         Text(
                           l10n.appName,
-                          style:
-                              const TextStyle(
+                          style: TextStyle(
                             fontSize: 21,
-                            fontWeight:
-                                FontWeight.bold,
+                            fontWeight: FontWeight.bold,
+                            color: _text(context),
                           ),
                         ),
                       ],
                     ),
                   ),
-
-                  // LANGUAGE BUTTON
-
-                  Container(
-                    decoration:
-                        BoxDecoration(
-                      color: const Color(0xFF111A2E),
-                      borderRadius:
-                          BorderRadius.circular(
-                              15),
-                    ),
-                    child: IconButton(
-                      onPressed: () {
-                        showLanguageSelector(
-                            context);
-                      },
-                      icon: const Icon(
-                        Icons
-                            .language_rounded,
-                        color:
-                            Color(0xFF38BDF8),
-                      ),
-                    ),
+                  _HeaderButton(
+                    icon: Icons.language_rounded,
+                    onTap: () => showLanguageSelector(context),
                   ),
-
-                  const SizedBox(width: 7),
-
-                  Material(
-                    color: const Color(0xFF15223B),
-                    borderRadius: BorderRadius.circular(15),
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(15),
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const ProfileScreen(),
-                          ),
-                        );
-                      },
-                      child: const SizedBox(
-                        width: 44,
-                        height: 44,
-                        child: Icon(
-                          Icons.person_outline_rounded,
-                          color: Color(0xFF38BDF8),
+                  const SizedBox(width: 5),
+                  ValueListenableBuilder<ThemeMode>(
+                    valueListenable: AppTheme.mode,
+                    builder: (context, mode, child) {
+                      return _HeaderButton(
+                        icon: mode == ThemeMode.dark
+                            ? Icons.light_mode_rounded
+                            : Icons.dark_mode_rounded,
+                        onTap: () {
+                          AppTheme.setMode(
+                            mode == ThemeMode.dark
+                                ? ThemeMode.light
+                                : ThemeMode.dark,
+                          );
+                        },
+                      );
+                    },
+                  ),
+                  const SizedBox(width: 5),
+                  _HeaderButton(
+                    icon: Icons.person_outline_rounded,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const ProfileScreen(),
                         ),
-                      ),
-                    ),
+                      );
+                    },
                   ),
                 ],
               ),
-
               const SizedBox(height: 28),
-
-              // ==================================================
-              // WELCOME BANNER
-              // ==================================================
-
               Container(
                 width: double.infinity,
-                padding:
-                    const EdgeInsets.all(22),
-                decoration:
-                    BoxDecoration(
-                  gradient:
-                      const LinearGradient(
-                    begin:
-                        Alignment.topLeft,
-                    end:
-                        Alignment.bottomRight,
+                padding: const EdgeInsets.all(22),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                     colors: [
                       Color(0xFF38BDF8),
                       Color(0xFF8B5CF6),
                     ],
                   ),
-                  borderRadius:
-                      BorderRadius.circular(25),
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.12),
-                    width: 1,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFF38BDF8)
-                          .withValues(alpha: 0.20),
-                      blurRadius: 22,
-                      offset: const Offset(0, 8),
-                    ),
-                  ],
+                  borderRadius: BorderRadius.circular(25),
                 ),
-                child: Stack(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Decorative transport artwork
-                    Positioned(
-                      right: 2,
-                      top: 0,
-                      child: Container(
-                        width: 86,
-                        height: 86,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF111A2E)
-                              .withValues(alpha: 0.09),
-                          borderRadius: BorderRadius.circular(28),
+                    Text(
+                      l10n.whereAreYouGoing,
+                      style: const TextStyle(
+                        color: Color(0xFF07111F),
+                        fontSize: 23,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 7),
+                    Text(
+                      l10n.planYourJourney,
+                      style: const TextStyle(
+                        color: Color(0xDD07111F),
+                        fontSize: 13,
+                      ),
+                    ),
+                    const SizedBox(height: 18),
+                    TextField(
+                      textInputAction: TextInputAction.search,
+                      onSubmitted: (_) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const RoutesScreen(),
+                          ),
+                        );
+                      },
+                      decoration: InputDecoration(
+                        hintText: l10n.searchDestination,
+                        filled: true,
+                        fillColor: Colors.white,
+                        prefixIcon: const Icon(
+                          Icons.search_rounded,
+                          color: Color(0xFF0284C7),
                         ),
-                        child: const Icon(
-                          Icons.directions_transit_rounded,
-                          size: 54,
-                          color: Color(0x33111A2E),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(15),
+                          borderSide: BorderSide.none,
                         ),
                       ),
                     ),
-
-                    Column(
-                      crossAxisAlignment:
-                          CrossAxisAlignment
-                              .start,
-                      children: [
-                        Text(
-                          l10n.whereAreYouGoing,
-                          style:
-                              const TextStyle(
-                            color: Color(0xFF111A2E),
-                            fontSize: 23,
-                            fontWeight:
-                                FontWeight.bold,
-                          ),
-                        ),
-
-                        const SizedBox(height: 7),
-
-                        Text(
-                          l10n.planYourJourney,
-                          style:
-                              const TextStyle(
-                            color:
-                                Color(0xB3F3F6FF),
-                            fontSize: 13,
-                            height: 1.5,
-                          ),
-                        ),
-
-                        const SizedBox(height: 18),
-
-                        Container(
-                          height: 50,
-                          decoration:
-                              BoxDecoration(
-                            color: const Color(0xFF111A2E),
-                            borderRadius:
-                                BorderRadius
-                                    .circular(
-                                        15),
-                          ),
-                          child: TextField(
-                            textInputAction: TextInputAction.search,
-                            onSubmitted: (_) {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => const RoutesScreen(),
-                                ),
-                              );
-                            },
-                            decoration:
-                                InputDecoration(
-                              hintText:
-                                  l10n.searchDestination,
-                              hintStyle:
-                                  const TextStyle(
-                                color:
-                                    Color(0xFF9AA8C0),
-                                fontSize: 14,
-                              ),
-                              prefixIcon:
-                                  const Icon(
-                                Icons
-                                    .search_rounded,
-                                color:
-                                    Color(
-                                        0xFF38BDF8),
-                              ),
-                              suffixIcon: IconButton(
-                                onPressed: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (_) => const RoutesScreen(),
-                                    ),
-                                  );
-                                },
-                                icon: const Icon(
-                                  Icons.arrow_forward_rounded,
-                                  color: Color(0xFF38BDF8),
-                                ),
-                              ),
-                              border:
-                                  InputBorder.none,
-                              contentPadding:
-                                  const EdgeInsets
-                                      .symmetric(
-                                vertical: 15,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
                   ],
                 ),
               ),
-
               const SizedBox(height: 28),
-
-              // ==================================================
-              // TRANSPORT
-              // ==================================================
-
               Text(
                 l10n.chooseYourTransport,
-                style:
-                    const TextStyle(
+                style: TextStyle(
                   fontSize: 20,
-                  fontWeight:
-                      FontWeight.bold,
+                  fontWeight: FontWeight.bold,
+                  color: _text(context),
                 ),
               ),
-
               const SizedBox(height: 5),
-
               Text(
                 l10n.selectHowYouTravel,
-                style:
-                    const TextStyle(
-                  color: Color(0xFF9AA8C0),
-                  fontSize: 13,
-                ),
+                style: TextStyle(color: _muted(context)),
               ),
-
               const SizedBox(height: 15),
-
               Row(
                 children: [
                   Expanded(
                     child: _TransportCard(
-                      icon: Icons
-                          .directions_bus_rounded,
+                      icon: Icons.directions_bus_rounded,
                       title: l10n.bus,
-                      subtitle:
-                          l10n.findBusRoutes,
-                      iconColor:
-                          const Color(
-                              0xFF38BDF8),
-                      backgroundColor:
-                          const Color(
-                              0xFF15223B),
+                      subtitle: l10n.findBusRoutes,
+                      iconColor: const Color(0xFF38BDF8),
                       onTap: () {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder:
-                                (context) =>
-                                    const BusRoutesScreen(),
+                            builder: (_) => const BusRoutesScreen(),
                           ),
                         );
                       },
                     ),
                   ),
-
                   const SizedBox(width: 14),
-
                   Expanded(
                     child: _TransportCard(
-                      icon:
-                          Icons.train_rounded,
+                      icon: Icons.train_rounded,
                       title: l10n.train,
-                      subtitle:
-                          l10n.findTrainRoutes,
-                      iconColor:
-                          const Color(
-                              0xFF8B5CF6),
-                      backgroundColor:
-                          const Color(
-                              0xFF211D3D),
+                      subtitle: l10n.findTrainRoutes,
+                      iconColor: const Color(0xFF8B5CF6),
                       onTap: () {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder:
-                                (context) =>
-                                    const TrainRoutesScreen(),
+                            builder: (_) => const TrainRoutesScreen(),
                           ),
                         );
                       },
@@ -1703,28 +953,18 @@ class HomePage extends StatelessWidget {
                   ),
                 ],
               ),
-
               const SizedBox(height: 28),
-
-              // ==================================================
-              // QUICK ACCESS
-              // ==================================================
-
               Row(
-                mainAxisAlignment:
-                    MainAxisAlignment
-                        .spaceBetween,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
                     l10n.quickAccess,
-                    style:
-                        const TextStyle(
+                    style: TextStyle(
                       fontSize: 20,
-                      fontWeight:
-                          FontWeight.bold,
+                      fontWeight: FontWeight.bold,
+                      color: _text(context),
                     ),
                   ),
-
                   TextButton(
                     onPressed: () {
                       Navigator.push(
@@ -1734,33 +974,16 @@ class HomePage extends StatelessWidget {
                         ),
                       );
                     },
-                    child: Text(
-                      l10n.viewAll,
-                      style:
-                          const TextStyle(
-                        color:
-                            Color(0xFF38BDF8),
-                        fontWeight:
-                            FontWeight.w600,
-                      ),
-                    ),
+                    child: Text(l10n.viewAll),
                   ),
                 ],
               ),
-
               const SizedBox(height: 8),
-
               _QuickActionCard(
-                icon: Icons
-                    .location_on_rounded,
-                title:
-                    l10n.nearbyTransport,
-                subtitle:
-                    l10n.findNearbyTransport,
-                iconColor:
-                    const Color(0xFF38BDF8),
-                backgroundColor:
-                    const Color(0xFF15223B),
+                icon: Icons.location_on_rounded,
+                title: l10n.nearbyTransport,
+                subtitle: l10n.findNearbyTransport,
+                iconColor: const Color(0xFF38BDF8),
                 onTap: () {
                   Navigator.push(
                     context,
@@ -1770,20 +993,12 @@ class HomePage extends StatelessWidget {
                   );
                 },
               ),
-
               const SizedBox(height: 11),
-
               _QuickActionCard(
-                icon:
-                    Icons.favorite_rounded,
-                title:
-                    l10n.favouriteRoutes,
-                subtitle:
-                    l10n.savedRoutes,
-                iconColor:
-                    const Color(0xFFFB7185),
-                backgroundColor:
-                    const Color(0xFF321A2A),
+                icon: Icons.favorite_rounded,
+                title: l10n.favouriteRoutes,
+                subtitle: l10n.savedRoutes,
+                iconColor: const Color(0xFFFB7185),
                 onTap: () {
                   Navigator.push(
                     context,
@@ -1793,20 +1008,12 @@ class HomePage extends StatelessWidget {
                   );
                 },
               ),
-
               const SizedBox(height: 11),
-
               _QuickActionCard(
-                icon:
-                    Icons.history_rounded,
-                title:
-                    l10n.recentJourneys,
-                subtitle:
-                    l10n.recentTrips,
-                iconColor:
-                    const Color(0xFFFBBF24),
-                backgroundColor:
-                    const Color(0xFF302719),
+                icon: Icons.history_rounded,
+                title: l10n.recentJourneys,
+                subtitle: l10n.recentTrips,
+                iconColor: const Color(0xFFF59E0B),
                 onTap: () {
                   Navigator.push(
                     context,
@@ -1816,71 +1023,38 @@ class HomePage extends StatelessWidget {
                   );
                 },
               ),
-
-              const SizedBox(height: 28),
-
-              // ==================================================
-              // INFO CARD
-              // ==================================================
-
+              const SizedBox(height: 25),
               Container(
                 width: double.infinity,
-                padding:
-                    const EdgeInsets.all(18),
-                decoration:
-                    BoxDecoration(
-                  color:
-                      const Color(0xFF17213A),
-                  borderRadius:
-                      BorderRadius.circular(20),
+                padding: const EdgeInsets.all(18),
+                decoration: BoxDecoration(
+                  color: _surface(context),
+                  borderRadius: BorderRadius.circular(20),
                 ),
                 child: Row(
                   children: [
-                    Container(
-                      width: 48,
-                      height: 48,
-                      decoration:
-                          BoxDecoration(
-                        color: const Color(0xFF111A2E),
-                        borderRadius:
-                            BorderRadius.circular(
-                                15),
-                      ),
-                      child: const Icon(
-                        Icons
-                            .lightbulb_outline_rounded,
-                        color:
-                            Color(0xFF8B5CF6),
-                      ),
+                    Icon(
+                      Icons.lightbulb_outline_rounded,
+                      color: _primary(context),
+                      size: 32,
                     ),
-
                     const SizedBox(width: 14),
-
                     Expanded(
                       child: Column(
-                        crossAxisAlignment:
-                            CrossAxisAlignment
-                                .start,
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
                             l10n.travelSmart,
-                            style:
-                                const TextStyle(
-                              fontWeight:
-                                  FontWeight
-                                      .bold,
-                              fontSize: 15,
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: _text(context),
                             ),
                           ),
-                          const SizedBox(
-                              height: 4),
+                          const SizedBox(height: 4),
                           Text(
-                            l10n
-                                .travelSmartDescription,
-                            style:
-                                const TextStyle(
-                              color:
-                                  Color(0xFF9AA8C0),
+                            l10n.travelSmartDescription,
+                            style: TextStyle(
+                              color: _muted(context),
                               fontSize: 12,
                             ),
                           ),
@@ -1890,42 +1064,22 @@ class HomePage extends StatelessWidget {
                   ],
                 ),
               ),
-
-              const SizedBox(height: 10),
             ],
           ),
         ),
       ),
-
-      // ==========================================================
-      // BOTTOM NAVIGATION
-      // ==========================================================
-
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: const Color(0xFF111A2E),
-          border: Border(
-            top: BorderSide(
-              color: const Color(0xFF38BDF8).withValues(alpha: 0.12),
-              width: 1,
-            ),
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.20),
-              blurRadius: 20,
-              offset: const Offset(0, -5),
-            ),
-          ],
-        ),
-        child: NavigationBar(
+      bottomNavigationBar: NavigationBar(
         height: 72,
         selectedIndex: 0,
+        backgroundColor: _surface(context),
+        indicatorColor: _primary(context).withValues(alpha: 0.13),
         onDestinationSelected: (index) {
           if (index == 1) {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (_) => const RoutesScreen()),
+              MaterialPageRoute(
+                builder: (_) => const RoutesScreen(),
+              ),
             );
           } else if (index == 2) {
             Navigator.push(
@@ -1937,67 +1091,60 @@ class HomePage extends StatelessWidget {
           } else if (index == 3) {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (_) => const ProfileScreen()),
+              MaterialPageRoute(
+                builder: (_) => const ProfileScreen(),
+              ),
             );
           }
         },
-        backgroundColor: Colors.transparent,
-        indicatorColor: const Color(0xFF38BDF8).withValues(alpha: 0.13),
-        labelTextStyle:
-            WidgetStateProperty.all(
-          const TextStyle(
-            fontSize: 11,
-            fontWeight:
-                FontWeight.w600,
-          ),
-        ),
         destinations: [
           NavigationDestination(
-            icon: const Icon(
-                Icons.home_outlined),
-            selectedIcon:
-                const Icon(
-              Icons.home,
-              color:
-                  Color(0xFF38BDF8),
-            ),
+            icon: const Icon(Icons.home_outlined),
+            selectedIcon: const Icon(Icons.home),
             label: l10n.home,
           ),
-
           NavigationDestination(
-            icon: const Icon(
-                Icons.route_outlined),
-            selectedIcon:
-                const Icon(
-              Icons.route,
-              color:
-                  Color(0xFF38BDF8),
-            ),
+            icon: const Icon(Icons.route_outlined),
+            selectedIcon: const Icon(Icons.route),
             label: l10n.routes,
           ),
-
           NavigationDestination(
-            icon: const Icon(
-                Icons.favorite_border),
-            selectedIcon:
-                const Icon(
-              Icons.favorite,
-              color:
-                  Color(0xFFFB7185),
-            ),
+            icon: const Icon(Icons.favorite_border),
+            selectedIcon: const Icon(Icons.favorite),
             label: l10n.favorites,
           ),
-
           NavigationDestination(
             icon: const Icon(Icons.person_outline),
-            selectedIcon: const Icon(
-              Icons.person,
-              color: Color(0xFF38BDF8),
-            ),
+            selectedIcon: const Icon(Icons.person),
             label: l10n.profile,
           ),
         ],
-        ),
+      ),
+    );
+  }
+}
+
+// ============================================================
+// HEADER BUTTON
+// ============================================================
+
+class _HeaderButton extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback onTap;
+
+  const _HeaderButton({
+    required this.icon,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: _surface(context),
+      borderRadius: BorderRadius.circular(14),
+      child: IconButton(
+        onPressed: onTap,
+        icon: Icon(icon, color: _primary(context)),
       ),
     );
   }
@@ -2007,13 +1154,11 @@ class HomePage extends StatelessWidget {
 // TRANSPORT CARD
 // ============================================================
 
-class _TransportCard
-    extends StatelessWidget {
+class _TransportCard extends StatelessWidget {
   final IconData icon;
   final String title;
   final String subtitle;
   final Color iconColor;
-  final Color backgroundColor;
   final VoidCallback onTap;
 
   const _TransportCard({
@@ -2021,115 +1166,58 @@ class _TransportCard
     required this.title,
     required this.subtitle,
     required this.iconColor,
-    required this.backgroundColor,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    final l10n =
-        AppLocalizations.of(context)!;
-
     return Material(
-      color: const Color(0xFF111A2E),
+      color: _surface(context),
       borderRadius: BorderRadius.circular(22),
       child: InkWell(
-        borderRadius:
-            BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(22),
         onTap: onTap,
         child: Container(
-          padding:
-              const EdgeInsets.all(18),
+          padding: const EdgeInsets.all(18),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(22),
             border: Border.all(
-              color: iconColor.withValues(alpha: 0.22),
-              width: 1,
+              color: iconColor.withValues(alpha: 0.30),
             ),
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                const Color(0xFF111A2E),
-                backgroundColor.withValues(alpha: 0.32),
-              ],
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: iconColor.withValues(alpha: 0.07),
-                blurRadius: 18,
-                offset: const Offset(0, 7),
-              ),
-            ],
           ),
           child: Column(
-            crossAxisAlignment:
-                CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                width: 56,
-                height: 56,
-                decoration:
-                    BoxDecoration(
-                  color:
-                      backgroundColor,
-                  borderRadius:
-                      BorderRadius.circular(
-                          17),
+                width: 52,
+                height: 52,
+                decoration: BoxDecoration(
+                  color: iconColor.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(16),
                 ),
-                child: Icon(
-                  icon,
-                  color: iconColor,
-                  size: 30,
-                ),
+                child: Icon(icon, color: iconColor, size: 29),
               ),
-
               const SizedBox(height: 18),
-
               Text(
                 title,
-                style:
-                    const TextStyle(
+                style: TextStyle(
                   fontSize: 18,
-                  fontWeight:
-                      FontWeight.bold,
+                  fontWeight: FontWeight.bold,
+                  color: _text(context),
                 ),
               ),
-
               const SizedBox(height: 5),
-
               Text(
                 subtitle,
-                style:
-                    const TextStyle(
+                style: TextStyle(
                   fontSize: 12,
-                  color: Color(0xFF9AA8C0),
+                  color: _muted(context),
                 ),
               ),
-
               const SizedBox(height: 15),
-
-              Row(
-                children: [
-                  Text(
-                    l10n.explore,
-                    style: TextStyle(
-                      color: iconColor,
-                      fontWeight:
-                          FontWeight.w600,
-                      fontSize: 12,
-                    ),
-                  ),
-
-                  const SizedBox(width: 5),
-
-                  Icon(
-                    Icons
-                        .arrow_forward_rounded,
-                    color: iconColor,
-                    size: 17,
-                  ),
-                ],
+              Icon(
+                Icons.arrow_forward_rounded,
+                color: iconColor,
               ),
             ],
           ),
@@ -2143,13 +1231,11 @@ class _TransportCard
 // QUICK ACTION CARD
 // ============================================================
 
-class _QuickActionCard
-    extends StatelessWidget {
+class _QuickActionCard extends StatelessWidget {
   final IconData icon;
   final String title;
   final String subtitle;
   final Color iconColor;
-  final Color backgroundColor;
   final VoidCallback onTap;
 
   const _QuickActionCard({
@@ -2157,27 +1243,23 @@ class _QuickActionCard
     required this.title,
     required this.subtitle,
     required this.iconColor,
-    required this.backgroundColor,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: const Color(0xFF111A2E),
-      borderRadius:
-          BorderRadius.circular(19),
+      color: _surface(context),
+      borderRadius: BorderRadius.circular(19),
       child: InkWell(
-        borderRadius:
-            BorderRadius.circular(19),
+        borderRadius: BorderRadius.circular(19),
         onTap: onTap,
         child: Container(
           padding: const EdgeInsets.all(15),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(19),
             border: Border.all(
-              color: iconColor.withValues(alpha: 0.12),
-              width: 1,
+              color: iconColor.withValues(alpha: 0.18),
             ),
           ),
           child: Row(
@@ -2185,57 +1267,38 @@ class _QuickActionCard
               Container(
                 width: 50,
                 height: 50,
-                decoration:
-                    BoxDecoration(
-                  color:
-                      backgroundColor,
-                  borderRadius:
-                      BorderRadius.circular(
-                          15),
+                decoration: BoxDecoration(
+                  color: iconColor.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(15),
                 ),
-                child: Icon(
-                  icon,
-                  color: iconColor,
-                  size: 25,
-                ),
+                child: Icon(icon, color: iconColor, size: 25),
               ),
-
               const SizedBox(width: 14),
-
               Expanded(
                 child: Column(
-                  crossAxisAlignment:
-                      CrossAxisAlignment
-                          .start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       title,
-                      style:
-                          const TextStyle(
-                        fontWeight:
-                            FontWeight
-                                .bold,
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
                         fontSize: 15,
+                        color: _text(context),
                       ),
                     ),
-
                     const SizedBox(height: 4),
-
                     Text(
                       subtitle,
-                      style:
-                          const TextStyle(
-                        color: Color(0xFF9AA8C0),
+                      style: TextStyle(
+                        color: _muted(context),
                         fontSize: 12,
                       ),
                     ),
                   ],
                 ),
               ),
-
               Icon(
-                Icons
-                    .arrow_forward_ios_rounded,
+                Icons.arrow_forward_ios_rounded,
                 size: 16,
                 color: iconColor,
               ),

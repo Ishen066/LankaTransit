@@ -1,17 +1,23 @@
 import 'package:flutter/material.dart';
 
 import 'app_locale.dart';
+import 'app_theme.dart';
 import 'l10n/app_localizations.dart';
 import 'route_details_screen.dart';
 
-const Color _background = Color(0xFF070B18);
-const Color _surface = Color(0xFF111A2E);
-const Color _surfaceLight = Color(0xFF15223B);
 const Color _cyan = Color(0xFF38BDF8);
 const Color _purple = Color(0xFF8B5CF6);
-const Color _text = Color(0xFFF3F6FF);
-const Color _muted = Color(0xFF9AA9C4);
-const Color _border = Color(0xFF26334D);
+
+// Read colors from AppTheme so this screen follows the app-wide theme.
+Color _background(BuildContext context) => AppTheme.pageBackground(context);
+Color _surface(BuildContext context) => AppTheme.cardBackground(context);
+Color _surfaceLight(BuildContext context) =>
+    Theme.of(context).brightness == Brightness.dark
+        ? const Color(0xFF15223B)
+        : const Color(0xFFEAF0F8);
+Color _text(BuildContext context) => AppTheme.mainText(context);
+Color _muted(BuildContext context) => AppTheme.secondaryText(context);
+Color _border(BuildContext context) => AppTheme.borderColor(context);
 
 class TrainRoutesScreen extends StatefulWidget {
   const TrainRoutesScreen({super.key});
@@ -242,7 +248,8 @@ class _TrainRoutesScreenState extends State<TrainRoutesScreen> {
           ? stops.length - 1
           : stops.indexWhere((stop) => stop.contains(to));
 
-      final correctOrder = from.isEmpty || to.isEmpty || fromIndex <= toIndex;
+      final correctOrder = from.isEmpty || to.isEmpty ||
+          (fromIndex >= 0 && toIndex >= 0 && fromIndex <= toIndex);
 
       return fromMatches && toMatches && queryMatches && correctOrder;
     }).toList();
@@ -314,7 +321,7 @@ class _TrainRoutesScreenState extends State<TrainRoutesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _background,
+      backgroundColor: _background(context),
       body: SafeArea(
         child: Column(
           children: [
@@ -327,14 +334,14 @@ class _TrainRoutesScreenState extends State<TrainRoutesScreen> {
                     onTap: () => Navigator.pop(context),
                   ),
                   const SizedBox(width: 14),
-                  const Expanded(
+                  Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
                           'Train Routes',
                           style: TextStyle(
-                            color: _text,
+                            color: _text(context),
                             fontSize: 21,
                             fontWeight: FontWeight.bold,
                           ),
@@ -342,7 +349,7 @@ class _TrainRoutesScreenState extends State<TrainRoutesScreen> {
                         SizedBox(height: 3),
                         Text(
                           'Explore railway journeys',
-                          style: TextStyle(color: _muted, fontSize: 12),
+                          style: TextStyle(color: _muted(context), fontSize: 12),
                         ),
                       ],
                     ),
@@ -362,7 +369,7 @@ class _TrainRoutesScreenState extends State<TrainRoutesScreen> {
                   Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
-                      gradient: const LinearGradient(
+                      gradient: LinearGradient(
                         colors: [Color(0xFF122C4A), Color(0xFF211D3D)],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
@@ -393,7 +400,7 @@ class _TrainRoutesScreenState extends State<TrainRoutesScreen> {
                                 color: _cyan.withValues(alpha: 0.12),
                                 borderRadius: BorderRadius.circular(30),
                               ),
-                              child: const Row(
+                              child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   Icon(
@@ -415,19 +422,19 @@ class _TrainRoutesScreenState extends State<TrainRoutesScreen> {
                               ),
                             ),
                             const SizedBox(height: 18),
-                            const Text(
+                            Text(
                               'Find your train',
                               style: TextStyle(
-                                color: _text,
+                                color: _text(context),
                                 fontSize: 27,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
                             const SizedBox(height: 8),
-                            const Text(
+                            Text(
                               'Explore routes and plan your next journey across Sri Lanka.',
                               style: TextStyle(
-                                color: _muted,
+                                color: _muted(context),
                                 fontSize: 13,
                                 height: 1.5,
                               ),
@@ -470,13 +477,13 @@ class _TrainRoutesScreenState extends State<TrainRoutesScreen> {
                       Expanded(
                         child: ElevatedButton.icon(
                           onPressed: _searchRoutes,
-                          icon: const Icon(Icons.search_rounded),
-                          label: const Text('Search trains'),
+                          icon: Icon(Icons.search_rounded),
+                          label: Text('Search trains'),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: _cyan,
-                            foregroundColor: _background,
+                            backgroundColor: Theme.of(context).colorScheme.primary,
+                            foregroundColor: Theme.of(context).colorScheme.onPrimary,
                             minimumSize: const Size.fromHeight(52),
-                            textStyle: const TextStyle(
+                            textStyle: TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 15,
                             ),
@@ -489,14 +496,14 @@ class _TrainRoutesScreenState extends State<TrainRoutesScreen> {
                       const SizedBox(width: 10),
                       Container(
                         decoration: BoxDecoration(
-                          color: _surfaceLight,
+                          color: _surfaceLight(context),
                           borderRadius: BorderRadius.circular(15),
-                          border: Border.all(color: _border),
+                          border: Border.all(color: _border(context)),
                         ),
                         child: IconButton(
                           tooltip: 'Clear search',
                           onPressed: _clearSearch,
-                          icon: const Icon(Icons.refresh_rounded, color: _cyan),
+                          icon: Icon(Icons.refresh_rounded, color: _cyan),
                           iconSize: 24,
                           style: IconButton.styleFrom(
                             minimumSize: const Size(52, 52),
@@ -509,13 +516,15 @@ class _TrainRoutesScreenState extends State<TrainRoutesScreen> {
                   Container(
                     padding: const EdgeInsets.all(13),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF302A1C),
+                      color: Theme.of(context).brightness == Brightness.dark
+                           ? const Color(0xFF302A1C)
+                           : const Color(0xFFFFF7E6),
                       borderRadius: BorderRadius.circular(15),
                       border: Border.all(
                         color: const Color(0xFF8A6500).withValues(alpha: 0.4),
                       ),
                     ),
-                    child: const Row(
+                    child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Icon(
@@ -545,8 +554,8 @@ class _TrainRoutesScreenState extends State<TrainRoutesScreen> {
                           _hasSearched
                               ? 'Search results'
                               : 'Popular train routes',
-                          style: const TextStyle(
-                            color: _text,
+                          style: TextStyle(
+                            color: _text(context),
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
                           ),
@@ -558,12 +567,12 @@ class _TrainRoutesScreenState extends State<TrainRoutesScreen> {
                           vertical: 7,
                         ),
                         decoration: BoxDecoration(
-                          color: _surfaceLight,
+                          color: _surfaceLight(context),
                           borderRadius: BorderRadius.circular(30),
                         ),
                         child: Text(
                           '${_filteredRoutes.length} routes',
-                          style: const TextStyle(
+                          style: TextStyle(
                             color: _cyan,
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
@@ -611,7 +620,7 @@ class _HeaderButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: _surface,
+      color: _surface(context),
       borderRadius: BorderRadius.circular(14),
       child: InkWell(
         onTap: onTap,
@@ -621,7 +630,7 @@ class _HeaderButton extends StatelessWidget {
           height: 44,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: _border),
+            border: Border.all(color: _border(context)),
           ),
           child: Icon(icon, color: color, size: 22),
         ),
@@ -643,14 +652,14 @@ class _SectionHeading extends StatelessWidget {
       children: [
         Text(
           title,
-          style: const TextStyle(
-            color: _text,
+          style: TextStyle(
+            color: _text(context),
             fontSize: 19,
             fontWeight: FontWeight.bold,
           ),
         ),
         const SizedBox(height: 5),
-        Text(subtitle, style: const TextStyle(color: _muted, fontSize: 13)),
+        Text(subtitle, style: TextStyle(color: _muted(context), fontSize: 13)),
       ],
     );
   }
@@ -676,13 +685,13 @@ class _SearchField extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 3),
       decoration: BoxDecoration(
-        color: _surface,
+        color: _surface(context),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: _border),
+        border: Border.all(color: _border(context)),
       ),
       child: TextField(
         controller: controller,
-        style: const TextStyle(color: _text, fontSize: 14),
+        style: TextStyle(color: _text(context), fontSize: 14),
         cursorColor: _cyan,
         textInputAction: onSubmitted == null
             ? TextInputAction.next
@@ -691,9 +700,9 @@ class _SearchField extends StatelessWidget {
         decoration: InputDecoration(
           icon: Icon(icon, color: _cyan, size: 21),
           labelText: label,
-          labelStyle: const TextStyle(color: _muted, fontSize: 13),
+          labelStyle: TextStyle(color: _muted(context), fontSize: 13),
           hintText: hint,
-          hintStyle: const TextStyle(color: Color(0xFF687994), fontSize: 13),
+          hintStyle: TextStyle(color: Color(0xFF687994), fontSize: 13),
           border: InputBorder.none,
           enabledBorder: InputBorder.none,
           focusedBorder: InputBorder.none,
@@ -714,7 +723,7 @@ class _TrainRouteCard extends StatelessWidget {
     final stops = (route['stops'] as List).join('  •  ');
 
     return Material(
-      color: _surface,
+      color: _surface(context),
       borderRadius: BorderRadius.circular(22),
       child: InkWell(
         onTap: onTap,
@@ -723,7 +732,7 @@ class _TrainRouteCard extends StatelessWidget {
           padding: const EdgeInsets.all(17),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(22),
-            border: Border.all(color: _border),
+            border: Border.all(color: _border(context)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -735,12 +744,12 @@ class _TrainRouteCard extends StatelessWidget {
                     width: 58,
                     height: 58,
                     decoration: BoxDecoration(
-                      gradient: const LinearGradient(
+                      gradient: LinearGradient(
                         colors: [Color(0xFF12304A), Color(0xFF211D3D)],
                       ),
                       borderRadius: BorderRadius.circular(16),
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.train_rounded,
                       color: _cyan,
                       size: 30,
@@ -753,7 +762,7 @@ class _TrainRouteCard extends StatelessWidget {
                       children: [
                         Text(
                           route['number'].toString(),
-                          style: const TextStyle(
+                          style: TextStyle(
                             color: _purple,
                             fontSize: 11,
                             fontWeight: FontWeight.bold,
@@ -762,8 +771,8 @@ class _TrainRouteCard extends StatelessWidget {
                         const SizedBox(height: 5),
                         Text(
                           route['route'].toString(),
-                          style: const TextStyle(
-                            color: _text,
+                          style: TextStyle(
+                            color: _text(context),
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
                           ),
@@ -771,12 +780,12 @@ class _TrainRouteCard extends StatelessWidget {
                         const SizedBox(height: 5),
                         Text(
                           'Approx. ${route['duration']}',
-                          style: const TextStyle(color: _muted, fontSize: 12),
+                          style: TextStyle(color: _muted(context), fontSize: 12),
                         ),
                       ],
                     ),
                   ),
-                  const Icon(
+                  Icon(
                     Icons.chevron_right_rounded,
                     color: _cyan,
                     size: 25,
@@ -784,7 +793,7 @@ class _TrainRouteCard extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 18),
-              const Divider(color: _border, height: 1),
+              Divider(color: _border(context), height: 1),
               const SizedBox(height: 15),
               _InfoLine(
                 icon: Icons.train_outlined,
@@ -808,8 +817,8 @@ class _TrainRouteCard extends StatelessWidget {
                 'Stations: $stops',
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  color: _muted,
+                style: TextStyle(
+                  color: _muted(context),
                   fontSize: 11,
                   height: 1.5,
                 ),
@@ -818,7 +827,7 @@ class _TrainRouteCard extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  const Text(
+                  Text(
                     'View train details',
                     style: TextStyle(
                       color: _cyan,
@@ -827,7 +836,7 @@ class _TrainRouteCard extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 6),
-                  const Icon(
+                  Icon(
                     Icons.arrow_forward_rounded,
                     color: _cyan,
                     size: 16,
@@ -864,14 +873,14 @@ class _InfoLine extends StatelessWidget {
           width: 105,
           child: Text(
             '$title:',
-            style: const TextStyle(color: _muted, fontSize: 11),
+            style: TextStyle(color: _muted(context), fontSize: 11),
           ),
         ),
         Expanded(
           child: Text(
             value,
-            style: const TextStyle(
-              color: _text,
+            style: TextStyle(
+              color: _text(context),
               fontSize: 11,
               fontWeight: FontWeight.w600,
               height: 1.4,
@@ -898,8 +907,8 @@ class _RouteInformationSheet extends StatelessWidget {
       constraints: BoxConstraints(
         maxHeight: MediaQuery.of(context).size.height * 0.86,
       ),
-      decoration: const BoxDecoration(
-        color: _surface,
+      decoration: BoxDecoration(
+        color: _surface(context),
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
       child: SafeArea(
@@ -911,7 +920,7 @@ class _RouteInformationSheet extends StatelessWidget {
                 width: 42,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: _muted.withValues(alpha: 0.5),
+                  color: _muted(context).withValues(alpha: 0.5),
                   borderRadius: BorderRadius.circular(10),
                 ),
               ),
@@ -923,10 +932,10 @@ class _RouteInformationSheet extends StatelessWidget {
                   width: 48,
                   height: 48,
                   decoration: BoxDecoration(
-                    color: _surfaceLight,
+                    color: _surfaceLight(context),
                     borderRadius: BorderRadius.circular(14),
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.train_rounded,
                     color: _cyan,
                     size: 27,
@@ -939,16 +948,16 @@ class _RouteInformationSheet extends StatelessWidget {
                     children: [
                       Text(
                         route['route'].toString(),
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
-                          color: _text,
+                          color: _text(context),
                         ),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         '${route['number']} • Train line',
-                        style: const TextStyle(color: _muted, fontSize: 12),
+                        style: TextStyle(color: _muted(context), fontSize: 12),
                       ),
                     ],
                   ),
@@ -974,12 +983,12 @@ class _RouteInformationSheet extends StatelessWidget {
               value: route['fare'].toString(),
             ),
             const SizedBox(height: 25),
-            const Text(
+            Text(
               'Example departure times',
               style: TextStyle(
                 fontSize: 17,
                 fontWeight: FontWeight.bold,
-                color: _text,
+                color: _text(context),
               ),
             ),
             const SizedBox(height: 12),
@@ -994,14 +1003,14 @@ class _RouteInformationSheet extends StatelessWidget {
                         vertical: 9,
                       ),
                       decoration: BoxDecoration(
-                        color: _surfaceLight,
+                        color: _surfaceLight(context),
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: _border),
+                        border: Border.all(color: _border(context)),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(
+                          Icon(
                             Icons.schedule_rounded,
                             size: 15,
                             color: _cyan,
@@ -1009,7 +1018,7 @@ class _RouteInformationSheet extends StatelessWidget {
                           const SizedBox(width: 6),
                           Text(
                             time,
-                            style: const TextStyle(color: _text, fontSize: 11),
+                            style: TextStyle(color: _text(context), fontSize: 11),
                           ),
                         ],
                       ),
@@ -1018,12 +1027,12 @@ class _RouteInformationSheet extends StatelessWidget {
                   .toList(),
             ),
             const SizedBox(height: 25),
-            const Text(
+            Text(
               'Stations along the route',
               style: TextStyle(
                 fontSize: 17,
                 fontWeight: FontWeight.bold,
-                color: _text,
+                color: _text(context),
               ),
             ),
             const SizedBox(height: 16),
@@ -1043,7 +1052,7 @@ class _RouteInformationSheet extends StatelessWidget {
                           color: index == stops.length - 1 ? _purple : _cyan,
                         ),
                         if (index != stops.length - 1)
-                          Container(width: 2, height: 28, color: _border),
+                          Container(width: 2, height: 28, color: _border(context)),
                       ],
                     ),
                   ),
@@ -1053,8 +1062,8 @@ class _RouteInformationSheet extends StatelessWidget {
                       padding: const EdgeInsets.only(top: 1, bottom: 20),
                       child: Text(
                         stops[index],
-                        style: const TextStyle(
-                          color: _text,
+                        style: TextStyle(
+                          color: _text(context),
                           fontWeight: FontWeight.w600,
                           fontSize: 13,
                         ),
@@ -1068,10 +1077,12 @@ class _RouteInformationSheet extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(13),
               decoration: BoxDecoration(
-                color: const Color(0xFF302A1C),
+                color: Theme.of(context).brightness == Brightness.dark
+                           ? const Color(0xFF302A1C)
+                           : const Color(0xFFFFF7E6),
                 borderRadius: BorderRadius.circular(13),
               ),
-              child: const Text(
+              child: Text(
                 'These are sample details for app development, not verified live railway timetable or fare information. Please confirm with Sri Lanka Railways before travelling.',
                 style: TextStyle(
                   color: Color(0xFFF5D98B),
@@ -1083,13 +1094,13 @@ class _RouteInformationSheet extends StatelessWidget {
             const SizedBox(height: 20),
             ElevatedButton.icon(
               onPressed: onShowMap,
-              icon: const Icon(Icons.map_outlined),
-              label: const Text('View train route on map'),
+              icon: Icon(Icons.map_outlined),
+              label: Text('View train route on map'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: _cyan,
-                foregroundColor: _background,
+                backgroundColor: Theme.of(context).colorScheme.primary,
+                foregroundColor: Theme.of(context).colorScheme.onPrimary,
                 minimumSize: const Size.fromHeight(52),
-                textStyle: const TextStyle(fontWeight: FontWeight.bold),
+                textStyle: TextStyle(fontWeight: FontWeight.bold),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(15),
                 ),
@@ -1113,9 +1124,9 @@ class _EmptyRoutesWidget extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(28),
       decoration: BoxDecoration(
-        color: _surface,
+        color: _surface(context),
         borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: _border),
+        border: Border.all(color: _border(context)),
       ),
       child: Column(
         children: [
@@ -1123,19 +1134,19 @@ class _EmptyRoutesWidget extends StatelessWidget {
             width: 65,
             height: 65,
             decoration: BoxDecoration(
-              color: _surfaceLight,
+              color: _surfaceLight(context),
               borderRadius: BorderRadius.circular(20),
             ),
-            child: const Icon(Icons.search_off_rounded, color: _cyan, size: 32),
+            child: Icon(Icons.search_off_rounded, color: _cyan, size: 32),
           ),
           const SizedBox(height: 16),
           Text(
             message,
             textAlign: TextAlign.center,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w600,
-              color: _text,
+              color: _text(context),
               height: 1.5,
             ),
           ),
@@ -1155,8 +1166,8 @@ void showLanguageSelector(BuildContext context) {
     isScrollControlled: true,
     builder: (sheetContext) {
       return Container(
-        decoration: const BoxDecoration(
-          color: _surface,
+        decoration: BoxDecoration(
+          color: _surface(context),
           borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
         ),
         child: SafeArea(
@@ -1172,10 +1183,10 @@ void showLanguageSelector(BuildContext context) {
                       width: 46,
                       height: 46,
                       decoration: BoxDecoration(
-                        color: _surfaceLight,
+                        color: _surfaceLight(context),
                         borderRadius: BorderRadius.circular(14),
                       ),
-                      child: const Icon(
+                      child: Icon(
                         Icons.language_rounded,
                         color: _cyan,
                         size: 25,
@@ -1184,10 +1195,10 @@ void showLanguageSelector(BuildContext context) {
                     const SizedBox(width: 13),
                     Text(
                       l10n.language,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 21,
                         fontWeight: FontWeight.bold,
-                        color: _text,
+                        color: _text(context),
                       ),
                     ),
                   ],
@@ -1235,7 +1246,11 @@ class _LanguageOption extends StatelessWidget {
     final isSelected = appLocale.value.languageCode == locale.languageCode;
 
     return Material(
-      color: isSelected ? const Color(0xFF211D3D) : _surfaceLight,
+      color: isSelected
+          ? (Theme.of(context).brightness == Brightness.dark
+              ? const Color(0xFF211D3D)
+              : const Color(0xFFEDE5FF))
+          : _surfaceLight(context),
       borderRadius: BorderRadius.circular(16),
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
@@ -1251,13 +1266,13 @@ class _LanguageOption extends StatelessWidget {
                 width: 43,
                 height: 43,
                 decoration: BoxDecoration(
-                  color: _background,
+                  color: _background(context),
                   borderRadius: BorderRadius.circular(13),
                 ),
                 child: Center(
                   child: Text(
                     locale.languageCode == 'en' ? '🇬🇧' : '🇱🇰',
-                    style: const TextStyle(fontSize: 22),
+                    style: TextStyle(fontSize: 22),
                   ),
                 ),
               ),
@@ -1268,22 +1283,22 @@ class _LanguageOption extends StatelessWidget {
                   children: [
                     Text(
                       title,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.bold,
-                        color: _text,
+                        color: _text(context),
                       ),
                     ),
                     const SizedBox(height: 3),
                     Text(
                       subtitle,
-                      style: const TextStyle(fontSize: 12, color: _muted),
+                      style: TextStyle(fontSize: 12, color: _muted(context)),
                     ),
                   ],
                 ),
               ),
               if (isSelected)
-                const Icon(Icons.check_circle_rounded, color: _cyan),
+                Icon(Icons.check_circle_rounded, color: _cyan),
             ],
           ),
         ),
