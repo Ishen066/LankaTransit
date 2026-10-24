@@ -10,12 +10,26 @@ import 'favourite_routes_screen.dart';
 import 'routes_screen.dart';
 import 'nearby_transport_screen.dart';
 import 'profile_screen.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'auth_service.dart';
+
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize Firebase
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+
+  // Load saved app theme
   await AppTheme.load();
+
   runApp(const LankaTransitApp());
 }
+
 
 // ============================================================
 // MAIN APP
@@ -228,8 +242,37 @@ class _LanguageOption extends StatelessWidget {
 // SPLASH SCREEN
 // ============================================================
 
-class SplashScreen extends StatelessWidget {
+
+class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
+
+  @override
+  State<SplashScreen> createState() => _SplashScreenState();
+}
+
+class _SplashScreenState extends State<SplashScreen> {
+  @override
+  void initState() {
+    super.initState();
+    _checkLoginSession();
+  }
+
+  void _checkLoginSession() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+
+      final user = FirebaseAuth.instance.currentUser;
+
+      if (user != null) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (_) => const HomePage(),
+          ),
+        );
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -360,6 +403,7 @@ class SplashScreen extends StatelessWidget {
   }
 }
 
+
 // ============================================================
 // SHARED AUTH INPUT
 // ============================================================
@@ -401,9 +445,6 @@ InputDecoration _inputDecoration(
   );
 }
 
-// ============================================================
-// LOGIN SCREEN
-// ============================================================
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -413,7 +454,115 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+
   bool _obscurePassword = true;
+  bool _isLoading = false;
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  void _showMessage(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
+  }
+
+  String _loginError(FirebaseAuthException e) {
+    switch (e.code) {
+      case 'invalid-credential':
+      case 'wrong-password':
+      case 'user-not-found':
+        return 'Incorrect email or password.';
+      case 'invalid-email':
+        return 'Please enter a valid email address.';
+      case 'too-many-requests':
+        return 'Too many attempts. Try again later.';
+      case 'network-request-failed':
+        return 'Check your internet connection.';
+      case 'user-disabled':
+        return 'This account has been disabled.';
+      default:
+        return e.message ?? 'Login failed. Please try again.';
+    }
+  }
+
+  Future<void> _login() async {
+    final email = _emailController.text.trim();
+    final password = _passwordController.text;
+
+    if (email.isEmpty || password.isEmpty) {
+      _showMessage('Please enter your email and password.');
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      await AuthService().login(
+        email: email,
+        password: password,
+      );
+
+      if (!mounted) return;
+
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(
+          builder: (_) => const HomePage(),
+        ),
+        (route) => false,
+      );
+    } on FirebaseAuthException catch (e) {
+      if (mounted) _showMessage(_loginError(e));
+    } catch (_) {
+      if (mounted) {
+        _showMessage('Something went wrong. Please try again.');
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _forgotPassword() async {
+    final email = _emailController.text.trim();
+
+    if (email.isEmpty) {
+      _showMessage('Enter your email address first.');
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      await AuthService().sendPasswordReset(email);
+
+      if (mounted) {
+        _showMessage(
+          'If an account exists for this email, a reset link will be sent.',
+        );
+      }
+    } on FirebaseAuthException catch (e) {
+      if (mounted) {
+        _showMessage(
+          e.code == 'invalid-email'
+              ? 'Please enter a valid email address.'
+              : 'Could not send reset email. Please try again.',
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        _showMessage('Could not send reset email. Please try again.');
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -430,14 +579,18 @@ class _LoginScreenState extends State<LoginScreen> {
               Row(
                 children: [
                   IconButton(
-                    onPressed: () => Navigator.pop(context),
+                    onPressed: _isLoading
+                        ? null
+                        : () => Navigator.pop(context),
                     icon: const Icon(Icons.arrow_back_rounded),
                   ),
                   const Spacer(),
                   IconButton(
                     onPressed: () => showLanguageSelector(context),
-                    icon: Icon(Icons.language_rounded,
-                        color: _primary(context)),
+                    icon: Icon(
+                      Icons.language_rounded,
+                      color: _primary(context),
+                    ),
                   ),
                 ],
               ),
@@ -472,7 +625,11 @@ class _LoginScreenState extends State<LoginScreen> {
               _FieldLabel(text: l10n.emailAddress),
               const SizedBox(height: 8),
               TextField(
+                controller: _emailController,
+                enabled: !_isLoading,
                 keyboardType: TextInputType.emailAddress,
+                textInputAction: TextInputAction.next,
+                autofillHints: const [AutofillHints.email],
                 decoration: _inputDecoration(
                   context,
                   label: l10n.enterYourEmail,
@@ -483,7 +640,12 @@ class _LoginScreenState extends State<LoginScreen> {
               _FieldLabel(text: l10n.password),
               const SizedBox(height: 8),
               TextField(
+                controller: _passwordController,
+                enabled: !_isLoading,
                 obscureText: _obscurePassword,
+                textInputAction: TextInputAction.done,
+                autofillHints: const [AutofillHints.password],
+                onSubmitted: (_) => _login(),
                 decoration: _inputDecoration(
                   context,
                   label: l10n.enterYourPassword,
@@ -505,7 +667,7 @@ class _LoginScreenState extends State<LoginScreen> {
               Align(
                 alignment: Alignment.centerRight,
                 child: TextButton(
-                  onPressed: () {},
+                  onPressed: _isLoading ? null : _forgotPassword,
                   child: Text(l10n.forgotPassword),
                 ),
               ),
@@ -514,28 +676,31 @@ class _LoginScreenState extends State<LoginScreen> {
                 width: double.infinity,
                 height: 54,
                 child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const HomePage(),
-                      ),
-                    );
-                  },
-                  child: Text(l10n.login),
+                  onPressed: _isLoading ? null : _login,
+                  child: _isLoading
+                      ? const SizedBox(
+                          height: 22,
+                          width: 22,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                          ),
+                        )
+                      : Text(l10n.login),
                 ),
               ),
               const SizedBox(height: 20),
               Center(
                 child: TextButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const RegisterScreen(),
-                      ),
-                    );
-                  },
+                  onPressed: _isLoading
+                      ? null
+                      : () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const RegisterScreen(),
+                            ),
+                          );
+                        },
                   child: Text(
                     '${l10n.dontHaveAccount} ${l10n.register}',
                   ),
@@ -549,9 +714,7 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 }
 
-// ============================================================
-// REGISTER SCREEN
-// ============================================================
+
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -561,8 +724,114 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
+  final _nameController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
+
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
+  bool _isLoading = false;
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
+    _confirmPasswordController.dispose();
+    super.dispose();
+  }
+
+  void _showMessage(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
+  }
+
+  Future<void> _register() async {
+    final name = _nameController.text.trim();
+    final email = _emailController.text.trim();
+    final password = _passwordController.text;
+    final confirmPassword = _confirmPasswordController.text;
+
+    if (name.isEmpty || email.isEmpty ||
+        password.isEmpty || confirmPassword.isEmpty) {
+      _showMessage('Please complete all fields.');
+      return;
+    }
+
+    if (!email.contains('@') || !email.contains('.')) {
+      _showMessage('Please enter a valid email address.');
+      return;
+    }
+
+    if (password.length < 6) {
+      _showMessage('Password must contain at least 6 characters.');
+      return;
+    }
+
+    if (password != confirmPassword) {
+      _showMessage('Passwords do not match.');
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      await AuthService().register(
+        name: name,
+        email: email,
+        password: password,
+      );
+
+      if (!mounted) return;
+
+      _showMessage('Account created successfully!');
+
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(
+          builder: (_) => const HomePage(),
+        ),
+        (route) => false,
+      );
+    } on FirebaseAuthException catch (e) {
+      if (!mounted) return;
+
+      String message;
+
+      switch (e.code) {
+        case 'email-already-in-use':
+          message = 'This email is already registered.';
+          break;
+        case 'invalid-email':
+          message = 'Please enter a valid email address.';
+          break;
+        case 'weak-password':
+          message = 'Please choose a stronger password.';
+          break;
+        case 'network-request-failed':
+          message = 'Check your internet connection.';
+          break;
+        case 'operation-not-allowed':
+          message = 'Email/password login is not enabled in Firebase.';
+          break;
+        default:
+          message = e.message ?? 'Registration failed. Please try again.';
+      }
+
+      _showMessage(message);
+    } catch (_) {
+      if (mounted) {
+        _showMessage(
+          'Account creation may have started, but saving the profile failed. '
+          'Try logging in before registering again.',
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -579,14 +848,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
               Row(
                 children: [
                   IconButton(
-                    onPressed: () => Navigator.pop(context),
+                    onPressed: _isLoading
+                        ? null
+                        : () => Navigator.pop(context),
                     icon: const Icon(Icons.arrow_back_rounded),
                   ),
                   const Spacer(),
                   IconButton(
                     onPressed: () => showLanguageSelector(context),
-                    icon: Icon(Icons.language_rounded,
-                        color: _primary(context)),
+                    icon: Icon(
+                      Icons.language_rounded,
+                      color: _primary(context),
+                    ),
                   ),
                 ],
               ),
@@ -621,7 +894,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
               _FieldLabel(text: l10n.fullName),
               const SizedBox(height: 8),
               TextField(
+                controller: _nameController,
+                enabled: !_isLoading,
                 textCapitalization: TextCapitalization.words,
+                textInputAction: TextInputAction.next,
                 decoration: _inputDecoration(
                   context,
                   label: l10n.enterYourFullName,
@@ -632,7 +908,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
               _FieldLabel(text: l10n.emailAddress),
               const SizedBox(height: 8),
               TextField(
+                controller: _emailController,
+                enabled: !_isLoading,
                 keyboardType: TextInputType.emailAddress,
+                textInputAction: TextInputAction.next,
                 decoration: _inputDecoration(
                   context,
                   label: l10n.enterYourEmail,
@@ -643,7 +922,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
               _FieldLabel(text: l10n.password),
               const SizedBox(height: 8),
               TextField(
+                controller: _passwordController,
+                enabled: !_isLoading,
                 obscureText: _obscurePassword,
+                textInputAction: TextInputAction.next,
                 decoration: _inputDecoration(
                   context,
                   label: l10n.createPassword,
@@ -666,7 +948,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
               _FieldLabel(text: l10n.confirmPassword),
               const SizedBox(height: 8),
               TextField(
+                controller: _confirmPasswordController,
+                enabled: !_isLoading,
                 obscureText: _obscureConfirmPassword,
+                textInputAction: TextInputAction.done,
+                onSubmitted: (_) => _register(),
                 decoration: _inputDecoration(
                   context,
                   label: l10n.confirmYourPassword,
@@ -699,21 +985,22 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 width: double.infinity,
                 height: 54,
                 child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const HomePage(),
-                      ),
-                    );
-                  },
-                  child: Text(l10n.createAccount),
+                  onPressed: _isLoading ? null : _register,
+                  child: _isLoading
+                      ? const SizedBox(
+                          height: 22,
+                          width: 22,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                          ),
+                        )
+                      : Text(l10n.createAccount),
                 ),
               ),
               const SizedBox(height: 20),
               Center(
                 child: TextButton(
-                  onPressed: () => Navigator.pop(context),
+                  onPressed: _isLoading ? null : () => Navigator.pop(context),
                   child: Text(
                     '${l10n.alreadyHaveAccount} ${l10n.login}',
                   ),
@@ -744,6 +1031,9 @@ class _FieldLabel extends StatelessWidget {
     );
   }
 }
+
+
+
 
 // ============================================================
 // HOME PAGE

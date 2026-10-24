@@ -7,6 +7,8 @@ import 'favourite_routes_screen.dart';
 import 'notification_screen.dart';
 import 'recent_journeys_screen.dart';
 import 'l10n/app_localizations.dart';
+import 'auth_service.dart';
+import 'main.dart' show LoginScreen;
 
 const Color _cyan = Color(0xFF38BDF8);
 const Color _purple = Color(0xFF8B5CF6);
@@ -38,6 +40,7 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   String _name = 'LankaTransit User';
   String _email = 'user@example.com';
+  bool _isLoggingOut = false;
 
   Future<void> _editProfile() async {
     final l10n = AppLocalizations.of(context)!;
@@ -199,6 +202,41 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  // Firebase sign out කර LoginScreen එකට යනවා.
+  Future<void> _logout() async {
+    if (_isLoggingOut) return;
+
+    setState(() {
+      _isLoggingOut = true;
+    });
+
+    try {
+      await AuthService().logout();
+
+      if (!mounted) return;
+
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute<void>(
+          builder: (_) => const LoginScreen(),
+        ),
+        (route) => false,
+      );
+    } catch (e) {
+      if (!mounted) return;
+
+      setState(() {
+        _isLoggingOut = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Logout failed. Please try again.'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+
   void _confirmLogout() {
     final l10n = AppLocalizations.of(context)!;
 
@@ -228,12 +266,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 backgroundColor: _pink,
                 foregroundColor: Colors.white,
               ),
-              onPressed: () {
-                Navigator.pop(dialogContext);
-                Navigator.of(context).popUntil(
-                  (route) => route.isFirst,
-                );
-              },
+              onPressed: _isLoggingOut
+                  ? null
+                  : () {
+                      Navigator.pop(dialogContext);
+                      _logout();
+                    },
               child: Text(l10n.logout),
             ),
           ],
@@ -245,7 +283,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void _openNotifications() {
     Navigator.push(
       context,
-      MaterialPageRoute(
+      MaterialPageRoute<void>(
         builder: (_) => const NotificationScreen(),
       ),
     );
@@ -254,7 +292,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void _openRecentJourneys() {
     Navigator.push(
       context,
-      MaterialPageRoute(
+      MaterialPageRoute<void>(
         builder: (_) => const RecentJourneysScreen(),
       ),
     );
@@ -263,7 +301,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void _openFavouriteRoutes() {
     Navigator.push(
       context,
-      MaterialPageRoute(
+      MaterialPageRoute<void>(
         builder: (_) => const FavouriteRoutesScreen(),
       ),
     );
@@ -272,7 +310,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void _openAbout() {
     Navigator.push(
       context,
-      MaterialPageRoute(
+      MaterialPageRoute<void>(
         builder: (_) => const AboutScreen(),
       ),
     );
@@ -315,7 +353,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
           children: [
-            // Profile header adapts to the current theme.
             Container(
               padding: const EdgeInsets.all(22),
               decoration: BoxDecoration(
@@ -393,9 +430,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ],
               ),
             ),
-
             const SizedBox(height: 27),
-
             _SectionTitle(title: l10n.yourTravel),
             const SizedBox(height: 11),
             _ProfileTile(
@@ -413,9 +448,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               subtitle: l10n.reviewRecentTrips,
               onTap: _openRecentJourneys,
             ),
-
             const SizedBox(height: 26),
-
             _SectionTitle(title: l10n.preferences),
             const SizedBox(height: 11),
             _ProfileTile(
@@ -433,9 +466,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               subtitle: l10n.viewTravelUpdates,
               onTap: _openNotifications,
             ),
-
             const SizedBox(height: 26),
-
             _SectionTitle(title: l10n.aboutSection),
             const SizedBox(height: 11),
             _ProfileTile(
@@ -445,16 +476,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
               subtitle: l10n.learnMoreAboutApp,
               onTap: _openAbout,
             ),
-
             const SizedBox(height: 20),
-
             SizedBox(
               height: 54,
               child: OutlinedButton.icon(
-                onPressed: _confirmLogout,
-                icon: const Icon(Icons.logout_rounded),
+                onPressed: _isLoggingOut ? null : _confirmLogout,
+                icon: _isLoggingOut
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                        ),
+                      )
+                    : const Icon(Icons.logout_rounded),
                 label: Text(
-                  l10n.logout,
+                  _isLoggingOut ? 'Logging out...' : l10n.logout,
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
                   ),
@@ -473,9 +510,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               ),
             ),
-
             const SizedBox(height: 22),
-
             Center(
               child: Text(
                 '${l10n.appName} • ${l10n.travelSmarterFooter}',
