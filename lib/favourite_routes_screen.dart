@@ -1,3 +1,4 @@
+
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -10,21 +11,17 @@ class FavouriteRoutesScreen extends StatefulWidget {
   const FavouriteRoutesScreen({super.key});
 
   @override
-  State<FavouriteRoutesScreen> createState() => _FavouriteRoutesScreenState();
+  State<FavouriteRoutesScreen> createState() =>
+      _FavouriteRoutesScreenState();
 }
 
 class _FavouriteRoutesScreenState extends State<FavouriteRoutesScreen> {
   static const String _storageKey = 'lanka_transit_favourites_v1';
 
-  static const Color _bg = Color(0xFF070B18);
-  static const Color _card = Color(0xFF111A2E);
-  static const Color _card2 = Color(0xFF15223B);
   static const Color _cyan = Color(0xFF38BDF8);
   static const Color _purple = Color(0xFF8B5CF6);
   static const Color _pink = Color(0xFFFB7185);
-  static const Color _white = Color(0xFFF3F6FF);
-  static const Color _muted = Color(0xFF9AA8C0);
-
+ 
   List<Map<String, dynamic>> _routes = <Map<String, dynamic>>[];
   bool _isLoading = true;
 
@@ -43,6 +40,7 @@ class _FavouriteRoutesScreenState extends State<FavouriteRoutesScreen> {
       for (final item in saved) {
         try {
           final value = jsonDecode(item);
+
           if (value is Map<String, dynamic>) {
             parsed.add(value);
           }
@@ -89,7 +87,10 @@ class _FavouriteRoutesScreenState extends State<FavouriteRoutesScreen> {
         final lng = point[1];
 
         if (lat is num && lng is num) {
-          result.add(<double>[lat.toDouble(), lng.toDouble()]);
+          result.add(<double>[
+            lat.toDouble(),
+            lng.toDouble(),
+          ]);
         }
       }
     }
@@ -111,7 +112,9 @@ class _FavouriteRoutesScreenState extends State<FavouriteRoutesScreen> {
           routeName: '${route['routeName'] ?? l10n.savedRouteFallback}',
           from: '${route['from'] ?? l10n.startLocationFallback}',
           to: '${route['to'] ?? l10n.destinationFallback}',
-          icon: isTrain ? Icons.train_rounded : Icons.directions_bus_rounded,
+          icon: isTrain
+              ? Icons.train_rounded
+              : Icons.directions_bus_rounded,
           iconColor: isTrain ? _purple : _cyan,
           startLat: _number(route, 'startLat'),
           startLng: _number(route, 'startLng'),
@@ -122,7 +125,6 @@ class _FavouriteRoutesScreenState extends State<FavouriteRoutesScreen> {
       ),
     );
 
-    // Refresh when returning from the route details screen.
     await _loadFavourites();
   }
 
@@ -182,102 +184,172 @@ class _FavouriteRoutesScreenState extends State<FavouriteRoutesScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+
+    final background = theme.scaffoldBackgroundColor;
+    final surface = colorScheme.surface;
+    final textColor = colorScheme.onSurface;
+    final mutedColor = colorScheme.onSurfaceVariant;
 
     return Scaffold(
-      backgroundColor: _bg,
+      backgroundColor: background,
       appBar: AppBar(
-        backgroundColor: _bg,
-        foregroundColor: _white,
+        backgroundColor: background,
+        foregroundColor: textColor,
+        surfaceTintColor: Colors.transparent,
         elevation: 0,
         title: Text(
           l10n.favouriteRoutes,
-          style: const TextStyle(fontWeight: FontWeight.bold),
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+          ),
         ),
         actions: [
           IconButton(
             tooltip: l10n.refreshFavourites,
             onPressed: _loadFavourites,
-            icon: const Icon(Icons.refresh_rounded, color: _cyan),
+            icon: const Icon(
+              Icons.refresh_rounded,
+              color: _cyan,
+            ),
           ),
         ],
       ),
       body: SafeArea(
         child: _isLoading
-            ? const Center(child: CircularProgressIndicator(color: _cyan))
-            : _routes.isEmpty
-            ? _buildEmptyState()
-            : RefreshIndicator(
-                color: _cyan,
-                backgroundColor: _card,
-                onRefresh: _loadFavourites,
-                child: ListView(
-                  padding: const EdgeInsets.fromLTRB(18, 8, 18, 24),
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(18),
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [_card2, Color(0xFF211D3D)],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        borderRadius: BorderRadius.circular(22),
-                        border: Border.all(
-                          color: _cyan.withValues(alpha: 0.18),
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 48,
-                            height: 48,
-                            decoration: BoxDecoration(
-                              color: _pink.withValues(alpha: 0.13),
-                              borderRadius: BorderRadius.circular(15),
-                            ),
-                            child: const Icon(
-                              Icons.favorite_rounded,
-                              color: _pink,
-                              size: 25,
-                            ),
-                          ),
-                          const SizedBox(width: 13),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  _savedCountText(l10n, _routes.length),
-                                  style: const TextStyle(
-                                    color: _white,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 17,
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  l10n.favouriteRoutesDescription,
-                                  style: const TextStyle(
-                                    color: _muted,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 18),
-                    ..._routes.map(_buildRouteCard),
-                  ],
+            ? const Center(
+                child: CircularProgressIndicator(
+                  color: _cyan,
                 ),
-              ),
+              )
+            : _routes.isEmpty
+                ? _buildEmptyState(
+                    context,
+                    textColor: textColor,
+                    mutedColor: mutedColor,
+                    isDark: isDark,
+                  )
+                : RefreshIndicator(
+                    color: _cyan,
+                    backgroundColor: surface,
+                    onRefresh: _loadFavourites,
+                    child: ListView(
+                      padding: const EdgeInsets.fromLTRB(
+                        18,
+                        8,
+                        18,
+                        24,
+                      ),
+                      children: [
+                        _buildSummaryCard(
+                          context,
+                          l10n: l10n,
+                          isDark: isDark,
+                          textColor: textColor,
+                          mutedColor: mutedColor,
+                        ),
+                        const SizedBox(height: 18),
+                        ..._routes.map(
+                          (route) => _buildRouteCard(
+                            context,
+                            route,
+                            isDark: isDark,
+                            textColor: textColor,
+                            mutedColor: mutedColor,
+                            surface: surface,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
       ),
     );
   }
 
-  Widget _buildEmptyState() {
+  Widget _buildSummaryCard(
+    BuildContext context, {
+    required AppLocalizations l10n,
+    required bool isDark,
+    required Color textColor,
+    required Color mutedColor,
+  }) {
+    final gradient = isDark
+        ? const [
+            Color(0xFF15223B),
+            Color(0xFF211D3D),
+          ]
+        : const [
+            Color(0xFFE6F5FF),
+            Color(0xFFF0EAFF),
+          ];
+
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: gradient,
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(
+          color: _cyan.withValues(
+            alpha: isDark ? 0.18 : 0.30,
+          ),
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: _pink.withValues(alpha: 0.14),
+              borderRadius: BorderRadius.circular(15),
+            ),
+            child: const Icon(
+              Icons.favorite_rounded,
+              color: _pink,
+              size: 25,
+            ),
+          ),
+          const SizedBox(width: 13),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  _savedCountText(l10n, _routes.length),
+                  style: TextStyle(
+                    color: textColor,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 17,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  l10n.favouriteRoutesDescription,
+                  style: TextStyle(
+                    color: mutedColor,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyState(
+    BuildContext context, {
+    required Color textColor,
+    required Color mutedColor,
+    required bool isDark,
+  }) {
     final l10n = AppLocalizations.of(context)!;
 
     return Center(
@@ -303,8 +375,8 @@ class _FavouriteRoutesScreenState extends State<FavouriteRoutesScreen> {
             Text(
               l10n.noFavouriteRoutesYet,
               textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: _white,
+              style: TextStyle(
+                color: textColor,
                 fontSize: 21,
                 fontWeight: FontWeight.bold,
               ),
@@ -313,7 +385,11 @@ class _FavouriteRoutesScreenState extends State<FavouriteRoutesScreen> {
             Text(
               l10n.saveFavouriteRoutesDescription,
               textAlign: TextAlign.center,
-              style: const TextStyle(color: _muted, height: 1.5, fontSize: 14),
+              style: TextStyle(
+                color: mutedColor,
+                height: 1.5,
+                fontSize: 14,
+              ),
             ),
             const SizedBox(height: 22),
             OutlinedButton.icon(
@@ -335,23 +411,44 @@ class _FavouriteRoutesScreenState extends State<FavouriteRoutesScreen> {
     );
   }
 
-  Widget _buildRouteCard(Map<String, dynamic> route) {
+  Widget _buildRouteCard(
+    BuildContext context,
+    Map<String, dynamic> route, {
+    required bool isDark,
+    required Color textColor,
+    required Color mutedColor,
+    required Color surface,
+  }) {
     final l10n = AppLocalizations.of(context)!;
 
     final transportType = '${route['transportType'] ?? 'Bus Route'}';
     final isTrain = transportType.toLowerCase().contains('train');
     final accent = isTrain ? _purple : _cyan;
 
-    final routeName = '${route['routeName'] ?? l10n.savedRouteFallback}';
+    final routeName =
+        '${route['routeName'] ?? l10n.savedRouteFallback}';
     final from = '${route['from'] ?? l10n.startLocationFallback}';
     final to = '${route['to'] ?? l10n.destinationFallback}';
 
     return Container(
       margin: const EdgeInsets.only(bottom: 13),
       decoration: BoxDecoration(
-        color: _card,
+        color: surface,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: accent.withValues(alpha: 0.22)),
+        border: Border.all(
+          color: accent.withValues(
+            alpha: isDark ? 0.22 : 0.35,
+          ),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(
+              alpha: isDark ? 0.08 : 0.035,
+            ),
+            blurRadius: 14,
+            offset: const Offset(0, 5),
+          ),
+        ],
       ),
       child: Material(
         color: Colors.transparent,
@@ -367,7 +464,9 @@ class _FavouriteRoutesScreenState extends State<FavouriteRoutesScreen> {
                   width: 52,
                   height: 52,
                   decoration: BoxDecoration(
-                    color: accent.withValues(alpha: 0.12),
+                    color: accent.withValues(
+                      alpha: isDark ? 0.12 : 0.10,
+                    ),
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Icon(
@@ -387,8 +486,8 @@ class _FavouriteRoutesScreenState extends State<FavouriteRoutesScreen> {
                         routeName,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: _white,
+                        style: TextStyle(
+                          color: textColor,
                           fontWeight: FontWeight.bold,
                           fontSize: 15,
                         ),
@@ -398,11 +497,16 @@ class _FavouriteRoutesScreenState extends State<FavouriteRoutesScreen> {
                         '$from  →  $to',
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(color: _muted, fontSize: 12),
+                        style: TextStyle(
+                          color: mutedColor,
+                          fontSize: 12,
+                        ),
                       ),
                       const SizedBox(height: 7),
                       Text(
-                        isTrain ? l10n.trainRoutes : l10n.busRouteLabel,
+                        isTrain
+                            ? l10n.trainRoutes
+                            : l10n.busRouteLabel,
                         style: TextStyle(
                           color: accent,
                           fontWeight: FontWeight.w700,
@@ -417,9 +521,15 @@ class _FavouriteRoutesScreenState extends State<FavouriteRoutesScreen> {
                 IconButton(
                   tooltip: l10n.removeFavourite,
                   onPressed: () => _removeFavourite(route),
-                  icon: const Icon(Icons.favorite_rounded, color: _pink),
+                  icon: const Icon(
+                    Icons.favorite_rounded,
+                    color: _pink,
+                  ),
                 ),
-                const Icon(Icons.chevron_right_rounded, color: _muted),
+                Icon(
+                  Icons.chevron_right_rounded,
+                  color: mutedColor,
+                ),
               ],
             ),
           ),

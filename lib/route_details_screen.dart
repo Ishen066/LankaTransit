@@ -1,3 +1,4 @@
+
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -37,7 +38,8 @@ class RouteDetailsScreen extends StatefulWidget {
   });
 
   @override
-  State<RouteDetailsScreen> createState() => _RouteDetailsScreenState();
+  State<RouteDetailsScreen> createState() =>
+      _RouteDetailsScreenState();
 }
 
 class _RouteDetailsScreenState extends State<RouteDetailsScreen> {
@@ -50,17 +52,13 @@ class _RouteDetailsScreenState extends State<RouteDetailsScreen> {
   bool _mapReady = false;
   bool _routeLoadFailed = false;
 
-  static const Color _bg = Color(0xFF050B1B);
-  static const Color _card = Color(0xFF08152D);
-  static const Color _card2 = Color(0xFF0D2040);
-  static const Color _cyan = Color(0xFF12D9FF);
+  static const Color _cyan = Color(0xFF12BFE8);
   static const Color _blue = Color(0xFF1677FF);
-  static const Color _purple = Color(0xFFB13CFF);
-  static const Color _white = Color(0xFFF4F7FF);
-  static const Color _muted = Color(0xFFA8B8D8);
-  static const Color _border = Color(0xFF174B87);
+  static const Color _purple = Color(0xFF8B5CF6);
+  static const Color _pink = Color(0xFFFB7185);
 
-  bool get isTrain => widget.transportType.toLowerCase().contains('train');
+  bool get isTrain =>
+      widget.transportType.toLowerCase().contains('train');
 
   Color get accent => isTrain ? _purple : _cyan;
   Color get accent2 => isTrain ? _cyan : _purple;
@@ -69,7 +67,6 @@ class _RouteDetailsScreenState extends State<RouteDetailsScreen> {
       ? 'https://images.unsplash.com/photo-1474487548417-781cb71495f3?auto=format&fit=crop&w=1400&q=85'
       : 'https://images.unsplash.com/photo-1570125909232-eb263c188f7e?auto=format&fit=crop&w=1400&q=85';
 
-  // Create a unique local-storage key for this route.
   String get _favouriteKey {
     final routeId = [
       widget.transportType,
@@ -88,12 +85,11 @@ class _RouteDetailsScreenState extends State<RouteDetailsScreen> {
     _loadFavourite();
   }
 
-  // Keep the route metadata list in sync with the existing boolean favourite.
-  // This lets the Favourite Routes screen reopen the selected route and map.
   Future<void> _updateFavouriteList(bool isFavourite) async {
     final prefs = await SharedPreferences.getInstance();
     final savedRoutes =
-        prefs.getStringList('lanka_transit_favourites_v1') ?? <String>[];
+        prefs.getStringList('lanka_transit_favourites_v1') ??
+            <String>[];
 
     savedRoutes.removeWhere((item) {
       try {
@@ -117,13 +113,16 @@ class _RouteDetailsScreenState extends State<RouteDetailsScreen> {
         'endLng': widget.endLng,
         'routePath': widget.routePath,
       };
+
       savedRoutes.add(jsonEncode(routeData));
     }
 
-    await prefs.setStringList('lanka_transit_favourites_v1', savedRoutes);
+    await prefs.setStringList(
+      'lanka_transit_favourites_v1',
+      savedRoutes,
+    );
   }
 
-  // Load the saved favourite state when this screen opens.
   Future<void> _loadFavourite() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -139,7 +138,6 @@ class _RouteDetailsScreenState extends State<RouteDetailsScreen> {
     }
   }
 
-  // Save or remove this route from local favourites.
   Future<void> _toggleFavourite() async {
     final previousValue = _isFavourite;
     final newValue = !previousValue;
@@ -163,25 +161,16 @@ class _RouteDetailsScreenState extends State<RouteDetailsScreen> {
           _isFavourite = previousValue;
         });
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Could not save favourite. Please try again.'),
-            behavior: SnackBarBehavior.floating,
-          ),
+        _showMessage(
+          'Could not save favourite. Please try again.',
         );
         return;
       }
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            newValue
-                ? 'Route added to favourites'
-                : 'Route removed from favourites',
-          ),
-          behavior: SnackBarBehavior.floating,
-          backgroundColor: _card2,
-        ),
+      _showMessage(
+        newValue
+            ? 'Route added to favourites'
+            : 'Route removed from favourites',
       );
     } catch (e) {
       if (!mounted) return;
@@ -190,15 +179,24 @@ class _RouteDetailsScreenState extends State<RouteDetailsScreen> {
         _isFavourite = previousValue;
       });
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Could not save favourite. Please try again.'),
-          behavior: SnackBarBehavior.floating,
-        ),
+      _showMessage(
+        'Could not save favourite. Please try again.',
       );
 
       debugPrint('Error saving favourite: $e');
     }
+  }
+
+  void _showMessage(String message) {
+    final theme = Theme.of(context);
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: theme.colorScheme.inverseSurface,
+      ),
+    );
   }
 
   Future<void> _loadRoute() async {
@@ -221,7 +219,6 @@ class _RouteDetailsScreenState extends State<RouteDetailsScreen> {
     }
 
     // OSRM provides road-driving geometry, not railway geometry.
-    // Do not request it for train journeys.
     if (isTrain) {
       _setFallbackRoute();
       return;
@@ -235,18 +232,25 @@ class _RouteDetailsScreenState extends State<RouteDetailsScreen> {
         '?overview=full&geometries=geojson',
       );
 
-      final response = await http.get(uri).timeout(const Duration(seconds: 12));
+      final response = await http
+          .get(uri)
+          .timeout(const Duration(seconds: 12));
 
       if (response.statusCode == 200) {
-        final data = jsonDecode(response.body) as Map<String, dynamic>;
+        final data =
+            jsonDecode(response.body) as Map<String, dynamic>;
         final routes = data['routes'] as List?;
 
         if (routes != null && routes.isNotEmpty) {
-          final geometry = routes.first['geometry'] as Map<String, dynamic>;
+          final geometry =
+              routes.first['geometry'] as Map<String, dynamic>;
           final coordinates = geometry['coordinates'] as List;
 
           final points = coordinates.map<LatLng>((p) {
-            return LatLng((p[1] as num).toDouble(), (p[0] as num).toDouble());
+            return LatLng(
+              (p[1] as num).toDouble(),
+              (p[0] as num).toDouble(),
+            );
           }).toList();
 
           if (points.isNotEmpty && mounted) {
@@ -302,27 +306,32 @@ class _RouteDetailsScreenState extends State<RouteDetailsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: _bg,
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: CustomScrollView(
         physics: const BouncingScrollPhysics(),
         slivers: [
-          SliverToBoxAdapter(child: _buildHero()),
+          SliverToBoxAdapter(
+            child: _buildHero(isDark),
+          ),
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  _buildEndpointStrip(),
+                  _buildEndpointStrip(isDark),
                   const SizedBox(height: 16),
-                  _buildMap(),
+                  _buildMap(isDark),
                   const SizedBox(height: 16),
-                  _buildStats(),
+                  _buildStats(isDark),
                   const SizedBox(height: 16),
-                  _buildDepartures(),
+                  _buildDepartures(isDark),
                   const SizedBox(height: 16),
-                  _buildStationsAndAbout(),
+                  _buildStationsAndAbout(isDark),
                   const SizedBox(height: 20),
                   _buildMapButton(),
                 ],
@@ -334,8 +343,11 @@ class _RouteDetailsScreenState extends State<RouteDetailsScreen> {
     );
   }
 
-  Widget _buildHero() {
+  Widget _buildHero(bool isDark) {
     final l10n = AppLocalizations.of(context)!;
+    final textColor = isDark ? Colors.white : const Color(0xFF17233B);
+    final mutedColor =
+        isDark ? const Color(0xFFD0D9E8) : const Color(0xFF56647A);
 
     return SizedBox(
       height: 330,
@@ -345,31 +357,39 @@ class _RouteDetailsScreenState extends State<RouteDetailsScreen> {
           Image.network(
             _heroImage,
             fit: BoxFit.cover,
-            errorBuilder: (context, error, stackTrace) => Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [_card2, _bg],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
+            errorBuilder: (context, error, stackTrace) {
+              return Container(
+                color: isDark
+                    ? const Color(0xFF101A30)
+                    : const Color(0xFFE8F1FA),
+                child: Icon(
+                  widget.icon,
+                  color: accent.withValues(alpha: 0.35),
+                  size: 130,
                 ),
-              ),
-              child: Icon(
-                widget.icon,
-                color: accent.withValues(alpha: 0.25),
-                size: 130,
-              ),
-            ),
+              );
+            },
           ),
           Container(
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
-                colors: [
-                  _bg.withValues(alpha: 0.50),
-                  _bg.withValues(alpha: 0.28),
-                  _bg.withValues(alpha: 0.96),
-                ],
+                colors: isDark
+                    ? [
+                        Colors.black.withValues(alpha: 0.50),
+                        Colors.black.withValues(alpha: 0.28),
+                        const Color(0xFF050B1B)
+                            .withValues(alpha: 0.98),
+                      ]
+                    : [
+                        const Color(0xFF14233B)
+                            .withValues(alpha: 0.30),
+                        const Color(0xFF14233B)
+                            .withValues(alpha: 0.42),
+                        const Color(0xFFF4F7FC)
+                            .withValues(alpha: 0.98),
+                      ],
                 stops: const [0, 0.38, 1],
               ),
             ),
@@ -385,12 +405,13 @@ class _RouteDetailsScreenState extends State<RouteDetailsScreen> {
                       _circleButton(
                         Icons.arrow_back_rounded,
                         () => Navigator.pop(context),
+                        isDark: isDark,
                       ),
                       const Spacer(),
                       Text(
                         l10n.routeDetails,
-                        style: const TextStyle(
-                          color: _white,
+                        style: TextStyle(
+                          color: textColor,
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
                         ),
@@ -401,7 +422,8 @@ class _RouteDetailsScreenState extends State<RouteDetailsScreen> {
                             ? Icons.favorite_rounded
                             : Icons.favorite_border_rounded,
                         _toggleFavourite,
-                        color: _isFavourite ? Colors.pinkAccent : _white,
+                        color: _isFavourite ? _pink : textColor,
+                        isDark: isDark,
                       ),
                     ],
                   ),
@@ -413,17 +435,24 @@ class _RouteDetailsScreenState extends State<RouteDetailsScreen> {
                         width: 76,
                         height: 76,
                         decoration: BoxDecoration(
-                          color: _bg.withValues(alpha: 0.88),
+                          color: isDark
+                              ? const Color(0xFF070B18)
+                                  .withValues(alpha: 0.90)
+                              : Colors.white.withValues(alpha: 0.94),
                           borderRadius: BorderRadius.circular(24),
                           border: Border.all(color: accent, width: 1.5),
                           boxShadow: [
                             BoxShadow(
-                              color: accent.withValues(alpha: 0.30),
+                              color: accent.withValues(alpha: 0.25),
                               blurRadius: 22,
                             ),
                           ],
                         ),
-                        child: Icon(widget.icon, color: accent, size: 42),
+                        child: Icon(
+                          widget.icon,
+                          color: accent,
+                          size: 42,
+                        ),
                       ),
                       const SizedBox(width: 14),
                       Expanded(
@@ -444,8 +473,8 @@ class _RouteDetailsScreenState extends State<RouteDetailsScreen> {
                               '${widget.from}  →  ${widget.to}',
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                color: _white,
+                              style: TextStyle(
+                                color: textColor,
                                 fontSize: 23,
                                 height: 1.15,
                                 fontWeight: FontWeight.w800,
@@ -454,15 +483,19 @@ class _RouteDetailsScreenState extends State<RouteDetailsScreen> {
                             const SizedBox(height: 8),
                             Row(
                               children: [
-                                Icon(widget.icon, size: 17, color: accent2),
+                                Icon(
+                                  widget.icon,
+                                  size: 17,
+                                  color: accent2,
+                                ),
                                 const SizedBox(width: 7),
                                 Expanded(
                                   child: Text(
                                     widget.routeName,
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(
-                                      color: _muted,
+                                    style: TextStyle(
+                                      color: mutedColor,
                                       fontSize: 13,
                                     ),
                                   ),
@@ -486,13 +519,20 @@ class _RouteDetailsScreenState extends State<RouteDetailsScreen> {
   Widget _circleButton(
     IconData icon,
     VoidCallback onTap, {
-    Color color = _white,
+    Color? color,
+    required bool isDark,
   }) {
     return Material(
-      color: _bg.withValues(alpha: 0.72),
+      color: isDark
+          ? const Color(0xFF070B18).withValues(alpha: 0.78)
+          : Colors.white.withValues(alpha: 0.94),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(14),
-        side: const BorderSide(color: _border),
+        side: BorderSide(
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.18)
+              : const Color(0xFFCAD5E5),
+        ),
       ),
       child: InkWell(
         borderRadius: BorderRadius.circular(14),
@@ -500,25 +540,43 @@ class _RouteDetailsScreenState extends State<RouteDetailsScreen> {
         child: SizedBox(
           width: 42,
           height: 42,
-          child: Icon(icon, color: color, size: 22),
+          child: Icon(
+            icon,
+            color: color ?? (isDark ? Colors.white : const Color(0xFF24334C)),
+            size: 22,
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildEndpointStrip() {
+  Widget _buildEndpointStrip(bool isDark) {
+    final textColor = isDark ? Colors.white : const Color(0xFF1B2942);
+    final mutedColor =
+        isDark ? const Color(0xFFA8B8D8) : const Color(0xFF63718A);
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [
-            _cyan.withValues(alpha: 0.10),
-            _card,
-            _purple.withValues(alpha: 0.12),
-          ],
+          colors: isDark
+              ? [
+                  _cyan.withValues(alpha: 0.10),
+                  const Color(0xFF111A2E),
+                  _purple.withValues(alpha: 0.12),
+                ]
+              : [
+                  _cyan.withValues(alpha: 0.12),
+                  Colors.white,
+                  _purple.withValues(alpha: 0.10),
+                ],
         ),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: _border),
+        border: Border.all(
+          color: isDark
+              ? const Color(0xFF174B87)
+              : const Color(0xFFD6E0EF),
+        ),
       ),
       child: Row(
         children: [
@@ -527,10 +585,17 @@ class _RouteDetailsScreenState extends State<RouteDetailsScreen> {
             name: widget.from,
             subtitle: 'Starting point',
             color: _cyan,
+            isDark: isDark,
+            textColor: textColor,
+            mutedColor: mutedColor,
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8),
-            child: Icon(Icons.more_horiz_rounded, color: accent2, size: 27),
+            child: Icon(
+              Icons.more_horiz_rounded,
+              color: accent2,
+              size: 27,
+            ),
           ),
           _endpoint(
             icon: Icons.location_on_rounded,
@@ -538,6 +603,9 @@ class _RouteDetailsScreenState extends State<RouteDetailsScreen> {
             subtitle: 'Destination',
             color: _purple,
             alignEnd: true,
+            isDark: isDark,
+            textColor: textColor,
+            mutedColor: mutedColor,
           ),
         ],
       ),
@@ -549,6 +617,9 @@ class _RouteDetailsScreenState extends State<RouteDetailsScreen> {
     required String name,
     required String subtitle,
     required Color color,
+    required bool isDark,
+    required Color textColor,
+    required Color mutedColor,
     bool alignEnd = false,
   }) {
     return Expanded(
@@ -557,7 +628,7 @@ class _RouteDetailsScreenState extends State<RouteDetailsScreen> {
             ? MainAxisAlignment.end
             : MainAxisAlignment.start,
         children: [
-          if (!alignEnd) _pin(icon, color),
+          if (!alignEnd) _pin(icon, color, isDark),
           if (!alignEnd) const SizedBox(width: 8),
           Flexible(
             child: Column(
@@ -569,8 +640,8 @@ class _RouteDetailsScreenState extends State<RouteDetailsScreen> {
                   name,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: _white,
+                  style: TextStyle(
+                    color: textColor,
                     fontWeight: FontWeight.bold,
                     fontSize: 12,
                   ),
@@ -580,19 +651,19 @@ class _RouteDetailsScreenState extends State<RouteDetailsScreen> {
                   subtitle,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(color: _muted, fontSize: 10),
+                  style: TextStyle(color: mutedColor, fontSize: 10),
                 ),
               ],
             ),
           ),
           if (alignEnd) const SizedBox(width: 8),
-          if (alignEnd) _pin(icon, color),
+          if (alignEnd) _pin(icon, color, isDark),
         ],
       ),
     );
   }
 
-  Widget _pin(IconData icon, Color color) {
+  Widget _pin(IconData icon, Color color, bool isDark) {
     return Container(
       width: 37,
       height: 37,
@@ -605,19 +676,25 @@ class _RouteDetailsScreenState extends State<RouteDetailsScreen> {
     );
   }
 
-  Widget _buildMap() {
+  Widget _buildMap(bool isDark) {
     final center = LatLng(
       (widget.startLat + widget.endLat) / 2,
       (widget.startLng + widget.endLng) / 2,
     );
 
+    final textColor = isDark ? Colors.white : const Color(0xFF1B2942);
+
     return Container(
       height: 245,
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
-        color: _card,
+        color: isDark ? const Color(0xFF111A2E) : Colors.white,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: _border),
+        border: Border.all(
+          color: isDark
+              ? const Color(0xFF174B87)
+              : const Color(0xFFD6E0EF),
+        ),
       ),
       child: Stack(
         children: [
@@ -633,7 +710,8 @@ class _RouteDetailsScreenState extends State<RouteDetailsScreen> {
             ),
             children: [
               TileLayer(
-                urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                urlTemplate:
+                    'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                 userAgentPackageName: 'com.example.lanka_transit',
               ),
               if (_routePoints.isNotEmpty)
@@ -657,13 +735,13 @@ class _RouteDetailsScreenState extends State<RouteDetailsScreen> {
                     point: LatLng(widget.startLat, widget.startLng),
                     width: 42,
                     height: 42,
-                    child: _mapPin(_cyan, Icons.trip_origin_rounded),
+                    child: _mapPin(_cyan, Icons.trip_origin_rounded, true),
                   ),
                   Marker(
                     point: LatLng(widget.endLat, widget.endLng),
                     width: 42,
                     height: 42,
-                    child: _mapPin(_purple, Icons.location_on_rounded),
+                    child: _mapPin(_purple, Icons.location_on_rounded, true),
                   ),
                 ],
               ),
@@ -671,8 +749,12 @@ class _RouteDetailsScreenState extends State<RouteDetailsScreen> {
           ),
           if (_isLoadingRoute)
             Container(
-              color: _bg.withValues(alpha: 0.78),
-              child: Center(child: CircularProgressIndicator(color: accent)),
+              color: isDark
+                  ? Colors.black.withValues(alpha: 0.65)
+                  : Colors.white.withValues(alpha: 0.65),
+              child: Center(
+                child: CircularProgressIndicator(color: accent),
+              ),
             ),
           if (_routeLoadFailed && !_isLoadingRoute)
             Positioned(
@@ -682,14 +764,14 @@ class _RouteDetailsScreenState extends State<RouteDetailsScreen> {
               child: Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: _bg.withValues(alpha: 0.94),
+                  color: isDark ? const Color(0xFF070B18) : Colors.white,
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Text(
                   isTrain
                       ? 'Route line is approximate; railway geometry is not connected yet.'
                       : 'Showing an approximate route line.',
-                  style: const TextStyle(color: _white, fontSize: 10),
+                  style: TextStyle(color: textColor, fontSize: 10),
                 ),
               ),
             ),
@@ -699,18 +781,26 @@ class _RouteDetailsScreenState extends State<RouteDetailsScreen> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
               decoration: BoxDecoration(
-                color: _bg.withValues(alpha: 0.92),
+                color: isDark ? const Color(0xFF070B18) : Colors.white,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: _border),
+                border: Border.all(
+                  color: isDark
+                      ? const Color(0xFF174B87)
+                      : const Color(0xFFD6E0EF),
+                ),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.map_outlined, color: _cyan, size: 17),
+                  const Icon(
+                    Icons.map_outlined,
+                    color: _cyan,
+                    size: 17,
+                  ),
                   const SizedBox(width: 6),
-                  const Text(
+                  Text(
                     'OpenStreetMap',
-                    style: TextStyle(color: _white, fontSize: 11),
+                    style: TextStyle(color: textColor, fontSize: 11),
                   ),
                 ],
               ),
@@ -723,6 +813,7 @@ class _RouteDetailsScreenState extends State<RouteDetailsScreen> {
               Icons.fullscreen_rounded,
               _fitWhenReady,
               color: _cyan,
+              isDark: isDark,
             ),
           ),
         ],
@@ -730,21 +821,24 @@ class _RouteDetailsScreenState extends State<RouteDetailsScreen> {
     );
   }
 
-  Widget _mapPin(Color color, IconData icon) {
+  Widget _mapPin(Color color, IconData icon, bool isDark) {
     return Container(
       decoration: BoxDecoration(
-        color: _bg,
+        color: isDark ? const Color(0xFF070B18) : Colors.white,
         shape: BoxShape.circle,
         border: Border.all(color: color, width: 2),
         boxShadow: [
-          BoxShadow(color: color.withValues(alpha: 0.45), blurRadius: 12),
+          BoxShadow(
+            color: color.withValues(alpha: 0.35),
+            blurRadius: 12,
+          ),
         ],
       ),
       child: Icon(icon, color: color, size: 22),
     );
   }
 
-  Widget _buildStats() {
+  Widget _buildStats(bool isDark) {
     return Row(
       children: [
         Expanded(
@@ -753,6 +847,7 @@ class _RouteDetailsScreenState extends State<RouteDetailsScreen> {
             'Duration',
             'See timetable',
             _cyan,
+            isDark,
           ),
         ),
         const SizedBox(width: 8),
@@ -762,11 +857,18 @@ class _RouteDetailsScreenState extends State<RouteDetailsScreen> {
             'Est. Fare',
             'Check locally',
             _purple,
+            isDark,
           ),
         ),
         const SizedBox(width: 8),
         Expanded(
-          child: _stat(Icons.alt_route_rounded, 'Stops', 'Route stops', _cyan),
+          child: _stat(
+            Icons.alt_route_rounded,
+            'Stops',
+            'Route stops',
+            _cyan,
+            isDark,
+          ),
         ),
         const SizedBox(width: 8),
         Expanded(
@@ -775,20 +877,35 @@ class _RouteDetailsScreenState extends State<RouteDetailsScreen> {
             'Service',
             'Check times',
             _purple,
+            isDark,
           ),
         ),
       ],
     );
   }
 
-  Widget _stat(IconData icon, String label, String value, Color color) {
+  Widget _stat(
+    IconData icon,
+    String label,
+    String value,
+    Color color,
+    bool isDark,
+  ) {
+    final textColor = isDark ? Colors.white : const Color(0xFF1B2942);
+    final mutedColor =
+        isDark ? const Color(0xFFA8B8D8) : const Color(0xFF63718A);
+
     return Container(
       constraints: const BoxConstraints(minHeight: 105),
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
       decoration: BoxDecoration(
-        color: _card,
+        color: isDark ? const Color(0xFF08152D) : Colors.white,
         borderRadius: BorderRadius.circular(17),
-        border: Border.all(color: _border),
+        border: Border.all(
+          color: isDark
+              ? const Color(0xFF174B87)
+              : const Color(0xFFD6E0EF),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -808,15 +925,15 @@ class _RouteDetailsScreenState extends State<RouteDetailsScreen> {
             label,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(color: _muted, fontSize: 10),
+            style: TextStyle(color: mutedColor, fontSize: 10),
           ),
           const SizedBox(height: 5),
           Text(
             value,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              color: _white,
+            style: TextStyle(
+              color: textColor,
               fontSize: 11,
               fontWeight: FontWeight.bold,
             ),
@@ -826,8 +943,13 @@ class _RouteDetailsScreenState extends State<RouteDetailsScreen> {
     );
   }
 
-  Widget _buildDepartures() {
+  Widget _buildDepartures(bool isDark) {
+    final textColor = isDark ? Colors.white : const Color(0xFF1B2942);
+    final mutedColor =
+        isDark ? const Color(0xFFA8B8D8) : const Color(0xFF63718A);
+
     return _panel(
+      isDark: isDark,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -835,32 +957,35 @@ class _RouteDetailsScreenState extends State<RouteDetailsScreen> {
             children: [
               _panelIcon(Icons.access_time_rounded, _cyan),
               const SizedBox(width: 10),
-              const Expanded(
+              Expanded(
                 child: Text(
                   'Departure information',
                   style: TextStyle(
-                    color: _white,
+                    color: textColor,
                     fontWeight: FontWeight.bold,
                     fontSize: 15,
                   ),
                 ),
               ),
-              Icon(Icons.chevron_right_rounded, color: _muted),
+              Icon(
+                Icons.chevron_right_rounded,
+                color: mutedColor,
+              ),
             ],
           ),
           const SizedBox(height: 8),
-          const Text(
+          Text(
             'Example times only — confirm the latest timetable before travelling.',
-            style: TextStyle(color: _muted, fontSize: 11),
+            style: TextStyle(color: mutedColor, fontSize: 11),
           ),
           const SizedBox(height: 14),
           Wrap(
             spacing: 8,
             runSpacing: 8,
             children: [
-              _timeChip('6:00 AM', _cyan),
-              _timeChip('7:00 AM', _cyan),
-              _timeChip('8:00 AM', _purple),
+              _timeChip('6:00 AM', _cyan, isDark),
+              _timeChip('7:00 AM', _cyan, isDark),
+              _timeChip('8:00 AM', _purple, isDark),
             ],
           ),
         ],
@@ -868,12 +993,17 @@ class _RouteDetailsScreenState extends State<RouteDetailsScreen> {
     );
   }
 
-  Widget _timeChip(String time, Color color) {
+  Widget _timeChip(String time, Color color, bool isDark) {
+    final textColor = isDark ? Colors.white : const Color(0xFF1B2942);
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [color.withValues(alpha: 0.22), _card2],
+          colors: [
+            color.withValues(alpha: isDark ? 0.22 : 0.12),
+            isDark ? const Color(0xFF0D2040) : Colors.white,
+          ],
         ),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: color.withValues(alpha: 0.65)),
@@ -885,8 +1015,8 @@ class _RouteDetailsScreenState extends State<RouteDetailsScreen> {
           const SizedBox(width: 7),
           Text(
             time,
-            style: const TextStyle(
-              color: _white,
+            style: TextStyle(
+              color: textColor,
               fontSize: 11,
               fontWeight: FontWeight.w600,
             ),
@@ -896,7 +1026,11 @@ class _RouteDetailsScreenState extends State<RouteDetailsScreen> {
     );
   }
 
-  Widget _buildStationsAndAbout() {
+  Widget _buildStationsAndAbout(bool isDark) {
+    final textColor = isDark ? Colors.white : const Color(0xFF1B2942);
+    final mutedColor =
+        isDark ? const Color(0xFFA8B8D8) : const Color(0xFF63718A);
+
     final stops = isTrain
         ? <String>[
             widget.from,
@@ -916,6 +1050,7 @@ class _RouteDetailsScreenState extends State<RouteDetailsScreen> {
           ];
 
     return _panel(
+      isDark: isDark,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -923,11 +1058,11 @@ class _RouteDetailsScreenState extends State<RouteDetailsScreen> {
             children: [
               _panelIcon(Icons.train_rounded, _cyan),
               const SizedBox(width: 10),
-              const Expanded(
+              Expanded(
                 child: Text(
                   'Stations along the route',
                   style: TextStyle(
-                    color: _white,
+                    color: textColor,
                     fontWeight: FontWeight.bold,
                     fontSize: 15,
                   ),
@@ -952,7 +1087,11 @@ class _RouteDetailsScreenState extends State<RouteDetailsScreen> {
                         width: 12,
                         height: 12,
                         decoration: BoxDecoration(
-                          color: first || last ? color : _card2,
+                          color: first || last
+                              ? color
+                              : (isDark
+                                  ? const Color(0xFF0D2040)
+                                  : const Color(0xFFE5ECF5)),
                           shape: BoxShape.circle,
                           border: Border.all(color: color, width: 2),
                           boxShadow: first || last
@@ -966,7 +1105,13 @@ class _RouteDetailsScreenState extends State<RouteDetailsScreen> {
                         ),
                       ),
                       if (!last)
-                        Container(width: 2, height: 27, color: _border),
+                        Container(
+                          width: 2,
+                          height: 27,
+                          color: isDark
+                              ? const Color(0xFF174B87)
+                              : const Color(0xFFD6E0EF),
+                        ),
                     ],
                   ),
                 ),
@@ -977,7 +1122,7 @@ class _RouteDetailsScreenState extends State<RouteDetailsScreen> {
                     child: Text(
                       stops[index],
                       style: TextStyle(
-                        color: first || last ? _white : _muted,
+                        color: first || last ? textColor : mutedColor,
                         fontSize: 12,
                         fontWeight: first || last
                             ? FontWeight.bold
@@ -987,7 +1132,7 @@ class _RouteDetailsScreenState extends State<RouteDetailsScreen> {
                   ),
                 ),
                 if (last)
-                  Text(
+                  const Text(
                     'Destination',
                     style: TextStyle(color: _purple, fontSize: 10),
                   ),
@@ -998,19 +1143,33 @@ class _RouteDetailsScreenState extends State<RouteDetailsScreen> {
           Container(
             padding: const EdgeInsets.all(13),
             decoration: BoxDecoration(
-              color: _card2.withValues(alpha: 0.60),
+              color: isDark
+                  ? const Color(0xFF0D2040).withValues(alpha: 0.60)
+                  : const Color(0xFFF0F5FB),
               borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: _border),
+              border: Border.all(
+                color: isDark
+                    ? const Color(0xFF174B87)
+                    : const Color(0xFFD6E0EF),
+              ),
             ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(Icons.info_outline_rounded, color: _cyan, size: 20),
+                const Icon(
+                  Icons.info_outline_rounded,
+                  color: _cyan,
+                  size: 20,
+                ),
                 const SizedBox(width: 10),
-                const Expanded(
+                Expanded(
                   child: Text(
                     'Route stops, departure times and fares shown here are illustrative sample data, not verified live transport information.',
-                    style: TextStyle(color: _muted, fontSize: 11, height: 1.45),
+                    style: TextStyle(
+                      color: mutedColor,
+                      fontSize: 11,
+                      height: 1.45,
+                    ),
                   ),
                 ),
               ],
@@ -1021,13 +1180,29 @@ class _RouteDetailsScreenState extends State<RouteDetailsScreen> {
     );
   }
 
-  Widget _panel({required Widget child}) {
+  Widget _panel({
+    required bool isDark,
+    required Widget child,
+  }) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: _card,
+        color: isDark ? const Color(0xFF08152D) : Colors.white,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: _border),
+        border: Border.all(
+          color: isDark
+              ? const Color(0xFF174B87)
+              : const Color(0xFFD6E0EF),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(
+              alpha: isDark ? 0.08 : 0.035,
+            ),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: child,
     );
@@ -1051,7 +1226,9 @@ class _RouteDetailsScreenState extends State<RouteDetailsScreen> {
       height: 56,
       child: DecoratedBox(
         decoration: BoxDecoration(
-          gradient: const LinearGradient(colors: [_cyan, _blue, _purple]),
+          gradient: const LinearGradient(
+            colors: [_cyan, _blue, _purple],
+          ),
           borderRadius: BorderRadius.circular(18),
           boxShadow: [
             BoxShadow(
@@ -1074,7 +1251,10 @@ class _RouteDetailsScreenState extends State<RouteDetailsScreen> {
           icon: const Icon(Icons.map_outlined),
           label: const Text(
             'View route on map',
-            style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ),
       ),

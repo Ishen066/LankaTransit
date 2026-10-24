@@ -8,13 +8,25 @@ import 'notification_screen.dart';
 import 'recent_journeys_screen.dart';
 import 'l10n/app_localizations.dart';
 
-const Color _bg = Color(0xFF070B18);
-const Color _panel = Color(0xFF111A2E);
-const Color _panelLight = Color(0xFF15223B);
 const Color _cyan = Color(0xFF38BDF8);
 const Color _purple = Color(0xFF8B5CF6);
-const Color _text = Color(0xFFF3F6FF);
-const Color _muted = Color(0xFF9AA8C0);
+const Color _pink = Color(0xFFFB7185);
+const Color _amber = Color(0xFFFBBF24);
+
+Color _bg(BuildContext context) =>
+    Theme.of(context).scaffoldBackgroundColor;
+
+Color _surface(BuildContext context) =>
+    Theme.of(context).colorScheme.surface;
+
+Color _text(BuildContext context) =>
+    Theme.of(context).colorScheme.onSurface;
+
+Color _muted(BuildContext context) =>
+    Theme.of(context).colorScheme.onSurfaceVariant;
+
+bool _isDark(BuildContext context) =>
+    Theme.of(context).brightness == Brightness.dark;
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -34,59 +46,58 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     final result = await showDialog<Map<String, String>>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        backgroundColor: _panel,
-        title: Text(
-          l10n.editProfile,
-          style: const TextStyle(color: _text),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: nameController,
-              textCapitalization: TextCapitalization.words,
-              style: const TextStyle(color: _text),
-              decoration: _inputDecoration(
-                l10n.fullName,
-                Icons.person_outline,
+      builder: (dialogContext) {
+        final colors = Theme.of(dialogContext).colorScheme;
+
+        return AlertDialog(
+          backgroundColor: colors.surface,
+          title: Text(
+            l10n.editProfile,
+            style: TextStyle(color: colors.onSurface),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameController,
+                textCapitalization: TextCapitalization.words,
+                style: TextStyle(color: colors.onSurface),
+                decoration: _inputDecoration(
+                  dialogContext,
+                  l10n.fullName,
+                  Icons.person_outline,
+                ),
               ),
+              const SizedBox(height: 14),
+              TextField(
+                controller: emailController,
+                keyboardType: TextInputType.emailAddress,
+                style: TextStyle(color: colors.onSurface),
+                decoration: _inputDecoration(
+                  dialogContext,
+                  l10n.emailAddress,
+                  Icons.email_outlined,
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: Text(l10n.cancel),
             ),
-            const SizedBox(height: 14),
-            TextField(
-              controller: emailController,
-              keyboardType: TextInputType.emailAddress,
-              style: const TextStyle(color: _text),
-              decoration: _inputDecoration(
-                l10n.emailAddress,
-                Icons.email_outlined,
-              ),
+            FilledButton(
+              onPressed: () {
+                Navigator.pop(dialogContext, {
+                  'name': nameController.text.trim(),
+                  'email': emailController.text.trim(),
+                });
+              },
+              child: Text(l10n.save),
             ),
           ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: Text(
-              l10n.cancel,
-              style: const TextStyle(color: _muted),
-            ),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: _cyan,
-              foregroundColor: _bg,
-            ),
-            onPressed: () {
-              Navigator.pop(dialogContext, {
-                'name': nameController.text.trim(),
-                'email': emailController.text.trim(),
-              });
-            },
-            child: Text(l10n.save),
-          ),
-        ],
-      ),
+        );
+      },
     );
 
     nameController.dispose();
@@ -94,7 +105,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     if (!mounted || result == null) return;
 
-    if (result['name']!.isEmpty || result['email']!.isEmpty) {
+    if ((result['name'] ?? '').isEmpty ||
+        (result['email'] ?? '').isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(l10n.pleaseEnterNameEmail),
@@ -110,24 +122,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
     });
   }
 
-  InputDecoration _inputDecoration(String label, IconData icon) {
+  InputDecoration _inputDecoration(
+    BuildContext context,
+    String label,
+    IconData icon,
+  ) {
+    final colors = Theme.of(context).colorScheme;
+
     return InputDecoration(
       labelText: label,
-      labelStyle: const TextStyle(color: _muted),
       prefixIcon: Icon(icon, color: _cyan),
       filled: true,
-      fillColor: _bg,
+      fillColor: colors.surfaceContainerHighest.withValues(alpha: 0.4),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
-        borderSide: const BorderSide(color: Color(0xFF28344D)),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
-        borderSide: const BorderSide(color: Color(0xFF28344D)),
+        borderSide: BorderSide(color: colors.outlineVariant),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
-        borderSide: const BorderSide(color: _cyan),
+        borderSide: const BorderSide(color: _cyan, width: 1.5),
       ),
     );
   }
@@ -137,9 +153,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     showModalBottomSheet<void>(
       context: context,
-      backgroundColor: _panel,
+      backgroundColor: _surface(context),
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(26)),
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(26),
+        ),
       ),
       builder: (sheetContext) => SafeArea(
         child: Padding(
@@ -150,8 +168,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
             children: [
               Text(
                 l10n.chooseLanguage,
-                style: const TextStyle(
-                  color: _text,
+                style: TextStyle(
+                  color: _text(sheetContext),
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
                 ),
@@ -186,41 +204,41 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     showDialog<void>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        backgroundColor: _panel,
-        icon: const Icon(
-          Icons.logout_rounded,
-          color: Color(0xFFFB7185),
-        ),
-        title: Text(
-          l10n.logoutTitle,
-          style: const TextStyle(color: _text),
-        ),
-        content: Text(
-          l10n.logoutMessage,
-          style: const TextStyle(color: _muted),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: Text(
-              l10n.cancel,
-              style: const TextStyle(color: _muted),
-            ),
+      builder: (dialogContext) {
+        final colors = Theme.of(dialogContext).colorScheme;
+
+        return AlertDialog(
+          backgroundColor: colors.surface,
+          icon: const Icon(Icons.logout_rounded, color: _pink),
+          title: Text(
+            l10n.logoutTitle,
+            style: TextStyle(color: colors.onSurface),
           ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFFB7185),
-              foregroundColor: Colors.white,
-            ),
-            onPressed: () {
-              Navigator.pop(dialogContext);
-              Navigator.of(context).popUntil((route) => route.isFirst);
-            },
-            child: Text(l10n.logout),
+          content: Text(
+            l10n.logoutMessage,
+            style: TextStyle(color: colors.onSurfaceVariant),
           ),
-        ],
-      ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: Text(l10n.cancel),
+            ),
+            FilledButton(
+              style: FilledButton.styleFrom(
+                backgroundColor: _pink,
+                foregroundColor: Colors.white,
+              ),
+              onPressed: () {
+                Navigator.pop(dialogContext);
+                Navigator.of(context).popUntil(
+                  (route) => route.isFirst,
+                );
+              },
+              child: Text(l10n.logout),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -228,7 +246,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => const NotificationScreen(),
+        builder: (_) => const NotificationScreen(),
       ),
     );
   }
@@ -237,7 +255,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => const RecentJourneysScreen(),
+        builder: (_) => const RecentJourneysScreen(),
       ),
     );
   }
@@ -246,7 +264,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => const FavouriteRoutesScreen(),
+        builder: (_) => const FavouriteRoutesScreen(),
       ),
     );
   }
@@ -255,7 +273,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => const AboutScreen(),
+        builder: (_) => const AboutScreen(),
       ),
     );
   }
@@ -263,6 +281,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final colors = Theme.of(context).colorScheme;
 
     final currentLanguage = switch (appLocale.value.languageCode) {
       'si' => l10n.sinhala,
@@ -271,10 +290,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
     };
 
     return Scaffold(
-      backgroundColor: _bg,
+      backgroundColor: _bg(context),
       appBar: AppBar(
-        backgroundColor: _bg,
-        foregroundColor: _text,
+        backgroundColor: _bg(context),
+        foregroundColor: _text(context),
+        surfaceTintColor: Colors.transparent,
         title: Text(
           l10n.myProfile,
           style: const TextStyle(fontWeight: FontWeight.bold),
@@ -295,17 +315,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
           children: [
+            // Profile header adapts to the current theme.
             Container(
               padding: const EdgeInsets.all(22),
               decoration: BoxDecoration(
-                gradient: const LinearGradient(
+                gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [_panelLight, Color(0xFF211D3D)],
+                  colors: _isDark(context)
+                      ? const [
+                          Color(0xFF15223B),
+                          Color(0xFF211D3D),
+                        ]
+                      : const [
+                          Color(0xFFEAF6FF),
+                          Color(0xFFF0EAFF),
+                        ],
                 ),
                 borderRadius: BorderRadius.circular(26),
                 border: Border.all(
-                  color: _cyan.withValues(alpha: 0.18),
+                  color: _cyan.withValues(alpha: 0.28),
                 ),
               ),
               child: Column(
@@ -321,7 +350,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                     child: const Icon(
                       Icons.person_rounded,
-                      color: _bg,
+                      color: Colors.white,
                       size: 55,
                     ),
                   ),
@@ -329,8 +358,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   Text(
                     _name,
                     textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: _text,
+                    style: TextStyle(
+                      color: _isDark(context)
+                          ? Colors.white
+                          : const Color(0xFF17233B),
                       fontSize: 21,
                       fontWeight: FontWeight.bold,
                     ),
@@ -339,8 +370,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   Text(
                     _email,
                     textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: _muted,
+                    style: TextStyle(
+                      color: _isDark(context)
+                          ? const Color(0xFFB8C5DA)
+                          : const Color(0xFF53627A),
                       fontSize: 13,
                     ),
                   ),
@@ -350,8 +383,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     icon: const Icon(Icons.edit_rounded, size: 17),
                     label: Text(l10n.editProfile),
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: _cyan,
-                      side: const BorderSide(color: _cyan),
+                      foregroundColor: colors.primary,
+                      side: BorderSide(color: colors.primary),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(14),
                       ),
@@ -360,13 +393,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ],
               ),
             ),
+
             const SizedBox(height: 27),
 
             _SectionTitle(title: l10n.yourTravel),
             const SizedBox(height: 11),
             _ProfileTile(
               icon: Icons.favorite_rounded,
-              iconColor: const Color(0xFFFB7185),
+              iconColor: _pink,
               title: l10n.favouriteRoutes,
               subtitle: l10n.savedBusTrainRoutes,
               onTap: _openFavouriteRoutes,
@@ -374,13 +408,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
             const SizedBox(height: 10),
             _ProfileTile(
               icon: Icons.history_rounded,
-              iconColor: const Color(0xFFFBBF24),
+              iconColor: _amber,
               title: l10n.recentJourneys,
               subtitle: l10n.reviewRecentTrips,
               onTap: _openRecentJourneys,
             ),
 
             const SizedBox(height: 26),
+
             _SectionTitle(title: l10n.preferences),
             const SizedBox(height: 11),
             _ProfileTile(
@@ -400,6 +435,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
 
             const SizedBox(height: 26),
+
             _SectionTitle(title: l10n.aboutSection),
             const SizedBox(height: 11),
             _ProfileTile(
@@ -411,6 +447,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
 
             const SizedBox(height: 20),
+
             SizedBox(
               height: 54,
               child: OutlinedButton.icon(
@@ -423,26 +460,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                 ),
                 style: OutlinedButton.styleFrom(
-                  foregroundColor: const Color(0xFFFB7185),
+                  foregroundColor: _pink,
                   side: BorderSide(
-                    color: const Color(0xFFFB7185)
-                        .withValues(alpha: 0.55),
+                    color: _pink.withValues(alpha: 0.65),
                   ),
-                  backgroundColor: const Color(0xFF321A2A)
-                      .withValues(alpha: 0.35),
+                  backgroundColor: _pink.withValues(
+                    alpha: _isDark(context) ? 0.10 : 0.06,
+                  ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(17),
                   ),
                 ),
               ),
             ),
+
             const SizedBox(height: 22),
+
             Center(
               child: Text(
                 '${l10n.appName} • ${l10n.travelSmarterFooter}',
                 textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: Color(0xFF64748B),
+                style: TextStyle(
+                  color: _muted(context).withValues(alpha: 0.8),
                   fontSize: 11,
                 ),
               ),
@@ -469,9 +508,12 @@ class _LanguageOption extends StatelessWidget {
   Widget build(BuildContext context) {
     final selected =
         appLocale.value.languageCode == locale.languageCode;
+    final colors = Theme.of(context).colorScheme;
 
     return Material(
-      color: selected ? _panelLight : _bg,
+      color: selected
+          ? colors.primaryContainer
+          : colors.surfaceContainerHighest.withValues(alpha: 0.45),
       borderRadius: BorderRadius.circular(15),
       child: ListTile(
         shape: RoundedRectangleBorder(
@@ -481,15 +523,25 @@ class _LanguageOption extends StatelessWidget {
           selected
               ? Icons.check_circle_rounded
               : Icons.circle_outlined,
-          color: selected ? _cyan : _muted,
+          color: selected
+              ? colors.primary
+              : colors.onSurfaceVariant,
         ),
         title: Text(
           title,
-          style: const TextStyle(color: _text),
+          style: TextStyle(
+            color: selected
+                ? colors.onPrimaryContainer
+                : colors.onSurface,
+          ),
         ),
         subtitle: Text(
           subtitle,
-          style: const TextStyle(color: _muted),
+          style: TextStyle(
+            color: selected
+                ? colors.onPrimaryContainer.withValues(alpha: 0.8)
+                : colors.onSurfaceVariant,
+          ),
         ),
         onTap: () {
           appLocale.value = locale;
@@ -509,8 +561,8 @@ class _SectionTitle extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       title,
-      style: const TextStyle(
-        color: _muted,
+      style: TextStyle(
+        color: _muted(context),
         fontSize: 12,
         letterSpacing: 1.5,
         fontWeight: FontWeight.bold,
@@ -536,8 +588,10 @@ class _ProfileTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
     return Material(
-      color: _panel,
+      color: _surface(context),
       borderRadius: BorderRadius.circular(18),
       child: InkWell(
         borderRadius: BorderRadius.circular(18),
@@ -550,7 +604,7 @@ class _ProfileTile extends StatelessWidget {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(18),
             border: Border.all(
-              color: iconColor.withValues(alpha: 0.12),
+              color: iconColor.withValues(alpha: 0.18),
             ),
           ),
           child: Row(
@@ -559,7 +613,7 @@ class _ProfileTile extends StatelessWidget {
                 width: 46,
                 height: 46,
                 decoration: BoxDecoration(
-                  color: iconColor.withValues(alpha: 0.12),
+                  color: iconColor.withValues(alpha: 0.13),
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: Icon(
@@ -575,8 +629,8 @@ class _ProfileTile extends StatelessWidget {
                   children: [
                     Text(
                       title,
-                      style: const TextStyle(
-                        color: _text,
+                      style: TextStyle(
+                        color: colors.onSurface,
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
                       ),
@@ -584,17 +638,17 @@ class _ProfileTile extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(
                       subtitle,
-                      style: const TextStyle(
-                        color: _muted,
+                      style: TextStyle(
+                        color: colors.onSurfaceVariant,
                         fontSize: 11.5,
                       ),
                     ),
                   ],
                 ),
               ),
-              const Icon(
+              Icon(
                 Icons.arrow_forward_ios_rounded,
-                color: _muted,
+                color: colors.onSurfaceVariant,
                 size: 15,
               ),
             ],
