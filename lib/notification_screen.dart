@@ -10,12 +10,8 @@ class NotificationScreen extends StatefulWidget {
 }
 
 class _NotificationScreenState extends State<NotificationScreen> {
-  static const Color _bg = Color(0xFF0B1220);
-  static const Color _panel = Color(0xFF172337);
   static const Color _cyan = Color(0xFF22D3EE);
   static const Color _purple = Color(0xFF8B5CF6);
-  static const Color _text = Color(0xFFF1F5F9);
-  static const Color _muted = Color(0xFF94A3B8);
 
   String _selectedFilter = 'all';
 
@@ -117,9 +113,13 @@ class _NotificationScreenState extends State<NotificationScreen> {
       notification['read'] = true;
     });
 
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    final muted = colors.onSurface.withValues(alpha: 0.65);
+
     showModalBottomSheet<void>(
       context: context,
-      backgroundColor: _panel,
+      backgroundColor: colors.surfaceContainer,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
@@ -140,7 +140,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                     width: 42,
                     height: 5,
                     decoration: BoxDecoration(
-                      color: _muted.withValues(alpha: 0.5),
+                      color: muted.withValues(alpha: 0.5),
                       borderRadius: BorderRadius.circular(10),
                     ),
                   ),
@@ -162,8 +162,8 @@ class _NotificationScreenState extends State<NotificationScreen> {
                 const SizedBox(height: 18),
                 Text(
                   _getTitle(l10n, type),
-                  style: const TextStyle(
-                    color: _text,
+                  style: TextStyle(
+                    color: colors.onSurface,
                     fontSize: 21,
                     fontWeight: FontWeight.bold,
                   ),
@@ -171,8 +171,8 @@ class _NotificationScreenState extends State<NotificationScreen> {
                 const SizedBox(height: 12),
                 Text(
                   _getMessage(l10n, type),
-                  style: const TextStyle(
-                    color: _muted,
+                  style: TextStyle(
+                    color: muted,
                     fontSize: 15,
                     height: 1.7,
                   ),
@@ -189,7 +189,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                     onPressed: () => Navigator.pop(sheetContext),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: _cyan,
-                      foregroundColor: _bg,
+                      foregroundColor: colors.surface,
                       padding: const EdgeInsets.symmetric(vertical: 15),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(14),
@@ -230,12 +230,16 @@ class _NotificationScreenState extends State<NotificationScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final notifications = _filteredNotifications;
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+    final muted = colors.onSurface.withValues(alpha: 0.65);
 
     return Scaffold(
-      backgroundColor: _bg,
+      backgroundColor: colors.surface,
       appBar: AppBar(
-        backgroundColor: _bg,
-        foregroundColor: _text,
+        backgroundColor: colors.surface,
+        foregroundColor: colors.onSurface,
         elevation: 0,
         title: Text(
           l10n.notifications,
@@ -266,8 +270,10 @@ class _NotificationScreenState extends State<NotificationScreen> {
                 width: double.infinity,
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF18344A), Color(0xFF28234B)],
+                  gradient: LinearGradient(
+                    colors: isDark
+                        ? const [Color(0xFF18344A), Color(0xFF28234B)]
+                        : [colors.primaryContainer, colors.secondaryContainer],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
@@ -295,8 +301,8 @@ class _NotificationScreenState extends State<NotificationScreen> {
                         children: [
                           Text(
                             l10n.notificationStayUpdated,
-                            style: const TextStyle(
-                              color: _text,
+                            style: TextStyle(
+                              color: isDark ? Colors.white : colors.onPrimaryContainer,
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
                             ),
@@ -307,7 +313,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                                 ? l10n.notificationAllCaughtUp
                                 : '${l10n.notificationUnreadCountLabel} '
                                       '$_unreadCount',
-                            style: const TextStyle(color: _muted, fontSize: 13),
+                            style: TextStyle(color: isDark ? const Color(0xFF94A3B8) : colors.onPrimaryContainer.withValues(alpha: 0.75), fontSize: 13),
                           ),
                         ],
                       ),
@@ -323,8 +329,8 @@ class _NotificationScreenState extends State<NotificationScreen> {
                   Expanded(
                     child: Text(
                       l10n.notificationYourNotifications,
-                      style: const TextStyle(
-                        color: _text,
+                      style: TextStyle(
+                        color: colors.onSurface,
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                       ),
@@ -332,7 +338,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                   ),
                   Text(
                     '${notifications.length} ${l10n.notificationItemsLabel}',
-                    style: const TextStyle(color: _muted, fontSize: 12),
+                    style: TextStyle(color: muted, fontSize: 12),
                   ),
                 ],
               ),
@@ -368,13 +374,13 @@ class _NotificationScreenState extends State<NotificationScreen> {
                             Icon(
                               Icons.notifications_none_rounded,
                               size: 65,
-                              color: _muted.withValues(alpha: 0.65),
+                              color: muted.withValues(alpha: 0.65),
                             ),
                             const SizedBox(height: 15),
                             Text(
                               l10n.notificationAllCaughtUp,
-                              style: const TextStyle(
-                                color: _text,
+                              style: TextStyle(
+                                color: colors.onSurface,
                                 fontSize: 17,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -383,7 +389,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                             Text(
                               l10n.notificationNoUnread,
                               textAlign: TextAlign.center,
-                              style: const TextStyle(color: _muted),
+                              style: TextStyle(color: muted),
                             ),
                           ],
                         ),
@@ -399,7 +405,9 @@ class _NotificationScreenState extends State<NotificationScreen> {
                         final isRead = notification['read'] as bool;
 
                         return Material(
-                          color: isRead ? _panel : const Color(0xFF1C3046),
+                          color: isRead
+                              ? colors.surfaceContainer
+                              : (isDark ? const Color(0xFF1C3046) : colors.primaryContainer),
                           borderRadius: BorderRadius.circular(18),
                           child: InkWell(
                             onTap: () => _openNotification(notification),
@@ -410,7 +418,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                                 borderRadius: BorderRadius.circular(18),
                                 border: Border.all(
                                   color: isRead
-                                      ? const Color(0xFF29384D)
+                                      ? colors.outlineVariant
                                       : _cyan.withValues(alpha: 0.45),
                                 ),
                               ),
@@ -445,7 +453,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                                               child: Text(
                                                 _getTitle(l10n, type),
                                                 style: TextStyle(
-                                                  color: _text,
+                                                  color: colors.onSurface,
                                                   fontSize: 14,
                                                   fontWeight: isRead
                                                       ? FontWeight.w500
@@ -474,8 +482,8 @@ class _NotificationScreenState extends State<NotificationScreen> {
                                           _getMessage(l10n, type),
                                           maxLines: 2,
                                           overflow: TextOverflow.ellipsis,
-                                          style: const TextStyle(
-                                            color: _muted,
+                                          style: TextStyle(
+                                            color: muted,
                                             fontSize: 12,
                                             height: 1.5,
                                           ),
@@ -495,9 +503,9 @@ class _NotificationScreenState extends State<NotificationScreen> {
                                     ),
                                   ),
                                   const SizedBox(width: 4),
-                                  const Icon(
+                                  Icon(
                                     Icons.chevron_right_rounded,
-                                    color: _muted,
+                                    color: muted,
                                   ),
                                 ],
                               ),
@@ -527,22 +535,24 @@ class _FilterChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(30),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
         decoration: BoxDecoration(
-          color: selected ? const Color(0xFF22D3EE) : const Color(0xFF172337),
+          color: selected ? _NotificationScreenState._cyan : colors.surfaceContainer,
           borderRadius: BorderRadius.circular(30),
           border: Border.all(
-            color: selected ? const Color(0xFF22D3EE) : const Color(0xFF29384D),
+            color: selected ? _NotificationScreenState._cyan : colors.outlineVariant,
           ),
         ),
         child: Text(
           label,
           style: TextStyle(
-            color: selected ? const Color(0xFF0B1220) : const Color(0xFF94A3B8),
+            color: selected ? colors.surface : colors.onSurface.withValues(alpha: isDark ? 0.75 : 0.8),
             fontSize: 13,
             fontWeight: FontWeight.w600,
           ),

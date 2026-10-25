@@ -5,25 +5,32 @@ import 'l10n/app_localizations.dart';
 class AboutScreen extends StatelessWidget {
   const AboutScreen({super.key});
 
-  static const Color _bg = Color(0xFF0B1220);
   static const Color _cyan = Color(0xFF22D3EE);
   static const Color _purple = Color(0xFF8B5CF6);
-  static const Color _textColor = Color(0xFFF1F5F9);
-  static const Color _muted = Color(0xFF94A3B8);
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+
+    final muted = colors.onSurface.withValues(
+      alpha: isDark ? 0.70 : 0.65,
+    );
 
     return Scaffold(
-      backgroundColor: _bg,
+      backgroundColor: colors.surface,
       appBar: AppBar(
-        backgroundColor: _bg,
-        foregroundColor: _textColor,
+        backgroundColor: colors.surface,
+        foregroundColor: colors.onSurface,
         elevation: 0,
+        scrolledUnderElevation: 0,
         title: Text(
           l10n.aboutLankaTransit,
-          style: const TextStyle(fontWeight: FontWeight.bold),
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+          ),
         ),
       ),
       body: SingleChildScrollView(
@@ -31,6 +38,7 @@ class AboutScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // App logo and introduction
             Center(
               child: Column(
                 children: [
@@ -44,6 +52,13 @@ class AboutScreen extends StatelessWidget {
                         end: Alignment.bottomRight,
                       ),
                       borderRadius: BorderRadius.circular(28),
+                      boxShadow: [
+                        BoxShadow(
+                          color: _cyan.withValues(alpha: 0.18),
+                          blurRadius: 22,
+                          offset: const Offset(0, 8),
+                        ),
+                      ],
                     ),
                     child: const Icon(
                       Icons.directions_bus_rounded,
@@ -52,45 +67,48 @@ class AboutScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 18),
-                  const Text(
+                  Text(
                     'LankaTransit',
                     style: TextStyle(
-                      color: _textColor,
+                      color: colors.onSurface,
                       fontSize: 28,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   const SizedBox(height: 6),
-                  Text(
-                    l10n.aboutTagline,
+                  const Text(
+                    'Travel Smarter, Travel Better',
                     textAlign: TextAlign.center,
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: _cyan,
                       fontSize: 15,
-                      fontWeight: FontWeight.w500,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                   const SizedBox(height: 12),
                   Text(
                     l10n.aboutCompanion,
                     textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: _muted,
+                    style: TextStyle(
+                      color: muted,
                       fontSize: 14,
+                      height: 1.5,
                     ),
                   ),
                 ],
               ),
             ),
+
             const SizedBox(height: 30),
 
             _SectionHeading(title: l10n.aboutOurApp),
             const SizedBox(height: 12),
+
             _InfoCard(
               child: Text(
                 l10n.aboutDescription,
-                style: const TextStyle(
-                  color: _muted,
+                style: TextStyle(
+                  color: muted,
                   fontSize: 14,
                   height: 1.7,
                 ),
@@ -98,6 +116,7 @@ class AboutScreen extends StatelessWidget {
             ),
 
             const SizedBox(height: 25),
+
             _SectionHeading(title: l10n.keyFeatures),
             const SizedBox(height: 12),
 
@@ -107,24 +126,28 @@ class AboutScreen extends StatelessWidget {
               subtitle: l10n.aboutBusDescription,
             ),
             const SizedBox(height: 10),
+
             _FeatureTile(
               icon: Icons.train_rounded,
               title: l10n.trainRoutes,
               subtitle: l10n.aboutTrainDescription,
             ),
             const SizedBox(height: 10),
+
             _FeatureTile(
               icon: Icons.location_on_rounded,
               title: l10n.nearbyTransport,
               subtitle: l10n.aboutNearbyDescription,
             ),
             const SizedBox(height: 10),
+
             _FeatureTile(
               icon: Icons.favorite_rounded,
               title: l10n.favouriteRoutes,
               subtitle: l10n.aboutFavouritesDescription,
             ),
             const SizedBox(height: 10),
+
             _FeatureTile(
               icon: Icons.history_rounded,
               title: l10n.recentJourneys,
@@ -132,8 +155,10 @@ class AboutScreen extends StatelessWidget {
             ),
 
             const SizedBox(height: 25),
+
             _SectionHeading(title: l10n.appInformation),
             const SizedBox(height: 12),
+
             _InfoCard(
               child: Column(
                 children: [
@@ -142,28 +167,19 @@ class AboutScreen extends StatelessWidget {
                     label: l10n.application,
                     value: 'LankaTransit',
                   ),
-                  const Divider(
-                    color: Color(0xFF29384D),
-                    height: 24,
-                  ),
+                  _buildDivider(context),
                   _InfoRow(
                     icon: Icons.phone_android_rounded,
                     label: l10n.platform,
                     value: 'Flutter',
                   ),
-                  const Divider(
-                    color: Color(0xFF29384D),
-                    height: 24,
-                  ),
+                  _buildDivider(context),
                   _InfoRow(
                     icon: Icons.public_rounded,
                     label: l10n.coverage,
                     value: l10n.sriLanka,
                   ),
-                  const Divider(
-                    color: Color(0xFF29384D),
-                    height: 24,
-                  ),
+                  _buildDivider(context),
                   _InfoRow(
                     icon: Icons.info_outline_rounded,
                     label: l10n.version,
@@ -174,6 +190,8 @@ class AboutScreen extends StatelessWidget {
             ),
 
             const SizedBox(height: 30),
+
+            // Footer
             Center(
               child: Column(
                 children: [
@@ -186,41 +204,54 @@ class AboutScreen extends StatelessWidget {
                   Text(
                     l10n.madeForSmarterJourneys,
                     textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: _muted,
+                    style: TextStyle(
+                      color: muted,
                       fontSize: 13,
                     ),
                   ),
                   const SizedBox(height: 5),
-                  const Text(
+                  Text(
                     'LankaTransit © 2026',
                     style: TextStyle(
-                      color: _muted,
+                      color: muted,
                       fontSize: 12,
                     ),
                   ),
                 ],
               ),
             ),
+
             const SizedBox(height: 20),
           ],
         ),
       ),
     );
   }
+
+  static Widget _buildDivider(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    return Divider(
+      color: colors.outlineVariant.withValues(alpha: 0.55),
+      height: 24,
+    );
+  }
 }
 
+// Section heading
 class _SectionHeading extends StatelessWidget {
   final String title;
 
-  const _SectionHeading({required this.title});
+  const _SectionHeading({
+    required this.title,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Text(
       title,
       style: const TextStyle(
-        color: Color(0xFF22D3EE),
+        color: AboutScreen._cyan,
         fontSize: 18,
         fontWeight: FontWeight.bold,
       ),
@@ -228,28 +259,45 @@ class _SectionHeading extends StatelessWidget {
   }
 }
 
+// Reusable information card
 class _InfoCard extends StatelessWidget {
   final Widget child;
 
-  const _InfoCard({required this.child});
+  const _InfoCard({
+    required this.child,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: const Color(0xFF172337),
+        color: colors.surfaceContainer,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(
-          color: const Color(0xFF29384D),
+          color: colors.outlineVariant.withValues(alpha: 0.55),
         ),
+        boxShadow: isDark
+            ? null
+            : [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.035),
+                  blurRadius: 10,
+                  offset: const Offset(0, 3),
+                ),
+              ],
       ),
       child: child,
     );
   }
 }
 
+// Feature tile with its own icon
 class _FeatureTile extends StatelessWidget {
   final IconData icon;
   final String title;
@@ -263,28 +311,42 @@ class _FeatureTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+
     return Container(
+      width: double.infinity,
       padding: const EdgeInsets.all(15),
       decoration: BoxDecoration(
-        color: const Color(0xFF172337),
+        color: colors.surfaceContainer,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: const Color(0xFF29384D),
+          color: colors.outlineVariant.withValues(alpha: 0.55),
         ),
+        boxShadow: isDark
+            ? null
+            : [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.025),
+                  blurRadius: 8,
+                  offset: const Offset(0, 3),
+                ),
+              ],
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
             width: 46,
             height: 46,
             decoration: BoxDecoration(
-              color: const Color(0xFF22D3EE)
-                  .withValues(alpha: 0.12),
+              color: AboutScreen._cyan.withValues(alpha: 0.13),
               borderRadius: BorderRadius.circular(13),
             ),
             child: Icon(
               icon,
-              color: const Color(0xFF22D3EE),
+              color: AboutScreen._cyan,
               size: 24,
             ),
           ),
@@ -295,8 +357,8 @@ class _FeatureTile extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: const TextStyle(
-                    color: Color(0xFFF1F5F9),
+                  style: TextStyle(
+                    color: colors.onSurface,
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
                   ),
@@ -304,10 +366,12 @@ class _FeatureTile extends StatelessWidget {
                 const SizedBox(height: 5),
                 Text(
                   subtitle,
-                  style: const TextStyle(
-                    color: Color(0xFF94A3B8),
+                  style: TextStyle(
+                    color: colors.onSurface.withValues(
+                      alpha: isDark ? 0.70 : 0.65,
+                    ),
                     fontSize: 12,
-                    height: 1.4,
+                    height: 1.5,
                   ),
                 ),
               ],
@@ -319,6 +383,7 @@ class _FeatureTile extends StatelessWidget {
   }
 }
 
+// Application information row
 class _InfoRow extends StatelessWidget {
   final IconData icon;
   final String label;
@@ -332,20 +397,21 @@ class _InfoRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
     return Row(
       children: [
-        const SizedBox(width: 2),
         Icon(
           icon,
-          color: const Color(0xFF22D3EE),
+          color: AboutScreen._cyan,
           size: 21,
         ),
         const SizedBox(width: 12),
         Expanded(
           child: Text(
             label,
-            style: const TextStyle(
-              color: Color(0xFF94A3B8),
+            style: TextStyle(
+              color: colors.onSurface.withValues(alpha: 0.65),
               fontSize: 13,
             ),
           ),
@@ -355,8 +421,8 @@ class _InfoRow extends StatelessWidget {
           child: Text(
             value,
             textAlign: TextAlign.end,
-            style: const TextStyle(
-              color: Color(0xFFF1F5F9),
+            style: TextStyle(
+              color: colors.onSurface,
               fontSize: 13,
               fontWeight: FontWeight.w600,
             ),

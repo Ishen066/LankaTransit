@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 
 import 'l10n/app_localizations.dart';
@@ -5,25 +6,33 @@ import 'l10n/app_localizations.dart';
 class RecentJourneysScreen extends StatelessWidget {
   const RecentJourneysScreen({super.key});
 
-  static const Color bg = Color(0xFF0B1220);
-  static const Color panel = Color(0xFF172337);
   static const Color cyan = Color(0xFF22D3EE);
   static const Color purple = Color(0xFF9B87F5);
-  static const Color muted = Color(0xFF9CA3AF);
+  static const Color success = Color(0xFF10B981);
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+
+    final mutedColor = colorScheme.onSurface.withValues(
+      alpha: isDark ? 0.65 : 0.60,
+    );
 
     return Scaffold(
-      backgroundColor: bg,
+      backgroundColor: colorScheme.surface,
       appBar: AppBar(
-        backgroundColor: bg,
-        foregroundColor: Colors.white,
+        backgroundColor: colorScheme.surface,
+        foregroundColor: colorScheme.onSurface,
         elevation: 0,
+        scrolledUnderElevation: 0,
         title: Text(
           l10n.recentJourneys,
-          style: const TextStyle(fontWeight: FontWeight.bold),
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+          ),
         ),
       ),
       body: ListView(
@@ -31,11 +40,15 @@ class RecentJourneysScreen extends StatelessWidget {
         children: [
           Text(
             l10n.yourTravelHistory,
-            style: const TextStyle(color: muted, fontSize: 14),
+            style: TextStyle(
+              color: mutedColor,
+              fontSize: 14,
+            ),
           ),
           const SizedBox(height: 22),
 
           _journeyCard(
+            context: context,
             icon: Icons.directions_bus_rounded,
             iconColor: cyan,
             iconBg: const Color(0xFF164E63),
@@ -49,6 +62,7 @@ class RecentJourneysScreen extends StatelessWidget {
           const SizedBox(height: 16),
 
           _journeyCard(
+            context: context,
             icon: Icons.train_rounded,
             iconColor: purple,
             iconBg: const Color(0xFF3B2866),
@@ -62,6 +76,7 @@ class RecentJourneysScreen extends StatelessWidget {
           const SizedBox(height: 16),
 
           _journeyCard(
+            context: context,
             icon: Icons.directions_bus_rounded,
             iconColor: cyan,
             iconBg: const Color(0xFF164E63),
@@ -78,7 +93,10 @@ class RecentJourneysScreen extends StatelessWidget {
             child: Text(
               l10n.sampleJourneysMessage,
               textAlign: TextAlign.center,
-              style: const TextStyle(color: muted, fontSize: 12),
+              style: TextStyle(
+                color: mutedColor,
+                fontSize: 12,
+              ),
             ),
           ),
         ],
@@ -86,7 +104,8 @@ class RecentJourneysScreen extends StatelessWidget {
     );
   }
 
-  static Widget _journeyCard({
+  Widget _journeyCard({
+    required BuildContext context,
     required IconData icon,
     required Color iconColor,
     required Color iconBg,
@@ -96,12 +115,33 @@ class RecentJourneysScreen extends StatelessWidget {
     required String date,
     required String time,
   }) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+
+    final cardColor = colorScheme.surfaceContainer;
+    final primaryTextColor = colorScheme.onSurface;
+    final mutedColor = colorScheme.onSurface.withValues(
+      alpha: isDark ? 0.65 : 0.60,
+    );
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: panel,
+        color: cardColor,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
+        border: Border.all(
+          color: colorScheme.outlineVariant.withValues(alpha: 0.45),
+        ),
+        boxShadow: isDark
+            ? null
+            : [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.04),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
       ),
       child: Column(
         children: [
@@ -114,7 +154,11 @@ class RecentJourneysScreen extends StatelessWidget {
                   color: iconBg,
                   borderRadius: BorderRadius.circular(14),
                 ),
-                child: Icon(icon, color: iconColor, size: 27),
+                child: Icon(
+                  icon,
+                  color: iconColor,
+                  size: 27,
+                ),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -124,7 +168,13 @@ class RecentJourneysScreen extends StatelessWidget {
                     Text(
                       type,
                       style: TextStyle(
-                        color: iconColor,
+                        color: isDark
+                            ? iconColor
+                            : Color.lerp(
+                                iconColor,
+                                Colors.black,
+                                0.20,
+                              ),
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
                       ),
@@ -132,8 +182,8 @@ class RecentJourneysScreen extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(
                       '$from → $to',
-                      style: const TextStyle(
-                        color: Colors.white,
+                      style: TextStyle(
+                        color: primaryTextColor,
                         fontSize: 15,
                         fontWeight: FontWeight.bold,
                       ),
@@ -143,27 +193,46 @@ class RecentJourneysScreen extends StatelessWidget {
               ),
               const Icon(
                 Icons.check_circle_rounded,
-                color: Color(0xFF34D399),
+                color: success,
                 size: 22,
               ),
             ],
           ),
           const SizedBox(height: 16),
-          Divider(color: Colors.white.withValues(alpha: 0.08)),
+          Divider(
+            color: colorScheme.outlineVariant.withValues(alpha: 0.55),
+          ),
           const SizedBox(height: 8),
           Row(
             children: [
-              const Icon(Icons.calendar_month_rounded, color: muted, size: 17),
+              Icon(
+                Icons.calendar_month_rounded,
+                color: mutedColor,
+                size: 17,
+              ),
               const SizedBox(width: 7),
               Expanded(
                 child: Text(
                   date,
-                  style: const TextStyle(color: muted, fontSize: 12),
+                  style: TextStyle(
+                    color: mutedColor,
+                    fontSize: 12,
+                  ),
                 ),
               ),
-              const Icon(Icons.access_time_rounded, color: muted, size: 17),
+              Icon(
+                Icons.access_time_rounded,
+                color: mutedColor,
+                size: 17,
+              ),
               const SizedBox(width: 5),
-              Text(time, style: const TextStyle(color: muted, fontSize: 12)),
+              Text(
+                time,
+                style: TextStyle(
+                  color: mutedColor,
+                  fontSize: 12,
+                ),
+              ),
             ],
           ),
         ],
