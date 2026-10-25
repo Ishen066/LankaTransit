@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 
 import 'app_locale.dart';
@@ -10,26 +9,26 @@ import 'favourite_routes_screen.dart';
 import 'routes_screen.dart';
 import 'nearby_transport_screen.dart';
 import 'profile_screen.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'firebase_options.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'auth_service.dart';
 
+import 'package:firebase_core/firebase_core.dart';
+
+import 'firebase_options.dart';
+
+import 'package:firebase_auth/firebase_auth.dart';
+
+import 'auth_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Initialize Firebase
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   // Load saved app theme
   await AppTheme.load();
 
   runApp(const LankaTransitApp());
 }
-
 
 // ============================================================
 // MAIN APP
@@ -53,10 +52,8 @@ class LankaTransitApp extends StatelessWidget {
               themeMode: mode,
               theme: AppTheme.lightTheme,
               darkTheme: AppTheme.darkTheme,
-              localizationsDelegates:
-                  AppLocalizations.localizationsDelegates,
-              supportedLocales:
-                  AppLocalizations.supportedLocales,
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
               home: const SplashScreen(),
             );
           },
@@ -70,20 +67,15 @@ class LankaTransitApp extends StatelessWidget {
 // THEME HELPERS
 // ============================================================
 
-Color _page(BuildContext context) =>
-    Theme.of(context).scaffoldBackgroundColor;
+Color _page(BuildContext context) => Theme.of(context).scaffoldBackgroundColor;
 
-Color _surface(BuildContext context) =>
-    Theme.of(context).colorScheme.surface;
+Color _surface(BuildContext context) => Theme.of(context).colorScheme.surface;
 
-Color _text(BuildContext context) =>
-    Theme.of(context).colorScheme.onSurface;
+Color _text(BuildContext context) => Theme.of(context).colorScheme.onSurface;
 
-Color _muted(BuildContext context) =>
-    AppTheme.secondaryText(context);
+Color _muted(BuildContext context) => AppTheme.secondaryText(context);
 
-Color _primary(BuildContext context) =>
-    Theme.of(context).colorScheme.primary;
+Color _primary(BuildContext context) => Theme.of(context).colorScheme.primary;
 
 // ============================================================
 // LANGUAGE SELECTOR
@@ -96,9 +88,7 @@ void showLanguageSelector(BuildContext context) {
     context: context,
     backgroundColor: _surface(context),
     shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(
-        top: Radius.circular(28),
-      ),
+      borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
     ),
     builder: (sheetContext) {
       return SafeArea(
@@ -169,8 +159,7 @@ class _LanguageOption extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final selected =
-        appLocale.value.languageCode == locale.languageCode;
+    final selected = appLocale.value.languageCode == locale.languageCode;
     final theme = Theme.of(context);
 
     return Material(
@@ -182,10 +171,7 @@ class _LanguageOption extends StatelessWidget {
         borderRadius: BorderRadius.circular(17),
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 14,
-          ),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           child: Row(
             children: [
               Container(
@@ -193,8 +179,7 @@ class _LanguageOption extends StatelessWidget {
                 height: 44,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.primary
-                      .withValues(alpha: 0.10),
+                  color: theme.colorScheme.primary.withValues(alpha: 0.10),
                   borderRadius: BorderRadius.circular(13),
                 ),
                 child: Text(
@@ -217,19 +202,13 @@ class _LanguageOption extends StatelessWidget {
                     const SizedBox(height: 3),
                     Text(
                       subtitle,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: _muted(context),
-                      ),
+                      style: TextStyle(fontSize: 12, color: _muted(context)),
                     ),
                   ],
                 ),
               ),
               if (selected)
-                Icon(
-                  Icons.check_circle_rounded,
-                  color: _primary(context),
-                ),
+                Icon(Icons.check_circle_rounded, color: _primary(context)),
             ],
           ),
         ),
@@ -241,7 +220,6 @@ class _LanguageOption extends StatelessWidget {
 // ============================================================
 // SPLASH SCREEN
 // ============================================================
-
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -266,9 +244,7 @@ class _SplashScreenState extends State<SplashScreen> {
       if (user != null) {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(
-            builder: (_) => const HomePage(),
-          ),
+          MaterialPageRoute(builder: (_) => const HomePage()),
         );
       }
     });
@@ -287,14 +263,10 @@ class _SplashScreenState extends State<SplashScreen> {
           Image.asset(
             'assets/images/lanka_transit_splash.png',
             fit: BoxFit.cover,
-            errorBuilder: (_, _, _) => Container(
-              color: _page(context),
-            ),
+            errorBuilder: (_, _, _) => Container(color: _page(context)),
           ),
           Container(
-            color: isDark
-                ? const Color(0xCC070B18)
-                : const Color(0x99070B18),
+            color: isDark ? const Color(0xCC070B18) : const Color(0x99070B18),
           ),
           SafeArea(
             child: Padding(
@@ -388,10 +360,7 @@ class _SplashScreenState extends State<SplashScreen> {
                   const SizedBox(height: 14),
                   Text(
                     l10n.yourJourneyStartsHere,
-                    style: const TextStyle(
-                      color: Colors.white70,
-                      fontSize: 12,
-                    ),
+                    style: const TextStyle(color: Colors.white70, fontSize: 12),
                   ),
                 ],
               ),
@@ -402,7 +371,6 @@ class _SplashScreenState extends State<SplashScreen> {
     );
   }
 }
-
 
 // ============================================================
 // SHARED AUTH INPUT
@@ -423,10 +391,7 @@ InputDecoration _inputDecoration(
     suffixIcon: suffixIcon,
     filled: true,
     fillColor: theme.colorScheme.surface,
-    contentPadding: const EdgeInsets.symmetric(
-      horizontal: 18,
-      vertical: 17,
-    ),
+    contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 17),
     border: OutlineInputBorder(
       borderRadius: BorderRadius.circular(16),
       borderSide: BorderSide(color: border),
@@ -437,14 +402,10 @@ InputDecoration _inputDecoration(
     ),
     focusedBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(16),
-      borderSide: BorderSide(
-        color: theme.colorScheme.primary,
-        width: 1.5,
-      ),
+      borderSide: BorderSide(color: theme.colorScheme.primary, width: 1.5),
     ),
   );
 }
-
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -468,9 +429,8 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void _showMessage(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message)));
   }
 
   String _loginError(FirebaseAuthException e) {
@@ -504,18 +464,13 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _isLoading = true);
 
     try {
-      await AuthService().login(
-        email: email,
-        password: password,
-      );
+      await AuthService().login(email: email, password: password);
 
       if (!mounted) return;
 
       Navigator.pushAndRemoveUntil(
         context,
-        MaterialPageRoute(
-          builder: (_) => const HomePage(),
-        ),
+        MaterialPageRoute(builder: (_) => const HomePage()),
         (route) => false,
       );
     } on FirebaseAuthException catch (e) {
@@ -567,154 +522,240 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-
+    final theme = Theme.of(context);
     return Scaffold(
       backgroundColor: _page(context),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(24, 18, 24, 30),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
+          padding: const EdgeInsets.fromLTRB(22, 12, 22, 28),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 470),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  IconButton(
-                    onPressed: _isLoading
-                        ? null
-                        : () => Navigator.pop(context),
-                    icon: const Icon(Icons.arrow_back_rounded),
+                  Row(
+                    children: [
+                      IconButton(
+                        tooltip: MaterialLocalizations.of(context)
+                            .backButtonTooltip,
+                        onPressed: () => Navigator.maybePop(context),
+                        icon: const Icon(Icons.arrow_back_rounded),
+                      ),
+                      const Spacer(),
+                      IconButton(
+                        tooltip: 'Change language',
+                        onPressed: () => showLanguageSelector(context),
+                        icon: const Icon(Icons.language_rounded),
+                      ),
+                    ],
                   ),
-                  const Spacer(),
-                  IconButton(
-                    onPressed: () => showLanguageSelector(context),
-                    icon: Icon(
-                      Icons.language_rounded,
-                      color: _primary(context),
+                  const SizedBox(height: 10),
+                  Center(
+                    child: Container(
+                      width: 82,
+                      height: 82,
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFF0F9D78), Color(0xFF087F8C)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(26),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF0F9D78).withValues(alpha:.24),
+                            blurRadius: 24,
+                            offset: const Offset(0, 10),
+                          ),
+                        ],
+                      ),
+                      child: const Icon(
+                        Icons.directions_transit_rounded,
+                        color: Colors.white,
+                        size: 42,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                  Center(
+                    child: Text(
+                      l10n.appName,
+                      style: TextStyle(
+                        fontSize: 16,
+                        letterSpacing: 1.4,
+                        fontWeight: FontWeight.w800,
+                        color: theme.colorScheme.primary,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    l10n.welcomeBack,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 30,
+                      height: 1.15,
+                      fontWeight: FontWeight.w800,
+                      color: _text(context),
+                    ),
+                  ),
+                  const SizedBox(height: 9),
+                  Text(
+                    l10n.loginSubtitle,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 14,
+                      height: 1.5,
+                      color: _muted(context),
+                    ),
+                  ),
+                  const SizedBox(height: 30),
+                  Container(
+                    padding: const EdgeInsets.all(22),
+                    decoration: BoxDecoration(
+                      color: _surface(context),
+                      borderRadius: BorderRadius.circular(26),
+                      border: Border.all(
+                        color: AppTheme.borderColor(context).withValues(alpha:.7),
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha:
+                            theme.brightness == Brightness.dark ? .08 : .045,
+                          ),
+                          blurRadius: 28,
+                          offset: const Offset(0, 12),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        _FieldLabel(text: l10n.emailAddress),
+                        const SizedBox(height: 8),
+                        TextField(
+                          controller: _emailController,
+                          enabled: !_isLoading,
+                          keyboardType: TextInputType.emailAddress,
+                          textInputAction: TextInputAction.next,
+                          autofillHints: const [AutofillHints.email],
+                          decoration: _inputDecoration(
+                            context,
+                            label: l10n.enterYourEmail,
+                            icon: Icons.mail_outline_rounded,
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        _FieldLabel(text: l10n.password),
+                        const SizedBox(height: 8),
+                        TextField(
+                          controller: _passwordController,
+                          enabled: !_isLoading,
+                          obscureText: _obscurePassword,
+                          textInputAction: TextInputAction.done,
+                          autofillHints: const [AutofillHints.password],
+                          onSubmitted: (_) => _login(),
+                          decoration: _inputDecoration(
+                            context,
+                            label: l10n.enterYourPassword,
+                            icon: Icons.lock_outline_rounded,
+                            suffixIcon: IconButton(
+                              onPressed: () => setState(
+                                () => _obscurePassword = !_obscurePassword,
+                              ),
+                              icon: Icon(
+                                _obscurePassword
+                                    ? Icons.visibility_outlined
+                                    : Icons.visibility_off_outlined,
+                              ),
+                            ),
+                          ),
+                        ),
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: TextButton(
+                            onPressed: _isLoading ? null : _forgotPassword,
+                            child: Text(l10n.forgotPassword),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        SizedBox(
+                          height: 54,
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              elevation: 0,
+                            ),
+                            onPressed: _isLoading ? null : _login,
+                            child: _isLoading
+                                ? const SizedBox(
+                                    width: 22,
+                                    height: 22,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Colors.white,
+                                    ),
+                                  )
+                                : Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                        l10n.login,
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      const Icon(
+                                        Icons.arrow_forward_rounded,
+                                        size: 19,
+                                      ),
+                                    ],
+                                  ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Center(
+                    child: Wrap(
+                      alignment: WrapAlignment.center,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        Text(
+                          l10n.dontHaveAccount,
+                          style: TextStyle(color: _muted(context)),
+                        ),
+                        TextButton(
+                          onPressed: _isLoading
+                              ? null
+                              : () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => const RegisterScreen(),
+                                  ),
+                                ),
+                          child: Text(
+                            l10n.register,
+                            style: const TextStyle(fontWeight: FontWeight.w800),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 24),
-              Center(
-                child: Icon(
-                  Icons.directions_transit_rounded,
-                  size: 66,
-                  color: _primary(context),
-                ),
-              ),
-              const SizedBox(height: 24),
-              Center(
-                child: Text(
-                  l10n.welcomeBack,
-                  style: TextStyle(
-                    fontSize: 30,
-                    fontWeight: FontWeight.bold,
-                    color: _text(context),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 8),
-              Center(
-                child: Text(
-                  l10n.loginSubtitle,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: _muted(context)),
-                ),
-              ),
-              const SizedBox(height: 32),
-              _FieldLabel(text: l10n.emailAddress),
-              const SizedBox(height: 8),
-              TextField(
-                controller: _emailController,
-                enabled: !_isLoading,
-                keyboardType: TextInputType.emailAddress,
-                textInputAction: TextInputAction.next,
-                autofillHints: const [AutofillHints.email],
-                decoration: _inputDecoration(
-                  context,
-                  label: l10n.enterYourEmail,
-                  icon: Icons.email_outlined,
-                ),
-              ),
-              const SizedBox(height: 20),
-              _FieldLabel(text: l10n.password),
-              const SizedBox(height: 8),
-              TextField(
-                controller: _passwordController,
-                enabled: !_isLoading,
-                obscureText: _obscurePassword,
-                textInputAction: TextInputAction.done,
-                autofillHints: const [AutofillHints.password],
-                onSubmitted: (_) => _login(),
-                decoration: _inputDecoration(
-                  context,
-                  label: l10n.enterYourPassword,
-                  icon: Icons.lock_outline_rounded,
-                  suffixIcon: IconButton(
-                    onPressed: () {
-                      setState(() {
-                        _obscurePassword = !_obscurePassword;
-                      });
-                    },
-                    icon: Icon(
-                      _obscurePassword
-                          ? Icons.visibility_outlined
-                          : Icons.visibility_off_outlined,
-                    ),
-                  ),
-                ),
-              ),
-              Align(
-                alignment: Alignment.centerRight,
-                child: TextButton(
-                  onPressed: _isLoading ? null : _forgotPassword,
-                  child: Text(l10n.forgotPassword),
-                ),
-              ),
-              const SizedBox(height: 12),
-              SizedBox(
-                width: double.infinity,
-                height: 54,
-                child: ElevatedButton(
-                  onPressed: _isLoading ? null : _login,
-                  child: _isLoading
-                      ? const SizedBox(
-                          height: 22,
-                          width: 22,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                          ),
-                        )
-                      : Text(l10n.login),
-                ),
-              ),
-              const SizedBox(height: 20),
-              Center(
-                child: TextButton(
-                  onPressed: _isLoading
-                      ? null
-                      : () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => const RegisterScreen(),
-                            ),
-                          );
-                        },
-                  child: Text(
-                    '${l10n.dontHaveAccount} ${l10n.register}',
-                  ),
-                ),
-              ),
-            ],
+            ),
           ),
         ),
       ),
     );
   }
 }
-
-
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -743,9 +784,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 
   void _showMessage(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message)));
   }
 
   Future<void> _register() async {
@@ -754,8 +794,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
     final password = _passwordController.text;
     final confirmPassword = _confirmPasswordController.text;
 
-    if (name.isEmpty || email.isEmpty ||
-        password.isEmpty || confirmPassword.isEmpty) {
+    if (name.isEmpty ||
+        email.isEmpty ||
+        password.isEmpty ||
+        confirmPassword.isEmpty) {
       _showMessage('Please complete all fields.');
       return;
     }
@@ -790,9 +832,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
       Navigator.pushAndRemoveUntil(
         context,
-        MaterialPageRoute(
-          builder: (_) => const HomePage(),
-        ),
+        MaterialPageRoute(builder: (_) => const HomePage()),
         (route) => false,
       );
     } on FirebaseAuthException catch (e) {
@@ -836,177 +876,270 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-
+    final theme = Theme.of(context);
     return Scaffold(
       backgroundColor: _page(context),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(24, 18, 24, 30),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
+          padding: const EdgeInsets.fromLTRB(22, 12, 22, 28),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 470),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  IconButton(
-                    onPressed: _isLoading
-                        ? null
-                        : () => Navigator.pop(context),
-                    icon: const Icon(Icons.arrow_back_rounded),
+                  Row(
+                    children: [
+                      IconButton(
+                        onPressed: () => Navigator.maybePop(context),
+                        icon: const Icon(Icons.arrow_back_rounded),
+                      ),
+                      const Spacer(),
+                      IconButton(
+                        tooltip: 'Change language',
+                        onPressed: () => showLanguageSelector(context),
+                        icon: const Icon(Icons.language_rounded),
+                      ),
+                    ],
                   ),
-                  const Spacer(),
-                  IconButton(
-                    onPressed: () => showLanguageSelector(context),
-                    icon: Icon(
-                      Icons.language_rounded,
-                      color: _primary(context),
+                  const SizedBox(height: 8),
+                  Center(
+                    child: Container(
+                      width: 74,
+                      height: 74,
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFF0F9D78), Color(0xFF087F8C)],
+                        ),
+                        borderRadius: BorderRadius.circular(23),
+                      ),
+                      child: const Icon(
+                        Icons.person_add_alt_1_rounded,
+                        color: Colors.white,
+                        size: 36,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                  Center(
+                    child: Text(
+                      l10n.appName,
+                      style: TextStyle(
+                        fontSize: 15,
+                        letterSpacing: 1.4,
+                        fontWeight: FontWeight.w800,
+                        color: theme.colorScheme.primary,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    l10n.createAccount,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 29,
+                      fontWeight: FontWeight.w800,
+                      color: _text(context),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    l10n.createAccountSubtitle,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 14,
+                      height: 1.5,
+                      color: _muted(context),
+                    ),
+                  ),
+                  const SizedBox(height: 26),
+                  Container(
+                    padding: const EdgeInsets.all(22),
+                    decoration: BoxDecoration(
+                      color: _surface(context),
+                      borderRadius: BorderRadius.circular(26),
+                      border: Border.all(
+                        color: AppTheme.borderColor(context).withValues(alpha:.7),
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha:
+                            theme.brightness == Brightness.dark ? .08 : .045,
+                          ),
+                          blurRadius: 28,
+                          offset: const Offset(0, 12),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        _FieldLabel(text: l10n.fullName),
+                        const SizedBox(height: 8),
+                        TextField(
+                          controller: _nameController,
+                          enabled: !_isLoading,
+                          textCapitalization: TextCapitalization.words,
+                          textInputAction: TextInputAction.next,
+                          decoration: _inputDecoration(
+                            context,
+                            label: l10n.enterYourFullName,
+                            icon: Icons.person_outline_rounded,
+                          ),
+                        ),
+                        const SizedBox(height: 17),
+                        _FieldLabel(text: l10n.emailAddress),
+                        const SizedBox(height: 8),
+                        TextField(
+                          controller: _emailController,
+                          enabled: !_isLoading,
+                          keyboardType: TextInputType.emailAddress,
+                          textInputAction: TextInputAction.next,
+                          autofillHints: const [AutofillHints.email],
+                          decoration: _inputDecoration(
+                            context,
+                            label: l10n.enterYourEmail,
+                            icon: Icons.mail_outline_rounded,
+                          ),
+                        ),
+                        const SizedBox(height: 17),
+                        _FieldLabel(text: l10n.password),
+                        const SizedBox(height: 8),
+                        TextField(
+                          controller: _passwordController,
+                          enabled: !_isLoading,
+                          obscureText: _obscurePassword,
+                          textInputAction: TextInputAction.next,
+                          decoration: _inputDecoration(
+                            context,
+                            label: l10n.createPassword,
+                            icon: Icons.lock_outline_rounded,
+                            suffixIcon: IconButton(
+                              onPressed: () => setState(
+                                () => _obscurePassword = !_obscurePassword,
+                              ),
+                              icon: Icon(
+                                _obscurePassword
+                                    ? Icons.visibility_outlined
+                                    : Icons.visibility_off_outlined,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 17),
+                        _FieldLabel(text: l10n.confirmPassword),
+                        const SizedBox(height: 8),
+                        TextField(
+                          controller: _confirmPasswordController,
+                          enabled: !_isLoading,
+                          obscureText: _obscureConfirmPassword,
+                          textInputAction: TextInputAction.done,
+                          onSubmitted: (_) => _register(),
+                          decoration: _inputDecoration(
+                            context,
+                            label: l10n.confirmYourPassword,
+                            icon: Icons.lock_outline_rounded,
+                            suffixIcon: IconButton(
+                              onPressed: () => setState(
+                                () => _obscureConfirmPassword =
+                                    !_obscureConfirmPassword,
+                              ),
+                              icon: Icon(
+                                _obscureConfirmPassword
+                                    ? Icons.visibility_outlined
+                                    : Icons.visibility_off_outlined,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Icon(
+                              Icons.info_outline_rounded,
+                              size: 17,
+                              color: _muted(context),
+                            ),
+                            const SizedBox(width: 7),
+                            Expanded(
+                              child: Text(
+                                l10n.passwordHint,
+                                style: TextStyle(
+                                  color: _muted(context),
+                                  fontSize: 12,
+                                  height: 1.4,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 22),
+                        SizedBox(
+                          height: 54,
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              elevation: 0,
+                            ),
+                            onPressed: _isLoading ? null : _register,
+                            child: _isLoading
+                                ? const SizedBox(
+                                    width: 22,
+                                    height: 22,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Colors.white,
+                                    ),
+                                  )
+                                : Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                        l10n.createAccount,
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      const Icon(
+                                        Icons.arrow_forward_rounded,
+                                        size: 19,
+                                      ),
+                                    ],
+                                  ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                  Center(
+                    child: Wrap(
+                      alignment: WrapAlignment.center,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        Text(
+                          l10n.alreadyHaveAccount,
+                          style: TextStyle(color: _muted(context)),
+                        ),
+                        TextButton(
+                          onPressed: _isLoading
+                              ? null
+                              : () => Navigator.pop(context),
+                          child: Text(
+                            l10n.login,
+                            style: const TextStyle(fontWeight: FontWeight.w800),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 20),
-              Center(
-                child: Icon(
-                  Icons.person_add_alt_1_rounded,
-                  size: 60,
-                  color: _primary(context),
-                ),
-              ),
-              const SizedBox(height: 22),
-              Center(
-                child: Text(
-                  l10n.createAccount,
-                  style: TextStyle(
-                    fontSize: 29,
-                    fontWeight: FontWeight.bold,
-                    color: _text(context),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 8),
-              Center(
-                child: Text(
-                  l10n.createAccountSubtitle,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: _muted(context)),
-                ),
-              ),
-              const SizedBox(height: 30),
-              _FieldLabel(text: l10n.fullName),
-              const SizedBox(height: 8),
-              TextField(
-                controller: _nameController,
-                enabled: !_isLoading,
-                textCapitalization: TextCapitalization.words,
-                textInputAction: TextInputAction.next,
-                decoration: _inputDecoration(
-                  context,
-                  label: l10n.enterYourFullName,
-                  icon: Icons.person_outline_rounded,
-                ),
-              ),
-              const SizedBox(height: 18),
-              _FieldLabel(text: l10n.emailAddress),
-              const SizedBox(height: 8),
-              TextField(
-                controller: _emailController,
-                enabled: !_isLoading,
-                keyboardType: TextInputType.emailAddress,
-                textInputAction: TextInputAction.next,
-                decoration: _inputDecoration(
-                  context,
-                  label: l10n.enterYourEmail,
-                  icon: Icons.email_outlined,
-                ),
-              ),
-              const SizedBox(height: 18),
-              _FieldLabel(text: l10n.password),
-              const SizedBox(height: 8),
-              TextField(
-                controller: _passwordController,
-                enabled: !_isLoading,
-                obscureText: _obscurePassword,
-                textInputAction: TextInputAction.next,
-                decoration: _inputDecoration(
-                  context,
-                  label: l10n.createPassword,
-                  icon: Icons.lock_outline_rounded,
-                  suffixIcon: IconButton(
-                    onPressed: () {
-                      setState(() {
-                        _obscurePassword = !_obscurePassword;
-                      });
-                    },
-                    icon: Icon(
-                      _obscurePassword
-                          ? Icons.visibility_outlined
-                          : Icons.visibility_off_outlined,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 18),
-              _FieldLabel(text: l10n.confirmPassword),
-              const SizedBox(height: 8),
-              TextField(
-                controller: _confirmPasswordController,
-                enabled: !_isLoading,
-                obscureText: _obscureConfirmPassword,
-                textInputAction: TextInputAction.done,
-                onSubmitted: (_) => _register(),
-                decoration: _inputDecoration(
-                  context,
-                  label: l10n.confirmYourPassword,
-                  icon: Icons.lock_outline_rounded,
-                  suffixIcon: IconButton(
-                    onPressed: () {
-                      setState(() {
-                        _obscureConfirmPassword =
-                            !_obscureConfirmPassword;
-                      });
-                    },
-                    icon: Icon(
-                      _obscureConfirmPassword
-                          ? Icons.visibility_outlined
-                          : Icons.visibility_off_outlined,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 14),
-              Text(
-                l10n.passwordHint,
-                style: TextStyle(
-                  color: _muted(context),
-                  fontSize: 12,
-                ),
-              ),
-              const SizedBox(height: 24),
-              SizedBox(
-                width: double.infinity,
-                height: 54,
-                child: ElevatedButton(
-                  onPressed: _isLoading ? null : _register,
-                  child: _isLoading
-                      ? const SizedBox(
-                          height: 22,
-                          width: 22,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                          ),
-                        )
-                      : Text(l10n.createAccount),
-                ),
-              ),
-              const SizedBox(height: 20),
-              Center(
-                child: TextButton(
-                  onPressed: _isLoading ? null : () => Navigator.pop(context),
-                  child: Text(
-                    '${l10n.alreadyHaveAccount} ${l10n.login}',
-                  ),
-                ),
-              ),
-            ],
+            ),
           ),
         ),
       ),
@@ -1031,9 +1164,6 @@ class _FieldLabel extends StatelessWidget {
     );
   }
 }
-
-
-
 
 // ============================================================
 // HOME PAGE
@@ -1061,10 +1191,7 @@ class HomePage extends StatelessWidget {
                     height: 48,
                     decoration: BoxDecoration(
                       gradient: const LinearGradient(
-                        colors: [
-                          Color(0xFF38BDF8),
-                          Color(0xFF8B5CF6),
-                        ],
+                        colors: [Color(0xFF38BDF8), Color(0xFF8B5CF6)],
                       ),
                       borderRadius: BorderRadius.circular(16),
                     ),
@@ -1137,10 +1264,7 @@ class HomePage extends StatelessWidget {
                   gradient: const LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
-                    colors: [
-                      Color(0xFF38BDF8),
-                      Color(0xFF8B5CF6),
-                    ],
+                    colors: [Color(0xFF38BDF8), Color(0xFF8B5CF6)],
                   ),
                   borderRadius: BorderRadius.circular(25),
                 ),
@@ -1259,9 +1383,7 @@ class HomePage extends StatelessWidget {
                     onPressed: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(
-                          builder: (_) => const RoutesScreen(),
-                        ),
+                        MaterialPageRoute(builder: (_) => const RoutesScreen()),
                       );
                     },
                     child: Text(l10n.viewAll),
@@ -1307,9 +1429,7 @@ class HomePage extends StatelessWidget {
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(
-                      builder: (_) => const RoutesScreen(),
-                    ),
+                    MaterialPageRoute(builder: (_) => const RoutesScreen()),
                   );
                 },
               ),
@@ -1367,23 +1487,17 @@ class HomePage extends StatelessWidget {
           if (index == 1) {
             Navigator.push(
               context,
-              MaterialPageRoute(
-                builder: (_) => const RoutesScreen(),
-              ),
+              MaterialPageRoute(builder: (_) => const RoutesScreen()),
             );
           } else if (index == 2) {
             Navigator.push(
               context,
-              MaterialPageRoute(
-                builder: (_) => const FavouriteRoutesScreen(),
-              ),
+              MaterialPageRoute(builder: (_) => const FavouriteRoutesScreen()),
             );
           } else if (index == 3) {
             Navigator.push(
               context,
-              MaterialPageRoute(
-                builder: (_) => const ProfileScreen(),
-              ),
+              MaterialPageRoute(builder: (_) => const ProfileScreen()),
             );
           }
         },
@@ -1422,10 +1536,7 @@ class _HeaderButton extends StatelessWidget {
   final IconData icon;
   final VoidCallback onTap;
 
-  const _HeaderButton({
-    required this.icon,
-    required this.onTap,
-  });
+  const _HeaderButton({required this.icon, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -1471,9 +1582,7 @@ class _TransportCard extends StatelessWidget {
           padding: const EdgeInsets.all(18),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(22),
-            border: Border.all(
-              color: iconColor.withValues(alpha: 0.30),
-            ),
+            border: Border.all(color: iconColor.withValues(alpha: 0.30)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -1499,16 +1608,10 @@ class _TransportCard extends StatelessWidget {
               const SizedBox(height: 5),
               Text(
                 subtitle,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: _muted(context),
-                ),
+                style: TextStyle(fontSize: 12, color: _muted(context)),
               ),
               const SizedBox(height: 15),
-              Icon(
-                Icons.arrow_forward_rounded,
-                color: iconColor,
-              ),
+              Icon(Icons.arrow_forward_rounded, color: iconColor),
             ],
           ),
         ),
@@ -1548,9 +1651,7 @@ class _QuickActionCard extends StatelessWidget {
           padding: const EdgeInsets.all(15),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(19),
-            border: Border.all(
-              color: iconColor.withValues(alpha: 0.18),
-            ),
+            border: Border.all(color: iconColor.withValues(alpha: 0.18)),
           ),
           child: Row(
             children: [
@@ -1579,19 +1680,12 @@ class _QuickActionCard extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(
                       subtitle,
-                      style: TextStyle(
-                        color: _muted(context),
-                        fontSize: 12,
-                      ),
+                      style: TextStyle(color: _muted(context), fontSize: 12),
                     ),
                   ],
                 ),
               ),
-              Icon(
-                Icons.arrow_forward_ios_rounded,
-                size: 16,
-                color: iconColor,
-              ),
+              Icon(Icons.arrow_forward_ios_rounded, size: 16, color: iconColor),
             ],
           ),
         ),
