@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 
 import 'about_screen.dart';
@@ -15,14 +14,11 @@ const Color _purple = Color(0xFF8B5CF6);
 const Color _pink = Color(0xFFFB7185);
 const Color _amber = Color(0xFFFBBF24);
 
-Color _bg(BuildContext context) =>
-    Theme.of(context).scaffoldBackgroundColor;
+Color _bg(BuildContext context) => Theme.of(context).scaffoldBackgroundColor;
 
-Color _surface(BuildContext context) =>
-    Theme.of(context).colorScheme.surface;
+Color _surface(BuildContext context) => Theme.of(context).colorScheme.surface;
 
-Color _text(BuildContext context) =>
-    Theme.of(context).colorScheme.onSurface;
+Color _text(BuildContext context) => Theme.of(context).colorScheme.onSurface;
 
 Color _muted(BuildContext context) =>
     Theme.of(context).colorScheme.onSurfaceVariant;
@@ -39,8 +35,48 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   String _name = 'LankaTransit User';
-  String _email = 'user@example.com';
+  String _email = '';
   bool _isLoggingOut = false;
+  bool _isLoadingProfile = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProfile();
+  }
+
+  Future<void> _loadProfile() async {
+    try {
+      final profile = await AuthService().getLocalProfile();
+      final user = AuthService().currentUser;
+
+      if (!mounted) return;
+
+      final savedName = (profile?['name'] as String?)?.trim() ?? '';
+      final firebaseName = user?.displayName?.trim() ?? '';
+      final email = user?.email ?? (profile?['email'] as String?) ?? '';
+
+      setState(() {
+        _name = savedName.isNotEmpty
+            ? savedName
+            : firebaseName.isNotEmpty
+            ? firebaseName
+            : 'LankaTransit User';
+        _email = email;
+        _isLoadingProfile = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      final user = AuthService().currentUser;
+      setState(() {
+        _name = user?.displayName?.trim().isNotEmpty == true
+            ? user!.displayName!.trim()
+            : 'LankaTransit User';
+        _email = user?.email ?? '';
+        _isLoadingProfile = false;
+      });
+    }
+  }
 
   Future<void> _editProfile() async {
     final l10n = AppLocalizations.of(context)!;
@@ -74,6 +110,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               const SizedBox(height: 14),
               TextField(
                 controller: emailController,
+                readOnly: true,
                 keyboardType: TextInputType.emailAddress,
                 style: TextStyle(color: colors.onSurface),
                 decoration: _inputDecoration(
@@ -108,8 +145,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     if (!mounted || result == null) return;
 
-    if ((result['name'] ?? '').isEmpty ||
-        (result['email'] ?? '').isEmpty) {
+    if ((result['name'] ?? '').isEmpty || (result['email'] ?? '').isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(l10n.pleaseEnterNameEmail),
@@ -119,10 +155,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
       return;
     }
 
-    setState(() {
-      _name = result['name']!;
-      _email = result['email']!;
-    });
+    try {
+      await AuthService().updateProfile(name: result['name']!);
+      if (!mounted) return;
+      await _loadProfile();
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Profile updated successfully.'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to update profile: $e'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
   }
 
   InputDecoration _inputDecoration(
@@ -137,9 +190,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       prefixIcon: Icon(icon, color: _cyan),
       filled: true,
       fillColor: colors.surfaceContainerHighest.withValues(alpha: 0.4),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
-      ),
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
         borderSide: BorderSide(color: colors.outlineVariant),
@@ -158,9 +209,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       context: context,
       backgroundColor: _surface(context),
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(26),
-        ),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(26)),
       ),
       builder: (sheetContext) => SafeArea(
         child: Padding(
@@ -216,9 +265,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (!mounted) return;
 
       Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute<void>(
-          builder: (_) => const LoginScreen(),
-        ),
+        MaterialPageRoute<void>(builder: (_) => const LoginScreen()),
         (route) => false,
       );
     } catch (e) {
@@ -283,36 +330,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void _openNotifications() {
     Navigator.push(
       context,
-      MaterialPageRoute<void>(
-        builder: (_) => const NotificationScreen(),
-      ),
+      MaterialPageRoute<void>(builder: (_) => const NotificationScreen()),
     );
   }
 
   void _openRecentJourneys() {
     Navigator.push(
       context,
-      MaterialPageRoute<void>(
-        builder: (_) => const RecentJourneysScreen(),
-      ),
+      MaterialPageRoute<void>(builder: (_) => const RecentJourneysScreen()),
     );
   }
 
   void _openFavouriteRoutes() {
     Navigator.push(
       context,
-      MaterialPageRoute<void>(
-        builder: (_) => const FavouriteRoutesScreen(),
-      ),
+      MaterialPageRoute<void>(builder: (_) => const FavouriteRoutesScreen()),
     );
   }
 
   void _openAbout() {
     Navigator.push(
       context,
-      MaterialPageRoute<void>(
-        builder: (_) => const AboutScreen(),
-      ),
+      MaterialPageRoute<void>(builder: (_) => const AboutScreen()),
     );
   }
 
@@ -341,10 +380,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           IconButton(
             tooltip: l10n.language,
             onPressed: _showLanguageSelector,
-            icon: const Icon(
-              Icons.language_rounded,
-              color: _cyan,
-            ),
+            icon: const Icon(Icons.language_rounded, color: _cyan),
           ),
           const SizedBox(width: 8),
         ],
@@ -360,19 +396,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: _isDark(context)
-                      ? const [
-                          Color(0xFF15223B),
-                          Color(0xFF211D3D),
-                        ]
-                      : const [
-                          Color(0xFFEAF6FF),
-                          Color(0xFFF0EAFF),
-                        ],
+                      ? const [Color(0xFF15223B), Color(0xFF211D3D)]
+                      : const [Color(0xFFEAF6FF), Color(0xFFF0EAFF)],
                 ),
                 borderRadius: BorderRadius.circular(26),
-                border: Border.all(
-                  color: _cyan.withValues(alpha: 0.28),
-                ),
+                border: Border.all(color: _cyan.withValues(alpha: 0.28)),
               ),
               child: Column(
                 children: [
@@ -381,9 +409,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     height: 94,
                     decoration: const BoxDecoration(
                       shape: BoxShape.circle,
-                      gradient: LinearGradient(
-                        colors: [_cyan, _purple],
-                      ),
+                      gradient: LinearGradient(colors: [_cyan, _purple]),
                     ),
                     child: const Icon(
                       Icons.person_rounded,
@@ -392,28 +418,39 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                   ),
                   const SizedBox(height: 15),
-                  Text(
-                    _name,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: _isDark(context)
-                          ? Colors.white
-                          : const Color(0xFF17233B),
-                      fontSize: 21,
-                      fontWeight: FontWeight.bold,
+                  if (_isLoadingProfile)
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 12),
+                      child: SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(strokeWidth: 2.5),
+                      ),
+                    )
+                  else ...[
+                    Text(
+                      _name,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: _isDark(context)
+                            ? Colors.white
+                            : const Color(0xFF17233B),
+                        fontSize: 21,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 5),
-                  Text(
-                    _email,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: _isDark(context)
-                          ? const Color(0xFFB8C5DA)
-                          : const Color(0xFF53627A),
-                      fontSize: 13,
+                    const SizedBox(height: 5),
+                    Text(
+                      _email,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: _isDark(context)
+                            ? const Color(0xFFB8C5DA)
+                            : const Color(0xFF53627A),
+                        fontSize: 13,
+                      ),
                     ),
-                  ),
+                  ],
                   const SizedBox(height: 18),
                   OutlinedButton.icon(
                     onPressed: _editProfile,
@@ -485,22 +522,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ? const SizedBox(
                         width: 18,
                         height: 18,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                        ),
+                        child: CircularProgressIndicator(strokeWidth: 2),
                       )
                     : const Icon(Icons.logout_rounded),
                 label: Text(
                   _isLoggingOut ? 'Logging out...' : l10n.logout,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: _pink,
-                  side: BorderSide(
-                    color: _pink.withValues(alpha: 0.65),
-                  ),
+                  side: BorderSide(color: _pink.withValues(alpha: 0.65)),
                   backgroundColor: _pink.withValues(
                     alpha: _isDark(context) ? 0.10 : 0.06,
                   ),
@@ -541,8 +572,7 @@ class _LanguageOption extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final selected =
-        appLocale.value.languageCode == locale.languageCode;
+    final selected = appLocale.value.languageCode == locale.languageCode;
     final colors = Theme.of(context).colorScheme;
 
     return Material(
@@ -551,23 +581,15 @@ class _LanguageOption extends StatelessWidget {
           : colors.surfaceContainerHighest.withValues(alpha: 0.45),
       borderRadius: BorderRadius.circular(15),
       child: ListTile(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(15),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
         leading: Icon(
-          selected
-              ? Icons.check_circle_rounded
-              : Icons.circle_outlined,
-          color: selected
-              ? colors.primary
-              : colors.onSurfaceVariant,
+          selected ? Icons.check_circle_rounded : Icons.circle_outlined,
+          color: selected ? colors.primary : colors.onSurfaceVariant,
         ),
         title: Text(
           title,
           style: TextStyle(
-            color: selected
-                ? colors.onPrimaryContainer
-                : colors.onSurface,
+            color: selected ? colors.onPrimaryContainer : colors.onSurface,
           ),
         ),
         subtitle: Text(
@@ -632,15 +654,10 @@ class _ProfileTile extends StatelessWidget {
         borderRadius: BorderRadius.circular(18),
         onTap: onTap,
         child: Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: 15,
-            vertical: 14,
-          ),
+          padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 14),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(18),
-            border: Border.all(
-              color: iconColor.withValues(alpha: 0.18),
-            ),
+            border: Border.all(color: iconColor.withValues(alpha: 0.18)),
           ),
           child: Row(
             children: [
@@ -651,11 +668,7 @@ class _ProfileTile extends StatelessWidget {
                   color: iconColor.withValues(alpha: 0.13),
                   borderRadius: BorderRadius.circular(14),
                 ),
-                child: Icon(
-                  icon,
-                  color: iconColor,
-                  size: 23,
-                ),
+                child: Icon(icon, color: iconColor, size: 23),
               ),
               const SizedBox(width: 13),
               Expanded(
